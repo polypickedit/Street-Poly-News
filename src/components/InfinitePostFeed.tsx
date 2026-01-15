@@ -1,0 +1,79 @@
+import { useEffect, useRef } from "react";
+import { usePosts } from "@/hooks/usePosts";
+import { PostCard } from "./PostCard";
+import { Loader2 } from "lucide-react";
+
+export function InfinitePostFeed() {
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
+    usePosts();
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-destructive font-body">Failed to load posts</p>
+      </div>
+    );
+  }
+
+  const posts = data?.pages.flatMap((page) => page.posts) ?? [];
+
+  return (
+    <div id="videos">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+        {posts.map((post, index) => (
+          <div key={post.id} style={{ animationDelay: `${index * 0.05}s` }}>
+            <PostCard
+              id={post.id}
+              title={post.title}
+              subtitle={post.subtitle}
+              youtube_id={post.youtube_id}
+              thumbnail_url={post.thumbnail_url}
+              created_at={post.created_at}
+              content_type={post.content_type}
+              is_breaking={post.is_breaking ?? false}
+              is_featured={post.is_featured ?? false}
+              view_count={post.view_count}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div ref={loadMoreRef} className="flex justify-center py-8">
+        {isFetchingNextPage && (
+          <Loader2 className="w-6 h-6 text-primary animate-spin" />
+        )}
+        {!hasNextPage && posts.length > 0 && (
+          <p className="text-muted-foreground font-body text-sm">
+            You've reached the end
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
