@@ -46,31 +46,35 @@ export function InfinitePostFeed() {
     );
   }
 
-  const posts = data?.pages.flatMap((page) => page.posts) ?? [];
+  const allPosts = data?.pages.flatMap((page) => page.posts) ?? [];
+  // Deduplicate posts by ID to prevent key warnings
+  const posts = Array.from(new Map(allPosts.map(post => [post.id, post])).values());
 
   return (
     <div id="videos">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
-        {posts.map((post, index) => (
-          <div 
-            key={post.id} 
-            className="animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both"
-            style={{ animationDelay: `${Math.min(index, 10) * 0.05}s` }}
-          >
-            <PostCard
-              id={post.id}
-              title={post.title}
-              subtitle={post.subtitle}
-              youtube_id={post.youtube_id}
-              thumbnail_url={post.thumbnail_url}
-              created_at={post.created_at}
-              content_type={post.content_type}
-              is_breaking={post.is_breaking ?? false}
-              is_featured={post.is_featured ?? false}
-              view_count={post.view_count}
-            />
-          </div>
-        ))}
+        {posts.map((post, index) => {
+          const delayClass = `delay-${Math.min(index, 10)}`;
+          return (
+            <div 
+              key={post.id} 
+              className={`animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both ${delayClass}`}
+            >
+              <PostCard
+                id={post.id}
+                title={post.title}
+                subtitle={post.subtitle}
+                youtube_id={post.youtube_id}
+                thumbnail_url={post.thumbnail_url}
+                created_at={post.created_at}
+                content_type={post.content_type}
+                is_breaking={post.is_breaking ?? false}
+                is_featured={post.is_featured ?? false}
+                view_count={post.view_count}
+              />
+            </div>
+          );
+        })}
       </div>
 
       <div ref={loadMoreRef} className="flex justify-center py-8">

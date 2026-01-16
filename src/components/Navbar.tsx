@@ -62,7 +62,7 @@ export function Navbar() {
               alt="Streetpoly News" 
               className="w-8 h-8 md:w-10 md:h-10 object-contain group-hover:rotate-3 transition-transform"
             />
-            <span className="font-display text-xl md:text-2xl tracking-tight text-foreground">
+            <span className="font-display text-xl md:text-2xl tracking-tight text-dem">
               STREETPOLY <span className="text-rep">NEWS</span>
             </span>
           </Link>
@@ -162,8 +162,7 @@ export function Navbar() {
                 key={link.name}
                 to={link.path}
                 onClick={() => setIsOpen(false)}
-                style={{ animationDelay: `${index * 50}ms` }}
-                className={`block py-3 font-body text-sm font-medium uppercase tracking-wider transition-colors hover:text-dem opacity-0 animate-slide-down ${
+                className={`block py-3 font-body text-sm font-medium uppercase tracking-wider transition-colors hover:text-dem opacity-0 animate-slide-down delay-${index % 11} ${
                   location.pathname === link.path
                     ? "text-dem"
                     : "text-muted-foreground"

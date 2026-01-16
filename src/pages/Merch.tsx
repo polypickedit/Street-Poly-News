@@ -59,7 +59,7 @@ const Merch = () => {
               <ShoppingBag className="w-8 h-8 md:w-10 md:h-10 text-dem" />
             </div>
             
-            <h1 className="font-display text-4xl md:text-6xl text-foreground mb-4">
+            <h1 className="font-display text-4xl md:text-6xl text-dem mb-4">
               STREETPOLY <span className="text-rep">MERCH</span>
             </h1>
             

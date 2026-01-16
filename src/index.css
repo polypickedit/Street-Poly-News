@@ -111,6 +111,32 @@
   background: hsl(var(--muted-foreground));
 }
 
+@layer utilities {
+  .dynamic-bg {
+    background-color: var(--bg-color);
+  }
+  
+  .dynamic-bg-muted {
+    background-color: color-mix(in srgb, var(--bg-color) 20%, transparent);
+  }
+
+  .dynamic-animation-delay {
+    animation-delay: calc(var(--index) * 0.05s);
+  }
+
+  .delay-0 { animation-delay: 0s; }
+  .delay-1 { animation-delay: 0.05s; }
+  .delay-2 { animation-delay: 0.1s; }
+  .delay-3 { animation-delay: 0.15s; }
+  .delay-4 { animation-delay: 0.2s; }
+  .delay-5 { animation-delay: 0.25s; }
+  .delay-6 { animation-delay: 0.3s; }
+  .delay-7 { animation-delay: 0.35s; }
+  .delay-8 { animation-delay: 0.4s; }
+  .delay-9 { animation-delay: 0.45s; }
+  .delay-10 { animation-delay: 0.5s; }
+}
+
 /* Animation keyframes */
 @keyframes fade-in {
   from {

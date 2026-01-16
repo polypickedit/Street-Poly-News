@@ -90,6 +90,7 @@ export const BottomNav = () => {
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
                 <button
+                  type="button"
                   className={cn(
                     "flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-lg transition-colors",
                     menuOpen
@@ -119,8 +120,8 @@ export const BottomNav = () => {
                           className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                         >
                           <div
-                            className="w-3 h-3 rounded-full bg-primary"
-                            style={category.color ? { backgroundColor: category.color } : undefined}
+                            className="w-3 h-3 rounded-full bg-primary dynamic-bg"
+                            style={category.color ? ({ "--bg-color": category.color } as React.CSSProperties) : undefined}
                           />
                           <span className="text-sm font-medium">{category.name}</span>
                         </Link>

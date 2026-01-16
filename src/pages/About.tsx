@@ -7,8 +7,8 @@ const About = () => {
       <PageTransition>
         <div className="max-w-3xl mx-auto py-8 md:py-12">
           <h1 className="font-display text-4xl md:text-6xl text-foreground mb-8">
-                About <span className="text-dem">Streetpoly News</span>
-              </h1>
+            About <span className="text-dem">Streetpoly</span> <span className="text-rep">News</span>
+          </h1>
           <div className="prose prose-invert max-w-none">
             <p className="font-body text-muted-foreground text-base md:text-lg leading-relaxed mb-6">
               Streetpoly News is an independent media outlet dedicated to bringing you 

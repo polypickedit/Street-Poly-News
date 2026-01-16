@@ -49,8 +49,8 @@ export function PostBadges({ contentType, isBreaking, isFeatured, categories }: 
       {categories?.slice(0, 2).map((cat) => (
         <span
           key={cat.name}
-          className="px-2 py-1 text-xs font-body font-semibold uppercase tracking-wider rounded text-white"
-          style={{ backgroundColor: cat.color }}
+          className="px-2 py-1 text-xs font-body font-semibold uppercase tracking-wider rounded text-white dynamic-bg"
+          style={{ "--bg-color": cat.color } as React.CSSProperties}
         >
           {cat.name}
         </span>
