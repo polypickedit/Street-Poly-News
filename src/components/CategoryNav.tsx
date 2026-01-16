@@ -11,8 +11,8 @@ export function CategoryNav() {
 
   return (
     <div className="fixed top-[100px] left-0 right-0 z-40 border-b border-border bg-card/95 backdrop-blur-sm">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center gap-1 overflow-x-auto py-2 scrollbar-hide">
+      <div className="max-w-screen-2xl mx-auto">
+        <div className="flex items-center gap-1 overflow-x-auto py-2 px-4 scrollbar-hide">
           <Link
             to="/"
             className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
@@ -36,6 +36,8 @@ export function CategoryNav() {
               {category.name}
             </Link>
           ))}
+          {/* Add spacer for better scrolling on mobile */}
+          <div className="w-4 flex-shrink-0" />
         </div>
       </div>
     </div>
