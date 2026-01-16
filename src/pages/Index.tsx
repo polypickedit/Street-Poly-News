@@ -15,7 +15,7 @@ const Index = () => {
             <h1 className="font-display text-3xl sm:text-5xl md:text-7xl lg:text-8xl text-foreground mb-3 md:mb-4 tracking-wide leading-tight">
               <span className="text-dem">STREETPOLY</span> <span className="text-rep">NEWS</span>
             </h1>
-            <p className="font-body text-muted-foreground text-sm sm:text-lg md:text-xl max-w-2xl mx-auto px-2">
+            <p className="font-body text-dem text-sm sm:text-lg md:text-xl max-w-2xl mx-auto px-2">
               Unfiltered news from the streets. Real stories, real voices, real impact.
             </p>
             <div className="mt-4 md:mt-6 w-16 md:w-24 h-1 bg-rep mx-auto"></div>
