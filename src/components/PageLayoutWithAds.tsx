@@ -23,19 +23,25 @@ export const PageLayoutWithAds = ({
       {showCategoryNav && <CategoryNav />}
 
       <div
-        className={`flex justify-center gap-4 lg:gap-6 px-4 sm:px-6 md:px-8 ${
+        className={`flex justify-center gap-0 lg:gap-0 px-0 sm:px-0 md:px-0 ${
           showCategoryNav ? "pt-[144px] md:pt-[160px]" : "pt-[100px] md:pt-[116px]"
         }`}
       >
-        <AdSidebar position="left" />
+        <div className="hidden xl:flex items-start">
+          <AdSidebar position="left" />
+          <div className="w-[1px] self-stretch bg-border/60 ml-6" />
+        </div>
 
-        <main className="flex-1 max-w-6xl min-w-0">
+        <main className="flex-1 max-w-6xl min-w-0 px-4 sm:px-6 md:px-8">
           {/* Mobile/Tablet banner ad at top */}
           {showMobileAd && <MobileAdBanner />}
           {children}
         </main>
 
-        <AdSidebar position="right" />
+        <div className="hidden xl:flex items-start">
+          <div className="w-[1px] self-stretch bg-border/60 mr-6" />
+          <AdSidebar position="right" />
+        </div>
       </div>
 
       <BottomNav />
