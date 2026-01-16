@@ -4,72 +4,64 @@ import { supabase } from "@/integrations/supabase/client";
 
 const SUPABASE_URL = "https://duldhllwapsjytdzpjfz.supabase.co";
 
-const mockAds = {
+interface Ad {
+  title: string;
+  subtitle: string;
+  bg: string;
+  text: string;
+  link?: string;
+  isAlbum?: boolean;
+  albumArt?: string;
+  affiliateName?: string | null;
+}
+
+const mockAds: { skyscraper: Ad[]; rectangle: Ad[]; banner: Ad[] } = {
   skyscraper: [
     {
-      title: "NEW JORDANS",
-      subtitle: "Limited Drop 🔥",
-      bg: "from-red-600 to-red-900",
-      text: "SHOP NOW",
-      link: "#",
+      title: "YOUR AD HERE",
+      subtitle: "Reach 40k+ readers",
+      bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
+      text: "ADVERTISE",
+      link: "/advertise",
       isAlbum: false,
       affiliateName: null,
     },
     {
-      title: "GNX",
-      subtitle: "Kendrick Lamar",
-      bg: "from-zinc-900 via-zinc-800 to-zinc-900",
-      text: "BUY NOW",
-      link: "https://www.kendricklamar.com",
-      isAlbum: true,
-      albumArt: "https://img.youtube.com/vi/yTsD_PzUJIE/maxresdefault.jpg",
-      affiliateName: "Kendrick Lamar - GNX Album",
-    },
-    {
-      title: "FASHION NOVA",
-      subtitle: "Men's Collection",
-      bg: "from-purple-600 to-purple-900",
-      text: "EXPLORE",
-      link: "#",
+      title: "YOUR AD HERE",
+      subtitle: "Premium Placement",
+      bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
+      text: "ADVERTISE",
+      link: "/advertise",
       isAlbum: false,
       affiliateName: null,
     },
   ],
   rectangle: [
     {
-      title: "KENDRICK LAMAR",
-      subtitle: "The Big Steppers Tour",
-      bg: "from-yellow-600 to-orange-700",
-      text: "GET TICKETS",
+      title: "YOUR AD HERE",
+      subtitle: "Promote your brand",
+      bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
+      text: "GET STARTED",
     },
     {
-      title: "CASH APP",
-      subtitle: "Get $15 Free",
-      bg: "from-green-500 to-green-700",
-      text: "DOWNLOAD",
+      title: "YOUR AD HERE",
+      subtitle: "Targeted Audience",
+      bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
+      text: "LEARN MORE",
     },
     {
-      title: "DRAKE OVO",
-      subtitle: "New Merch Drop",
-      bg: "from-amber-500 to-amber-700",
-      text: "SHOP NOW",
+      title: "YOUR AD HERE",
+      subtitle: "Daily Traffic",
+      bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
+      text: "BOOK NOW",
     },
   ],
   banner: [
     {
-      title: "GNX OUT NOW",
-      subtitle: "Kendrick Lamar",
-      bg: "from-zinc-900 via-zinc-800 to-zinc-900",
-      text: "STREAM",
-      isAlbum: true,
-      albumArt: "https://img.youtube.com/vi/yTsD_PzUJIE/maxresdefault.jpg",
-      affiliateName: "Kendrick Lamar - GNX Album",
-    },
-    {
-      title: "NEW JORDANS",
-      subtitle: "Limited Drop",
-      bg: "from-red-600 to-red-900",
-      text: "SHOP",
+      title: "YOUR AD HERE",
+      subtitle: "Contact us to advertise",
+      bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
+      text: "ADVERTISE NOW",
       isAlbum: false,
       affiliateName: null,
     },
@@ -124,7 +116,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
           href={getTrackedUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className={`w-[160px] h-[600px] bg-gradient-to-b ${skyAd.bg} rounded-lg flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg block`}
+          className={`w-[160px] h-[600px] bg-gradient-to-b ${skyAd.bg} rounded-lg flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20 block`}
         >
           {skyAd.isAlbum ? (
             <>
@@ -136,38 +128,38 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="text-white/60 font-body text-xs uppercase tracking-wider mb-1">
+              <div className="text-foreground/60 font-body text-xs uppercase tracking-wider mb-1">
                 New Album
               </div>
-              <div className="text-white font-display text-3xl leading-tight mb-1">
+              <div className="text-foreground font-display text-3xl leading-tight mb-1">
                 {skyAd.title}
               </div>
-              <div className="text-white/80 font-body text-sm mb-4">
+              <div className="text-foreground/80 font-body text-sm mb-4">
                 {skyAd.subtitle}
               </div>
               <div className="flex items-center gap-2 bg-dem text-dem-foreground font-display text-sm px-5 py-2.5 rounded-full">
                 <Download className="w-4 h-4" />
                 {skyAd.text}
               </div>
-              <div className="mt-4 flex items-center gap-1.5 text-white/50 text-xs font-body">
+              <div className="mt-4 flex items-center gap-1.5 text-foreground/50 text-xs font-body">
                 <Music className="w-3 h-3" />
                 Stream or Download
               </div>
               {affiliateLink && (
-                <div className="mt-2 text-white/30 text-[10px] font-body">
+                <div className="mt-2 text-foreground/30 text-[10px] font-body">
                   {affiliateLink.click_count} clicks
                 </div>
               )}
             </>
           ) : (
             <>
-              <div className="text-white/90 font-display text-2xl leading-tight mb-2">
+              <div className="text-foreground/90 font-display text-2xl leading-tight mb-2">
                 {skyAd.title}
               </div>
-              <div className="text-white/70 font-body text-sm mb-6">
+              <div className="text-foreground/70 font-body text-sm mb-6">
                 {skyAd.subtitle}
               </div>
-              <div className="bg-white text-black font-display text-sm px-6 py-2 rounded-full">
+              <div className="bg-foreground text-background font-display text-sm px-6 py-2 rounded-full">
                 {skyAd.text}
               </div>
             </>
@@ -181,15 +173,15 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
           Advertisement
         </span>
         <div
-          className={`w-[160px] h-[250px] bg-gradient-to-b ${rectAd.bg} rounded-lg flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg`}
+          className={`w-[160px] h-[250px] bg-gradient-to-b ${rectAd.bg} rounded-lg flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20`}
         >
-          <div className="text-white/90 font-display text-xl leading-tight mb-2">
+          <div className="text-foreground/90 font-display text-xl leading-tight mb-2">
             {rectAd.title}
           </div>
-          <div className="text-white/70 font-body text-xs mb-4">
+          <div className="text-foreground/70 font-body text-xs mb-4">
             {rectAd.subtitle}
           </div>
-          <div className="bg-white text-black font-display text-xs px-4 py-1.5 rounded-full">
+          <div className="bg-foreground text-background font-display text-xs px-4 py-1.5 rounded-full">
             {rectAd.text}
           </div>
         </div>
@@ -236,7 +228,7 @@ export const MobileAdBanner = () => {
           href={getTrackedUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className={`w-full h-20 md:h-24 bg-gradient-to-r ${bannerAd.bg} rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg`}
+          className={`w-full h-20 md:h-24 bg-gradient-to-r ${bannerAd.bg} rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20`}
         >
           <div className="flex items-center gap-3 md:gap-4">
             {bannerAd.isAlbum && (
@@ -249,19 +241,18 @@ export const MobileAdBanner = () => {
               </div>
             )}
             <div>
-              <div className="text-white/60 font-body text-[10px] uppercase tracking-wider">
+              <div className="text-foreground/60 font-body text-[10px] uppercase tracking-wider">
                 New Album
               </div>
-              <div className="text-white font-display text-xl md:text-2xl leading-tight">
+              <div className="text-foreground font-display text-xl md:text-2xl leading-tight">
                 {bannerAd.title}
               </div>
-              <div className="text-white/70 font-body text-xs">
+              <div className="text-foreground/70 font-body text-xs">
                 {bannerAd.subtitle}
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-dem text-dem-foreground font-display text-xs md:text-sm px-4 py-2 rounded-full flex-shrink-0">
-            <Download className="w-3 h-3 md:w-4 md:h-4" />
+          <div className="flex items-center gap-2 bg-foreground text-background font-display text-xs md:text-sm px-4 py-2 rounded-full flex-shrink-0">
             {bannerAd.text}
           </div>
         </a>
