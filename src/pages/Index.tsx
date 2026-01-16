@@ -10,7 +10,7 @@ const Index = () => {
     <PageLayoutWithAds showMobileAd={false}>
       <PageTransition>
         {/* Hero Section */}
-        <section className="pb-8 md:pb-12">
+        <section className="pt-8 md:pt-16 pb-8 md:pb-12">
           <div className="text-center px-4 md:px-6">
             <h1 className="font-display text-3xl sm:text-5xl md:text-7xl lg:text-8xl text-foreground mb-3 md:mb-4 tracking-wide leading-tight">
               <span className="text-dem">STREETPOLY</span> <span className="text-rep">NEWS</span>
