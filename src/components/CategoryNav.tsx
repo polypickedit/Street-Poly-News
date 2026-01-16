@@ -10,7 +10,7 @@ export function CategoryNav() {
   if (isLoading || !categories?.length) return null;
 
   return (
-    <div className="fixed top-[100px] left-0 right-0 z-40 border-b border-border bg-card/95 backdrop-blur-sm">
+    <div className="fixed top-[100px] md:top-[116px] left-0 right-0 z-40 border-b border-border bg-card/95 backdrop-blur-sm">
       <div className="max-w-screen-2xl mx-auto">
         <div className="flex items-center gap-1 overflow-x-auto py-2 px-4 scrollbar-hide">
           <Link

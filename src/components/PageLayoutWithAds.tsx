@@ -16,14 +16,6 @@ export const PageLayoutWithAds = ({
   showCategoryNav = true,
   showMobileAd = true,
 }: PageLayoutWithAdsProps) => {
-  const TOP_BANNER_HEIGHT = 36; // Breaking news banner height
-  const NAVBAR_HEIGHT = 64;
-  const CATEGORY_NAV_HEIGHT = 44;
-  const baseHeaderHeight = TOP_BANNER_HEIGHT + NAVBAR_HEIGHT;
-  const contentPaddingTop = showCategoryNav
-    ? baseHeaderHeight + CATEGORY_NAV_HEIGHT
-    : baseHeaderHeight;
-
   return (
     <div className="min-h-screen bg-background pb-20">
       <BreakingNewsBanner />
@@ -31,8 +23,9 @@ export const PageLayoutWithAds = ({
       {showCategoryNav && <CategoryNav />}
 
       <div
-        className="flex justify-center gap-4 lg:gap-6 px-4 sm:px-6 md:px-8"
-        style={{ paddingTop: `${contentPaddingTop}px` }}
+        className={`flex justify-center gap-4 lg:gap-6 px-4 sm:px-6 md:px-8 ${
+          showCategoryNav ? "pt-[144px] md:pt-[160px]" : "pt-[100px] md:pt-[116px]"
+        }`}
       >
         <AdSidebar position="left" />
 
