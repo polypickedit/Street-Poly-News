@@ -64,7 +64,7 @@ export const MerchCard = ({ item }: MerchCardProps) => {
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden group hover:border-primary/50 transition-colors">
+    <div className="bg-card border border-border rounded-lg overflow-hidden group hover:border-dem/50 transition-colors">
       <div className="aspect-square overflow-hidden">
         <img
           src={item.image}
@@ -73,7 +73,7 @@ export const MerchCard = ({ item }: MerchCardProps) => {
         />
       </div>
       <div className="p-4">
-        <span className="text-xs font-body uppercase tracking-wider text-primary">
+        <span className="text-xs font-body uppercase tracking-wider text-dem">
           {item.type}
         </span>
         <h3 className="font-display text-xl text-foreground mt-1">
@@ -118,7 +118,7 @@ export const MerchCard = ({ item }: MerchCardProps) => {
         </div>
 
         <Button
-          className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground font-body uppercase text-xs tracking-wider"
+          className="w-full mt-4 bg-dem hover:bg-dem/90 text-dem-foreground font-body uppercase text-xs tracking-wider"
           onClick={handleAddToCart}
         >
           Add to Cart

@@ -10,15 +10,15 @@ const Index = () => {
     <PageLayoutWithAds showMobileAd={false}>
       <PageTransition>
         {/* Hero Section */}
-        <section className="pb-6 md:pb-8">
-          <div className="text-center px-2">
-            <h1 className="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-foreground mb-3 md:mb-4 tracking-wide">
-              <span className="text-primary">STREET</span> POLITICS
+        <section className="pb-8 md:pb-12">
+          <div className="text-center px-4 md:px-6">
+            <h1 className="font-display text-3xl sm:text-5xl md:text-7xl lg:text-8xl text-foreground mb-3 md:mb-4 tracking-wide leading-tight">
+              <span className="text-dem">STREETPOLY</span> <span className="text-rep">NEWS</span>
             </h1>
-            <p className="font-body text-muted-foreground text-base sm:text-lg md:text-xl max-w-2xl mx-auto">
+            <p className="font-body text-muted-foreground text-sm sm:text-lg md:text-xl max-w-2xl mx-auto px-2">
               Unfiltered news from the streets. Real stories, real voices, real impact.
             </p>
-            <div className="mt-4 md:mt-6 w-16 md:w-24 h-1 bg-primary mx-auto"></div>
+            <div className="mt-4 md:mt-6 w-16 md:w-24 h-1 bg-rep mx-auto"></div>
           </div>
         </section>
 

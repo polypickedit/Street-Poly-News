@@ -61,7 +61,7 @@ export function PostCard({
     return (
       <Link
         to={`/post/${id}`}
-        className="group flex gap-4 bg-card/50 rounded-lg p-3 hover:bg-card transition-all duration-300 border border-transparent hover:border-primary/30"
+        className="group flex gap-4 bg-card/50 rounded-lg p-3 hover:bg-card transition-all duration-300 border border-transparent hover:border-dem/30"
       >
         <div className="relative w-28 h-20 flex-shrink-0 rounded-md overflow-hidden">
           <img
@@ -75,7 +75,7 @@ export function PostCard({
           </div>
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="font-display text-base text-foreground leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+          <h4 className="font-display text-base text-foreground leading-tight line-clamp-2 group-hover:text-dem transition-colors">
             {title}
           </h4>
           <p className="text-muted-foreground text-xs font-body mt-1">{timeAgo}</p>
@@ -87,7 +87,7 @@ export function PostCard({
   return (
     <Link
       to={`/post/${id}`}
-      className="group block bg-card rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1"
+      className="group block bg-card rounded-xl overflow-hidden border border-border hover:border-dem/50 transition-all duration-300 hover:shadow-xl hover:shadow-dem/10 hover:-translate-y-1"
     >
       <div className="relative aspect-video overflow-hidden">
         <img
@@ -97,30 +97,30 @@ export function PostCard({
         />
         {/* Gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent opacity-60" />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-br from-dem/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         
         {/* Play button */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-          <div className="w-16 h-16 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg shadow-primary/50">
-            <Play className="w-7 h-7 text-primary-foreground ml-1" fill="currentColor" />
+          <div className="w-16 h-16 rounded-full bg-dem/90 backdrop-blur-sm flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg shadow-dem/50">
+            <Play className="w-7 h-7 text-dem-foreground ml-1" fill="currentColor" />
           </div>
         </div>
         
         {/* Top badges */}
         <div className="absolute top-3 left-3 flex flex-wrap gap-2">
           {is_breaking && (
-            <span className="px-2.5 py-1 bg-destructive text-destructive-foreground text-[10px] font-body font-bold uppercase tracking-wider rounded-full animate-pulse shadow-lg">
+            <span className="px-2.5 py-1 bg-rep text-rep-foreground text-[10px] font-body font-bold uppercase tracking-wider rounded-full animate-pulse shadow-lg">
               🔴 Breaking
             </span>
           )}
           {is_featured && (
-            <span className="px-2.5 py-1 bg-accent/90 backdrop-blur-sm text-accent-foreground text-[10px] font-body font-bold uppercase tracking-wider rounded-full shadow-lg flex items-center gap-1">
+            <span className="px-2.5 py-1 bg-dem/90 backdrop-blur-sm text-dem-foreground text-[10px] font-body font-bold uppercase tracking-wider rounded-full shadow-lg flex items-center gap-1">
               <TrendingUp className="w-3 h-3" />
               Featured
             </span>
           )}
           {isNew && !is_breaking && (
-            <span className="px-2.5 py-1 bg-green-500/90 backdrop-blur-sm text-white text-[10px] font-body font-bold uppercase tracking-wider rounded-full shadow-lg">
+            <span className="px-2.5 py-1 bg-dem text-dem-foreground text-[10px] font-body font-bold uppercase tracking-wider rounded-full shadow-lg">
               New
             </span>
           )}
@@ -152,7 +152,7 @@ export function PostCard({
       </div>
 
       <div className="p-5">
-        <h3 className="font-display text-xl md:text-2xl text-foreground leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">
+        <h3 className="font-display text-xl md:text-2xl text-foreground leading-tight mb-2 group-hover:text-dem transition-colors line-clamp-2">
           {title}
         </h3>
         {subtitle && (

@@ -145,7 +145,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
               <div className="text-white/80 font-body text-sm mb-4">
                 {skyAd.subtitle}
               </div>
-              <div className="flex items-center gap-2 bg-primary text-primary-foreground font-display text-sm px-5 py-2.5 rounded-full">
+              <div className="flex items-center gap-2 bg-dem text-dem-foreground font-display text-sm px-5 py-2.5 rounded-full">
                 <Download className="w-4 h-4" />
                 {skyAd.text}
               </div>
@@ -260,7 +260,7 @@ export const MobileAdBanner = () => {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-primary text-primary-foreground font-display text-xs md:text-sm px-4 py-2 rounded-full flex-shrink-0">
+          <div className="flex items-center gap-2 bg-dem text-dem-foreground font-display text-xs md:text-sm px-4 py-2 rounded-full flex-shrink-0">
             <Download className="w-3 h-3 md:w-4 md:h-4" />
             {bannerAd.text}
           </div>

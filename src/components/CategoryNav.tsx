@@ -4,6 +4,8 @@ import { useCategories } from "@/hooks/useCategories";
 export function CategoryNav() {
   const { data: categories, isLoading } = useCategories();
   const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const currentCategory = searchParams.get("category");
 
   if (isLoading || !categories?.length) return null;
 
@@ -15,7 +17,7 @@ export function CategoryNav() {
             to="/"
             className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
               location.pathname === "/" && !location.search
-                ? "bg-primary text-primary-foreground"
+                ? "bg-dem text-dem-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
@@ -24,10 +26,10 @@ export function CategoryNav() {
           {categories.map((category) => (
             <Link
               key={category.id}
-              to={`/category/${category.slug}`}
+              to={`/?category=${category.slug}`}
               className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
-                location.pathname === `/category/${category.slug}`
-                  ? "bg-primary text-primary-foreground"
+                currentCategory === category.slug
+                  ? "bg-dem text-dem-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
             >

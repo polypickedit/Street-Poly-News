@@ -19,6 +19,14 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        dem: {
+          DEFAULT: "#0047AB", // Democratic Blue
+          foreground: "#FFFFFF",
+        },
+        rep: {
+          DEFAULT: "#E81B23", // Republican Red
+          foreground: "#FFFFFF",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

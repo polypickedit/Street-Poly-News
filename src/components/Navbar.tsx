@@ -49,16 +49,22 @@ export function Navbar() {
           animate={{ y: 0 }}
           exit={{ y: -100 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed top-[36px] left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border"
+          className="fixed top-[36px] left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm"
         >
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center">
+        <div className="flex items-center justify-between h-16 md:h-20">
+          <Link 
+            to="/" 
+            className="flex items-center gap-2 group transition-transform hover:scale-[1.02]"
+          >
             <img 
               src={logo} 
-              alt="Street Politics News" 
-              className="h-10 md:h-12 w-auto"
+              alt="Streetpoly News" 
+              className="w-8 h-8 md:w-10 md:h-10 object-contain group-hover:rotate-3 transition-transform"
             />
+            <span className="font-display text-xl md:text-2xl tracking-tight text-foreground">
+              STREETPOLY <span className="text-rep">NEWS</span>
+            </span>
           </Link>
 
           {/* Desktop Nav */}
@@ -67,9 +73,9 @@ export function Navbar() {
               <Link
                 key={link.name}
                 to={link.path}
-                className={`font-body text-sm font-medium uppercase tracking-wider transition-colors hover:text-primary ${
+                className={`font-body text-sm font-medium uppercase tracking-wider transition-colors hover:text-dem ${
                   location.pathname === link.path
-                    ? "text-primary"
+                    ? "text-dem"
                     : "text-muted-foreground"
                 }`}
               >
@@ -87,7 +93,8 @@ export function Navbar() {
               ) : (
                 <button
                   onClick={() => setShowSearch(true)}
-                  className="p-2 text-muted-foreground hover:text-primary transition-colors"
+                  aria-label="Search"
+                  className="p-2 text-muted-foreground hover:text-dem transition-colors"
                 >
                   <Search size={20} />
                 </button>
@@ -96,11 +103,13 @@ export function Navbar() {
 
             <button
               onClick={() => setCartOpen(true)}
-              className="relative p-2 text-muted-foreground hover:text-primary transition-colors"
+              aria-label="Open cart"
+              className="relative p-2 text-muted-foreground hover:text-dem transition-colors"
+              title="Merch Store"
             >
               <ShoppingBag size={20} />
               {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-body w-5 h-5 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-rep text-rep-foreground text-xs font-body w-5 h-5 rounded-full flex items-center justify-center shadow-sm">
                   {totalItems}
                 </span>
               )}
@@ -111,23 +120,26 @@ export function Navbar() {
           <div className="lg:hidden flex items-center gap-2">
             <button
               onClick={() => setShowSearch(!showSearch)}
+              aria-label="Toggle search"
               className="p-2 text-foreground"
             >
               <Search size={20} />
             </button>
             <button
               onClick={() => setCartOpen(true)}
+              aria-label="Open cart"
               className="relative p-2 text-foreground"
             >
               <ShoppingBag size={20} />
               {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-body w-5 h-5 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-rep text-rep-foreground text-xs font-body w-5 h-5 rounded-full flex items-center justify-center shadow-sm">
                   {totalItems}
                 </span>
               )}
             </button>
             <button
               className="p-2 text-foreground"
+              aria-label="Toggle menu"
               onClick={() => setIsOpen(!isOpen)}
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -151,9 +163,9 @@ export function Navbar() {
                 to={link.path}
                 onClick={() => setIsOpen(false)}
                 style={{ animationDelay: `${index * 50}ms` }}
-                className={`block py-3 font-body text-sm font-medium uppercase tracking-wider transition-colors hover:text-primary opacity-0 animate-slide-down ${
+                className={`block py-3 font-body text-sm font-medium uppercase tracking-wider transition-colors hover:text-dem opacity-0 animate-slide-down ${
                   location.pathname === link.path
-                    ? "text-primary"
+                    ? "text-dem"
                     : "text-muted-foreground"
                 }`}
               >

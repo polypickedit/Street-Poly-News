@@ -1,8 +1,8 @@
-# Welcome to your Lovable project
+# STREETPOLY NEWS
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**URL**: https://github.com/polypickedit/Street-Poly-News.git
 
 ## How can I edit this code?
 

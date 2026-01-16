@@ -53,7 +53,7 @@ export function SearchBar({ className, onClose }: SearchBarProps) {
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          className="pl-10 pr-10 bg-card border-border text-foreground placeholder:text-muted-foreground"
+          className="pl-10 pr-10 bg-card border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-dem"
         />
         {query && (
           <button
@@ -63,6 +63,7 @@ export function SearchBar({ className, onClose }: SearchBarProps) {
               inputRef.current?.focus();
             }}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            title="Clear search"
           >
             <X className="w-4 h-4" />
           </button>
@@ -87,9 +88,9 @@ export function SearchBar({ className, onClose }: SearchBarProps) {
                     setQuery("");
                     onClose?.();
                   }}
-                  className="block p-3 hover:bg-muted transition-colors border-b border-border last:border-0"
+                  className="block p-3 hover:bg-dem/5 transition-colors border-b border-border last:border-0 group"
                 >
-                  <h4 className="font-display text-sm text-foreground line-clamp-1">
+                  <h4 className="font-display text-sm text-foreground line-clamp-1 group-hover:text-dem transition-colors">
                     {post.title}
                   </h4>
                   {post.subtitle && (

@@ -28,12 +28,12 @@ export const SuggestionsCarousel = () => {
   if (isLoading) {
     return (
       <div className="py-6 sm:py-8">
-        <h2 className="text-lg sm:text-xl font-display font-bold mb-4">
+        <h2 className="text-lg sm:text-xl font-display font-bold mb-4 text-foreground">
           Suggested For You
         </h2>
         <div className="flex gap-4 overflow-hidden">
           {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="w-48 h-32 rounded-lg flex-shrink-0" />
+            <Skeleton key={i} className="w-48 h-32 rounded-lg flex-shrink-0 bg-muted" />
           ))}
         </div>
       </div>
@@ -44,7 +44,7 @@ export const SuggestionsCarousel = () => {
 
   return (
     <div className="py-6 sm:py-8 border-t border-border">
-      <h2 className="text-lg sm:text-xl font-display font-bold mb-4">
+      <h2 className="text-lg sm:text-xl font-display font-bold mb-4 text-foreground">
         Suggested For You
       </h2>
       <Carousel
@@ -62,7 +62,7 @@ export const SuggestionsCarousel = () => {
             >
               <Link
                 to={`/post/${post.id}`}
-                className="group block relative overflow-hidden rounded-lg aspect-video"
+                className="group block relative overflow-hidden rounded-lg aspect-video shadow-sm hover:shadow-md transition-shadow"
               >
                 <img
                   src={
@@ -72,9 +72,9 @@ export const SuggestionsCarousel = () => {
                   alt={post.title}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-dem/90 via-dem/20 to-transparent opacity-80" />
                 <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <h3 className="text-sm font-medium text-white line-clamp-2 leading-tight">
+                  <h3 className="text-sm font-medium text-dem-foreground line-clamp-2 leading-tight group-hover:underline">
                     {post.title}
                   </h3>
                 </div>
@@ -82,8 +82,8 @@ export const SuggestionsCarousel = () => {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="hidden sm:flex -left-4 bg-background/80 backdrop-blur-sm" />
-        <CarouselNext className="hidden sm:flex -right-4 bg-background/80 backdrop-blur-sm" />
+        <CarouselPrevious className="hidden sm:flex -left-4 bg-background/80 backdrop-blur-sm border-border text-foreground hover:bg-dem hover:text-dem-foreground" />
+        <CarouselNext className="hidden sm:flex -right-4 bg-background/80 backdrop-blur-sm border-border text-foreground hover:bg-dem hover:text-dem-foreground" />
       </Carousel>
     </div>
   );

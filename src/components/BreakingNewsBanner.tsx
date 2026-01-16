@@ -37,7 +37,7 @@ export function BreakingNewsBanner() {
   const currentPost = breakingPosts[currentIndex];
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] bg-primary text-primary-foreground">
+    <div className="fixed top-0 left-0 right-0 z-[60] bg-rep text-rep-foreground">
       <div className="container mx-auto px-4">
         <Link
           to={`/post/${currentPost.id}`}

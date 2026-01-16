@@ -33,16 +33,16 @@ export function PostBadges({ contentType, isBreaking, isFeatured, categories }: 
   return (
     <div className="flex flex-wrap gap-2">
       {isBreaking && (
-        <span className="px-2 py-1 bg-destructive text-destructive-foreground text-xs font-body font-semibold uppercase tracking-wider rounded flex items-center gap-1 animate-pulse">
+        <span className="px-2 py-1 bg-rep text-rep-foreground text-xs font-body font-semibold uppercase tracking-wider rounded flex items-center gap-1 animate-pulse">
           Breaking
         </span>
       )}
       {isFeatured && (
-        <span className="px-2 py-1 bg-accent text-accent-foreground text-xs font-body font-semibold uppercase tracking-wider rounded">
+        <span className="px-2 py-1 bg-dem text-dem-foreground text-xs font-body font-semibold uppercase tracking-wider rounded">
           Featured
         </span>
       )}
-      <span className="px-2 py-1 bg-primary text-primary-foreground text-xs font-body font-semibold uppercase tracking-wider rounded flex items-center gap-1">
+      <span className="px-2 py-1 bg-dem text-dem-foreground text-xs font-body font-semibold uppercase tracking-wider rounded flex items-center gap-1">
         {getContentIcon()}
         {getContentLabel()}
       </span>

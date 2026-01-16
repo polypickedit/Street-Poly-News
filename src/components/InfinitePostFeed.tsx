@@ -28,7 +28,7 @@ export function InfinitePostFeed() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <Loader2 className="w-8 h-8 text-dem animate-spin" />
       </div>
     );
   }
@@ -66,7 +66,7 @@ export function InfinitePostFeed() {
 
       <div ref={loadMoreRef} className="flex justify-center py-8">
         {isFetchingNextPage && (
-          <Loader2 className="w-6 h-6 text-primary animate-spin" />
+          <Loader2 className="w-6 h-6 text-dem animate-spin" />
         )}
         {!hasNextPage && posts.length > 0 && (
           <p className="text-muted-foreground font-body text-sm">

@@ -11,7 +11,7 @@ export const CartSidebar = () => {
       <SheetContent className="bg-card border-border w-full sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle className="font-display text-2xl text-foreground flex items-center gap-2">
-            <ShoppingBag className="w-6 h-6 text-primary" />
+            <ShoppingBag className="w-6 h-6 text-dem" />
             YOUR CART
           </SheetTitle>
         </SheetHeader>
@@ -35,7 +35,7 @@ export const CartSidebar = () => {
                     className="w-20 h-20 object-cover rounded-md"
                   />
                   <div className="flex-1 min-w-0">
-                    <span className="text-xs font-body uppercase tracking-wider text-primary">
+                    <span className="text-xs font-body uppercase tracking-wider text-dem">
                       {item.type}
                     </span>
                     <h4 className="font-display text-sm text-foreground truncate">
@@ -91,7 +91,7 @@ export const CartSidebar = () => {
                 </span>
               </div>
               <Button
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-body uppercase tracking-wider"
+                className="w-full bg-dem hover:bg-dem/90 text-dem-foreground font-body uppercase tracking-wider"
                 size="lg"
               >
                 Checkout

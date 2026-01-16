@@ -24,7 +24,8 @@ export function TipButton() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 bg-primary text-primary-foreground p-4 rounded-full shadow-lg hover:scale-110 transition-transform"
+        className="fixed bottom-6 right-6 z-40 bg-dem text-dem-foreground p-4 rounded-full shadow-lg hover:scale-110 transition-transform"
+        title="Got a Tip?"
       >
         <MessageSquare className="w-6 h-6" />
       </button>
@@ -34,11 +35,12 @@ export function TipButton() {
           <div className="bg-card border border-border rounded-lg w-full max-w-md p-6 animate-fade-in">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-2xl text-foreground">
-                Got a <span className="text-primary">Tip?</span>
+                Got a <span className="text-dem">Tip?</span>
               </h2>
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-muted-foreground hover:text-foreground"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -49,14 +51,14 @@ export function TipButton() {
                 placeholder="Your name (optional)"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="bg-muted border-border"
+                className="bg-muted border-border focus-visible:ring-dem"
               />
               <Input
                 type="email"
                 placeholder="Your email (optional)"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="bg-muted border-border"
+                className="bg-muted border-border focus-visible:ring-dem"
               />
               <Textarea
                 placeholder="Tell us what you know..."
@@ -64,9 +66,9 @@ export function TipButton() {
                 rows={4}
                 value={formData.tip}
                 onChange={(e) => setFormData({ ...formData, tip: e.target.value })}
-                className="bg-muted border-border resize-none"
+                className="bg-muted border-border resize-none focus-visible:ring-dem"
               />
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full bg-dem hover:bg-dem/90 text-dem-foreground">
                 <Send className="w-4 h-4 mr-2" />
                 Send Tip
               </Button>

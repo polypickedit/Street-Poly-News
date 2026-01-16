@@ -44,7 +44,7 @@ export function PostTags({ categories, people }: PostTagsProps) {
           <Link
             key={person.id}
             to={`/person/${person.slug}`}
-            className="px-3 py-1.5 bg-muted text-muted-foreground text-sm font-body font-semibold uppercase tracking-wider rounded transition-all hover:bg-primary hover:text-primary-foreground"
+            className="px-3 py-1.5 bg-muted text-muted-foreground text-sm font-body font-semibold uppercase tracking-wider rounded transition-all hover:bg-dem hover:text-dem-foreground"
           >
             {person.name}
           </Link>

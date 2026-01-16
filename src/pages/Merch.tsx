@@ -1,5 +1,5 @@
-import { Navbar } from "@/components/Navbar";
-import { BreakingNewsBanner } from "@/components/BreakingNewsBanner";
+import { PageLayoutWithAds } from "@/components/PageLayoutWithAds";
+import { PageTransition } from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, ExternalLink } from "lucide-react";
 import { MerchCard } from "@/components/MerchCard";
@@ -7,7 +7,7 @@ import { MerchCard } from "@/components/MerchCard";
 const mockMerch = [
   {
     id: 1,
-    name: "Street Politics Logo Tee",
+    name: "Streetpoly Logo Tee",
     type: "T-Shirt",
     price: 29.99,
     image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop",
@@ -51,51 +51,51 @@ const mockMerch = [
 
 const Merch = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <BreakingNewsBanner />
-      <Navbar />
-      
-      <main className="container mx-auto px-4 pt-[144px] pb-20">
-        <div className="text-center mb-12">
-          <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-8">
-            <ShoppingBag className="w-10 h-10 text-primary" />
+    <PageLayoutWithAds showCategoryNav={false}>
+      <PageTransition>
+        <div className="py-8 md:py-12">
+          <div className="text-center mb-12">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-dem/10 flex items-center justify-center mx-auto mb-6 md:mb-8">
+              <ShoppingBag className="w-8 h-8 md:w-10 md:h-10 text-dem" />
+            </div>
+            
+            <h1 className="font-display text-4xl md:text-6xl text-foreground mb-4">
+              STREETPOLY <span className="text-rep">MERCH</span>
+            </h1>
+            
+            <p className="text-muted-foreground font-body max-w-xl mx-auto px-4">
+              Support independent journalism and wear the message. High-quality apparel 
+              for the voices of the street.
+            </p>
           </div>
-          
-          <h1 className="font-display text-5xl md:text-6xl text-foreground mb-4">
-            <span className="text-primary">STREET</span> MERCH
-          </h1>
-          
-          <p className="font-body text-muted-foreground text-lg max-w-xl mx-auto">
-            Rep the movement. Official Street Politics News gear.
-          </p>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {mockMerch.map((item) => (
-            <MerchCard key={item.id} item={item} />
-          ))}
-        </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {mockMerch.map((item) => (
+              <MerchCard key={item.id} item={item} />
+            ))}
+          </div>
 
-        <div className="text-center">
-          <Button
-            asChild
-            size="lg"
-            variant="outline"
-            className="border-primary text-primary hover:bg-primary hover:text-primary-foreground font-body uppercase tracking-wider"
-          >
-            <a
-              href="https://yourstore.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2"
+          <div className="text-center">
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="border-dem text-dem hover:bg-dem hover:text-dem-foreground font-body uppercase tracking-wider"
             >
-              Visit Full Store
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          </Button>
+              <a
+                href="https://yourstore.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2"
+              >
+                Visit Full Store
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </Button>
+          </div>
         </div>
-      </main>
-    </div>
+      </PageTransition>
+    </PageLayoutWithAds>
   );
 };
 

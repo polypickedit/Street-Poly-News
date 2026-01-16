@@ -67,14 +67,23 @@ export const BottomNav = () => {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-lg transition-colors",
+                  "relative flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-lg transition-colors",
                   isActive(item.path)
-                    ? "text-primary"
+                    ? "text-dem"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <item.icon className="h-5 w-5" />
-                <span className="text-xs font-medium">{item.label}</span>
+                <item.icon className={cn("h-5 w-5", isActive(item.path) && "animate-bounce-subtle")} />
+                <span className="text-[10px] font-medium uppercase tracking-widest font-display">
+                  {item.label}
+                </span>
+                {isActive(item.path) && (
+                  <motion.div
+                    layoutId="bottom-nav-indicator"
+                    className="absolute bottom-1 w-1 h-1 rounded-full bg-dem"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
               </Link>
             ))}
 

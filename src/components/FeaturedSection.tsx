@@ -31,7 +31,7 @@ export function FeaturedSection() {
   return (
     <section className="py-4 md:py-6">
       <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
-        <Flame className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+        <Flame className="w-4 h-4 md:w-5 md:h-5 text-rep" />
         <h2 className="font-display text-xl md:text-2xl text-foreground">Featured Stories</h2>
         <div className="flex-1 h-px bg-border ml-2" />
       </div>
@@ -51,15 +51,15 @@ export function FeaturedSection() {
           <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
             <div className="flex items-center gap-2 mb-2">
               {mainFeatured.is_breaking && (
-                <span className="px-2 py-1 bg-primary text-primary-foreground text-[10px] md:text-xs font-body uppercase tracking-wider rounded">
+                <span className="px-2 py-1 bg-rep text-rep-foreground text-[10px] md:text-xs font-body uppercase tracking-wider rounded">
                   Breaking
                 </span>
               )}
-              <span className="px-2 py-1 bg-accent text-accent-foreground text-[10px] md:text-xs font-body uppercase tracking-wider rounded">
+              <span className="px-2 py-1 bg-dem text-dem-foreground text-[10px] md:text-xs font-body uppercase tracking-wider rounded">
                 Featured
               </span>
             </div>
-            <h3 className="font-display text-2xl sm:text-3xl md:text-4xl text-foreground leading-tight mb-2 group-hover:text-primary transition-colors">
+            <h3 className="font-display text-2xl sm:text-3xl md:text-4xl text-foreground leading-tight mb-2 group-hover:text-dem transition-colors">
               {mainFeatured.title}
             </h3>
             {mainFeatured.subtitle && (
@@ -68,34 +68,38 @@ export function FeaturedSection() {
               </p>
             )}
           </div>
-          <div className="absolute top-3 md:top-4 right-3 md:right-4 w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <Play className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground ml-0.5" fill="currentColor" />
+          <div className="absolute top-3 md:top-4 right-3 md:right-4 w-10 h-10 md:w-12 md:h-12 rounded-full bg-dem/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <Play className="w-5 h-5 md:w-6 md:h-6 text-dem-foreground ml-0.5" fill="currentColor" />
           </div>
         </Link>
 
-        {/* Side Featured */}
-        {sideFeatured.map((post) => (
-          <Link
-            key={post.id}
-            to={`/post/${post.id}`}
-            className="group relative aspect-video rounded-lg overflow-hidden"
-          >
-            <img
-              src={getThumbnail(post)}
-              alt={post.title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
-              <p className="text-muted-foreground text-[10px] md:text-xs font-body uppercase tracking-wider mb-1">
-                {format(new Date(post.created_at), "MMM d, yyyy")}
-              </p>
-              <h3 className="font-display text-base md:text-lg text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                {post.title}
-              </h3>
-            </div>
-          </Link>
-        ))}
+        {/* Small Featured Items */}
+        <div className="flex flex-col gap-3 sm:gap-4 h-full">
+          {sideFeatured.map((post) => (
+            <Link
+              key={post.id}
+              to={`/post/${post.id}`}
+              className="group flex-1 relative rounded-lg overflow-hidden min-h-[120px] lg:min-h-0"
+            >
+              <img
+                src={getThumbnail(post)}
+                alt={post.title}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="px-1.5 py-0.5 bg-dem/80 text-dem-foreground text-[8px] md:text-[10px] font-body uppercase tracking-wider rounded">
+                    Featured
+                  </span>
+                </div>
+                <h4 className="font-display text-lg md:text-xl text-foreground leading-tight group-hover:text-dem transition-colors line-clamp-2">
+                  {post.title}
+                </h4>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );
