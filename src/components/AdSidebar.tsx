@@ -116,7 +116,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
           href={getTrackedUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className={`w-[160px] h-[600px] bg-gradient-to-b ${skyAd.bg} rounded-lg flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20 block`}
+          className={`w-[160px] h-[600px] bg-gradient-to-b ${skyAd.bg} rounded-lg flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20`}
         >
           {skyAd.isAlbum ? (
             <>

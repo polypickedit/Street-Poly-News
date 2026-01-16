@@ -25,20 +25,16 @@ const Categories = () => {
                 <Link
                   key={category.id}
                   to={`/category/${category.slug}`}
-                  className="group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg"
-                  style={{
-                    backgroundColor: category.color
-                      ? `${category.color}20`
-                      : "hsl(var(--muted))",
-                  }}
+                  className="group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg bg-muted"
+                  style={category.color ? { backgroundColor: `${category.color}20` } : undefined}
                 >
                   <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity"
-                    style={{ backgroundColor: category.color || "hsl(var(--primary))" }}
+                    className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-primary"
+                    style={category.color ? { backgroundColor: category.color } : undefined}
                   />
                   <div
-                    className="w-4 h-4 rounded-full mb-3"
-                    style={{ backgroundColor: category.color || "hsl(var(--primary))" }}
+                    className="w-4 h-4 rounded-full mb-3 bg-primary"
+                    style={category.color ? { backgroundColor: category.color } : undefined}
                   />
                   <h2 className="text-lg font-semibold">{category.name}</h2>
                 </Link>

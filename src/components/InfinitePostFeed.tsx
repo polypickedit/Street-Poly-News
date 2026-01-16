@@ -52,7 +52,11 @@ export function InfinitePostFeed() {
     <div id="videos">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
         {posts.map((post, index) => (
-          <div key={post.id} style={{ animationDelay: `${index * 0.05}s` }}>
+          <div 
+            key={post.id} 
+            className="animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both"
+            style={{ animationDelay: `${Math.min(index, 10) * 0.05}s` }}
+          >
             <PostCard
               id={post.id}
               title={post.title}

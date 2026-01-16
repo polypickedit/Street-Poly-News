@@ -119,8 +119,8 @@ export const BottomNav = () => {
                           className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                         >
                           <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: category.color || "hsl(var(--primary))" }}
+                            className="w-3 h-3 rounded-full bg-primary"
+                            style={category.color ? { backgroundColor: category.color } : undefined}
                           />
                           <span className="text-sm font-medium">{category.name}</span>
                         </Link>

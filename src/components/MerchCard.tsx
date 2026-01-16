@@ -106,7 +106,7 @@ export const MerchCard = ({ item }: MerchCardProps) => {
                 <SelectItem key={color.value} value={color.value} className="text-foreground hover:bg-muted">
                   <div className="flex items-center gap-2">
                     <span
-                      className="w-4 h-4 rounded-full border border-border"
+                      className="w-4 h-4 rounded-full border border-border shrink-0"
                       style={{ backgroundColor: color.hex }}
                     />
                     {color.name}
