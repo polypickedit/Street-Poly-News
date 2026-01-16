@@ -2,10 +2,15 @@ import { useEffect, useRef } from "react";
 import { usePosts } from "@/hooks/usePosts";
 import { PostCard } from "./PostCard";
 import { Loader2 } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 export function InfinitePostFeed() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const currentCategory = searchParams.get("category");
+
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
-    usePosts();
+    usePosts(currentCategory);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

@@ -17,15 +17,35 @@ export interface Post {
   view_count: number | null;
 }
 
-async function fetchPosts({ pageParam = 0 }: { pageParam?: number }) {
+async function fetchPosts({ 
+  pageParam = 0, 
+  category 
+}: { 
+  pageParam?: number;
+  category?: string | null;
+}) {
   const from = pageParam * POSTS_PER_PAGE;
   const to = from + POSTS_PER_PAGE - 1;
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("posts")
-    .select("*")
+    .select(`
+      *,
+      post_categories!inner (
+        category_id,
+        categories (
+          slug
+        )
+      )
+    `)
     .order("created_at", { ascending: false })
     .range(from, to);
+
+  if (category) {
+    query = query.eq("post_categories.categories.slug", category);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw error;
   
@@ -35,10 +55,10 @@ async function fetchPosts({ pageParam = 0 }: { pageParam?: number }) {
   };
 }
 
-export function usePosts() {
+export function usePosts(category?: string | null) {
   return useInfiniteQuery({
-    queryKey: ["posts"],
-    queryFn: fetchPosts,
+    queryKey: ["posts", category],
+    queryFn: ({ pageParam }) => fetchPosts({ pageParam, category }),
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 0,
   });

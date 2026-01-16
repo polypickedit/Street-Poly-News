@@ -1,22 +1,41 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Play, Flame } from "lucide-react";
 import { format } from "date-fns";
+import { Post } from "@/hooks/usePosts";
 
 export function FeaturedSection() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const currentCategory = searchParams.get("category");
+
   const { data: featuredPosts, isLoading } = useQuery({
-    queryKey: ["featured-posts"],
+    queryKey: ["featured-posts", currentCategory],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("posts")
-        .select("*")
+        .select(`
+          *,
+          post_categories!inner (
+            category_id,
+            categories (
+              slug
+            )
+          )
+        `)
         .eq("is_featured", true)
         .order("created_at", { ascending: false })
         .limit(5);
 
+      if (currentCategory) {
+        query = query.eq("post_categories.categories.slug", currentCategory);
+      }
+
+      const { data, error } = await query;
+
       if (error) throw error;
-      return data;
+      return data as Post[];
     },
   });
 
@@ -25,7 +44,7 @@ export function FeaturedSection() {
   const mainFeatured = featuredPosts[0];
   const sideFeatured = featuredPosts.slice(1, 4);
 
-  const getThumbnail = (post: any) =>
+  const getThumbnail = (post: Post) =>
     post.thumbnail_url || `https://img.youtube.com/vi/${post.youtube_id}/maxresdefault.jpg`;
 
   return (
