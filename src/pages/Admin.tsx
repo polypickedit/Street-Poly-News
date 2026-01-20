@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
@@ -138,6 +138,21 @@ const Admin = () => {
     queryClient.invalidateQueries({ queryKey: ["breaking-posts"] });
     setIsSubmitting(false);
   };
+
+  const categoriesContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (categoriesContainerRef.current) {
+      const labels = categoriesContainerRef.current.querySelectorAll("[data-bg-color]");
+      labels.forEach((label) => {
+        const color = (label as HTMLElement).dataset.bgColor;
+        if (color) {
+          (label as HTMLElement).style.backgroundColor = color;
+          (label as HTMLElement).style.color = "white";
+        }
+      });
+    }
+  }, [categories]);
 
   const handleCreateCategory = async () => {
     if (!newCategory.name) return;
@@ -358,16 +373,16 @@ const Admin = () => {
                 </div>
               )}
 
-              <div className="flex flex-wrap gap-2">
+              <div ref={categoriesContainerRef} className="flex flex-wrap gap-2">
                 {categories?.map((cat) => (
                   <label
                     key={cat.id}
+                    data-bg-color={cat.color}
                     className={`px-3 py-1.5 rounded-full cursor-pointer transition-all text-sm font-body ${
                       selectedCategories.includes(cat.id)
                         ? "ring-2 ring-primary"
                         : "opacity-60 hover:opacity-100"
                     }`}
-                    style={{ backgroundColor: cat.color, color: "white" }}
                   >
                     <input
                       type="checkbox"

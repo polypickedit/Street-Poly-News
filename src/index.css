@@ -1,8 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 @layer base {
   :root {
@@ -117,7 +117,22 @@
   }
   
   .dynamic-bg-muted {
-    background-color: color-mix(in srgb, var(--bg-color) 20%, transparent);
+    position: relative;
+    z-index: 0;
+  }
+
+  .dynamic-bg-muted::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: var(--bg-color);
+    opacity: 0.15;
+    z-index: -1;
+    border-radius: inherit;
+  }
+
+  .dynamic-text {
+    color: var(--bg-color);
   }
 
   .dynamic-animation-delay {
@@ -165,6 +180,7 @@
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -172,6 +188,7 @@
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

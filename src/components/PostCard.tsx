@@ -29,8 +29,14 @@ export function PostCard({
   view_count = 0,
   variant = "default",
 }: PostCardProps) {
+  const getYouTubeThumbnail = (id: string) => {
+    if (!id) return null;
+    // For mock videos, we'll try to use the high quality one, but fallback to mq if needed
+    return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+  };
+
   const thumbnail =
-    thumbnail_url || `https://img.youtube.com/vi/${youtube_id}/maxresdefault.jpg`;
+    thumbnail_url || getYouTubeThumbnail(youtube_id) || "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&auto=format&fit=crop&q=60";
 
   const getContentIcon = () => {
     switch (content_type) {

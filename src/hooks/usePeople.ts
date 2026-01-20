@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Post } from "./usePosts";
 
 export interface Person {
   id: string;
@@ -55,7 +56,8 @@ export function usePersonPosts(personId: string) {
         .eq("person_id", personId);
 
       if (error) throw error;
-      return data.map((pp: any) => pp.posts);
+      const personPosts = data as unknown as { posts: Post }[];
+      return personPosts.map((pp) => pp.posts).filter((post): post is Post => post !== null);
     },
     enabled: !!personId,
   });

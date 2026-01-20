@@ -25,6 +25,5 @@ WITH CHECK (true);
 
 -- Seed with sample data
 INSERT INTO public.posts (title, subtitle, youtube_id, thumbnail_url) VALUES
-('Election Violence in Miami', 'Breaking coverage of the latest developments in South Florida', 'Xw8nQTl1Li8', 'https://img.youtube.com/vi/Xw8nQTl1Li8/maxresdefault.jpg'),
-('Police Clash with Protesters in NYC', 'Live footage from the streets of Manhattan', 'dQw4w9WgXcQ', 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg'),
-('Street Voices: Oakland', 'Exclusive interviews from the community', 'jNQXAC9IVRw', 'https://img.youtube.com/vi/jNQXAC9IVRw/maxresdefault.jpg');
+('Tampa meets Memphis in ATL BMY Treydawg & Foreign Freckles at #NewMusicMondays', 'Coalition DJs showcase captures BMY Treydawg & Foreign Freckles bringing new talent energy.', '3PXQSs-FsK4', 'https://i4.ytimg.com/vi/3PXQSs-FsK4/hqdefault.jpg'),
+('@superspodeeotm Opens Up: The Dark Truth About Designer Drugs & His Journey to Sobriety! 🚨', 'Spodee shares how he beat addiction and why authenticity matters in the streets.', 'Uxnw9TANizo', 'https://i2.ytimg.com/vi/Uxnw9TANizo/hqdefault.jpg');

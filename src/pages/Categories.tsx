@@ -21,21 +21,19 @@ const Categories = () => {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <style>
+                {categories?.map((category) => `
+                  .cat-card-${category.id} { --bg-color: ${category.color || 'var(--primary)'}; }
+                `).join('\n')}
+              </style>
               {categories?.map((category) => (
                 <Link
                   key={category.id}
                   to={`/category/${category.slug}`}
-                  className="group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg bg-muted dynamic-bg-muted"
-                  style={category.color ? ({ "--bg-color": category.color } as React.CSSProperties) : undefined}
+                  className={`group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg bg-muted dynamic-bg-muted cat-card-${category.id}`}
                 >
-                  <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-primary dynamic-bg"
-                    style={category.color ? ({ "--bg-color": category.color } as React.CSSProperties) : undefined}
-                  />
-                  <div
-                    className="w-4 h-4 rounded-full mb-3 bg-primary dynamic-bg"
-                    style={category.color ? ({ "--bg-color": category.color } as React.CSSProperties) : undefined}
-                  />
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-primary dynamic-bg" />
+                  <div className="w-4 h-4 rounded-full mb-3 bg-primary dynamic-bg" />
                   <h2 className="text-lg font-semibold">{category.name}</h2>
                 </Link>
               ))}

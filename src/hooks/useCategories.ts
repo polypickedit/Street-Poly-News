@@ -37,7 +37,8 @@ export function usePostCategories(postId: number) {
         .eq("post_id", postId);
 
       if (error) throw error;
-      return data.map((pc: any) => pc.categories as Category);
+      const postCategories = data as unknown as { categories: Category }[];
+      return postCategories.map((pc) => pc.categories).filter((cat): cat is Category => cat !== null);
     },
     enabled: !!postId,
   });

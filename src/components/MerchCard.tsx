@@ -105,9 +105,9 @@ export const MerchCard = ({ item }: MerchCardProps) => {
               {colors.map((color) => (
                 <SelectItem key={color.value} value={color.value} className="text-foreground hover:bg-muted">
                   <div className="flex items-center gap-2">
+                    <style>{`.color-swatch-${color.value.replace(/[^a-zA-Z0-9]/g, '-')} { background-color: ${color.hex}; }`}</style>
                     <span
-                      className="w-4 h-4 rounded-full border border-border shrink-0 dynamic-bg"
-                      style={{ "--bg-color": color.hex } as React.CSSProperties}
+                      className={`w-4 h-4 rounded-full border border-border shrink-0 color-swatch-${color.value.replace(/[^a-zA-Z0-9]/g, '-')}`}
                     />
                     {color.name}
                   </div>

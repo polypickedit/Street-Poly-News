@@ -112,6 +112,9 @@ export const BottomNav = () => {
                       Categories
                     </h3>
                     <div className="grid grid-cols-2 gap-2">
+                      <style>
+                        {categories?.map((category) => `.cat-dot-${category.id} { background-color: ${category.color || 'var(--primary)'}; }`).join('\n')}
+                      </style>
                       {categories?.map((category) => (
                         <Link
                           key={category.id}
@@ -119,10 +122,7 @@ export const BottomNav = () => {
                           onClick={() => setMenuOpen(false)}
                           className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                         >
-                          <div
-                            className="w-3 h-3 rounded-full bg-primary dynamic-bg"
-                            style={category.color ? ({ "--bg-color": category.color } as React.CSSProperties) : undefined}
-                          />
+                          <div className={`w-3 h-3 rounded-full cat-dot-${category.id}`} />
                           <span className="text-sm font-medium">{category.name}</span>
                         </Link>
                       ))}

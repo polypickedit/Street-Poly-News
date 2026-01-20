@@ -45,7 +45,7 @@ export function FeaturedSection() {
   const sideFeatured = featuredPosts.slice(1, 4);
 
   const getThumbnail = (post: Post) =>
-    post.thumbnail_url || `https://img.youtube.com/vi/${post.youtube_id}/maxresdefault.jpg`;
+    post.thumbnail_url || `https://img.youtube.com/vi/${post.youtube_id}/hqdefault.jpg`;
 
   return (
     <section className="py-4 md:py-6">

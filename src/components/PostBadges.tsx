@@ -30,8 +30,15 @@ export function PostBadges({ contentType, isBreaking, isFeatured, categories }: 
     }
   };
 
+  const activeCategories = categories?.slice(0, 2) || [];
+
   return (
     <div className="flex flex-wrap gap-2">
+      {activeCategories.length > 0 && (
+        <style>
+          {activeCategories.map((cat, idx) => `.cat-badge-${idx} { background-color: ${cat.color}; }`).join('\n')}
+        </style>
+      )}
       {isBreaking && (
         <span className="px-2 py-1 bg-rep text-rep-foreground text-xs font-body font-semibold uppercase tracking-wider rounded flex items-center gap-1 animate-pulse">
           Breaking
@@ -46,11 +53,10 @@ export function PostBadges({ contentType, isBreaking, isFeatured, categories }: 
         {getContentIcon()}
         {getContentLabel()}
       </span>
-      {categories?.slice(0, 2).map((cat) => (
+      {activeCategories.map((cat, idx) => (
         <span
           key={cat.name}
-          className="px-2 py-1 text-xs font-body font-semibold uppercase tracking-wider rounded text-white dynamic-bg"
-          style={{ "--bg-color": cat.color } as React.CSSProperties}
+          className={`px-2 py-1 text-xs font-body font-semibold uppercase tracking-wider rounded text-white cat-badge-${idx}`}
         >
           {cat.name}
         </span>

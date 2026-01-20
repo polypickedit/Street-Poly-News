@@ -4,6 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { BreakingNewsBanner } from "@/components/BreakingNewsBanner";
 import { PostCard } from "@/components/PostCard";
 import { Loader2, ArrowLeft, User } from "lucide-react";
+import { Post } from "@/hooks/usePosts";
 
 const Person = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -87,7 +88,7 @@ const Person = () => {
 
         {posts?.length ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {posts.map((post: any) => (
+            {posts.map((post: Post) => (
               <PostCard
                 key={post.id}
                 id={post.id}
@@ -97,8 +98,8 @@ const Person = () => {
                 thumbnail_url={post.thumbnail_url}
                 created_at={post.created_at}
                 content_type={post.content_type}
-                is_breaking={post.is_breaking}
-                is_featured={post.is_featured}
+                is_breaking={post.is_breaking ?? undefined}
+                is_featured={post.is_featured ?? undefined}
               />
             ))}
           </div>

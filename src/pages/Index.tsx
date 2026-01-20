@@ -4,8 +4,28 @@ import { InfinitePostFeed } from "@/components/InfinitePostFeed";
 import { SuggestionsCarousel } from "@/components/SuggestionsCarousel";
 import { Separator } from "@/components/ui/separator";
 import { PageTransition } from "@/components/PageTransition";
+import { ExternalLink } from "lucide-react";
 
 const Index = () => {
+  const videoLinks = [
+    {
+      id: "3PXQSs-FsK4",
+      title: "Tampa meets Memphis in ATL BMY Treydawg & Foreign Freckles",
+      description:
+        "Coalition DJs’ New Music Mondays captures independent energy from BMY Treydawg and Foreign Freckles.",
+      url: "https://www.youtube.com/shorts/3PXQSs-FsK4",
+      thumbnail: "https://i4.ytimg.com/vi/3PXQSs-FsK4/hqdefault.jpg",
+    },
+    {
+      id: "Uxnw9TANizo",
+      title: "@superspodeeotm Opens Up: The Dark Truth About Designer Drugs",
+      description:
+        "Spodee breaks down addiction, sobriety, and why raw storytelling matters in the streets.",
+      url: "https://www.youtube.com/watch?v=Uxnw9TANizo",
+      thumbnail: "https://i.ytimg.com/vi/Uxnw9TANizo/hqdefault.jpg",
+    },
+  ];
+
   return (
     <PageLayoutWithAds showMobileAd={false}>
       <PageTransition>
@@ -19,6 +39,60 @@ const Index = () => {
               Unfiltered news from the streets. Real stories, real voices, real impact.
             </p>
             <div className="mt-4 md:mt-6 w-16 md:w-24 h-1 bg-rep mx-auto"></div>
+          </div>
+        </section>
+
+        {/* Video Links */}
+        <section className="mb-6 md:mb-10">
+          <div className="flex items-center justify-between gap-4 mb-3">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground font-body">
+                STREETPOLY NEWS
+              </p>
+              <h2 className="font-display text-2xl md:text-3xl text-foreground">
+                Latest Clips
+              </h2>
+            </div>
+            <a
+              href="https://www.youtube.com/@STREETPOLYNEWS"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-widest text-dem hover:text-dem-foreground transition-colors"
+            >
+              View channel
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            {videoLinks.map((video) => (
+              <a
+                key={video.id}
+                href={video.url}
+                target="_blank"
+                rel="noreferrer"
+                className="group flex flex-col rounded-2xl border border-border bg-card/80 transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg"
+              >
+                <div className="overflow-hidden rounded-t-2xl bg-muted/30">
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-4 flex flex-col gap-2">
+                  <h3 className="font-display text-lg text-foreground transition-colors group-hover:text-dem">
+                    {video.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground font-body mt-2">
+                    {video.description}
+                  </p>
+                  <span className="mt-3 text-xs font-semibold uppercase tracking-widest text-dem">
+                    Watch on YouTube →
+                  </span>
+                </div>
+              </a>
+            ))}
           </div>
         </section>
 
