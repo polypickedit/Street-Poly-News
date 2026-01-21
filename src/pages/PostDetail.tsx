@@ -13,6 +13,8 @@ import { format, formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useHeaderVisible } from "@/hooks/useHeaderVisible";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface PostCategory {
   id: string;
@@ -28,6 +30,8 @@ interface PostPerson {
 }
 
 const PostDetail = () => {
+  const isVisible = useHeaderVisible();
+  const isMobile = useIsMobile();
   const { id } = useParams<{ id: string }>();
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -132,53 +136,58 @@ const PostDetail = () => {
     );
   }
 
+  const getPaddingTop = () => {
+    return isVisible ? (isMobile ? "pt-[100px]" : "pt-[116px]") : "pt-[36px]";
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <BreakingNewsBanner />
       <Navbar />
       
-      {/* Hero Section with Thumbnail */}
-      <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
-        <img
-          src={thumbnail}
-          alt={post.title}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/30" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/80 to-transparent" />
-        
-        {/* Play button overlay */}
-        {!isPlaying && (
-          <button
-            onClick={() => setIsPlaying(true)}
-            className="absolute inset-0 flex items-center justify-center group"
-            title="Play video"
-          >
-            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-dem/90 backdrop-blur-sm flex items-center justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:bg-dem shadow-2xl shadow-dem/50">
-              <Play className="w-10 h-10 md:w-14 md:h-14 text-dem-foreground ml-2" fill="currentColor" />
-            </div>
-          </button>
-        )}
-
-        {/* Back button */}
-        <Link
-          to="/"
-          className="absolute top-28 left-4 md:left-8 inline-flex items-center gap-2 text-foreground/80 hover:text-dem transition-colors bg-background/50 backdrop-blur-sm px-4 py-2 rounded-full"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="font-body text-sm">Back</span>
-        </Link>
-
-        {/* Badges on hero */}
-        <div className="absolute bottom-8 left-4 md:left-8">
-          <PostBadges
-            contentType={post.content_type}
-            isBreaking={post.is_breaking}
-            isFeatured={post.is_featured}
-            categories={categories?.map((c: PostCategory) => ({ name: c.name, color: c.color }))}
+      <div className={`transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}>
+        {/* Hero Section with Thumbnail */}
+        <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
+          <img
+            src={thumbnail}
+            alt={post.title}
+            className="w-full h-full object-cover"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/30" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/80 to-transparent" />
+          
+          {/* Play button overlay */}
+          {!isPlaying && (
+            <button
+              onClick={() => setIsPlaying(true)}
+              className="absolute inset-0 flex items-center justify-center group"
+              title="Play video"
+            >
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-dem/90 backdrop-blur-sm flex items-center justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:bg-dem shadow-2xl shadow-dem/50">
+                <Play className="w-10 h-10 md:w-14 md:h-14 text-dem-foreground ml-2" fill="currentColor" />
+              </div>
+            </button>
+          )}
+
+          {/* Back button */}
+          <Link
+            to="/"
+            className="absolute top-8 left-4 md:left-8 inline-flex items-center gap-2 text-foreground/80 hover:text-dem transition-colors bg-background/50 backdrop-blur-sm px-4 py-2 rounded-full"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="font-body text-sm">Back</span>
+          </Link>
+
+          {/* Badges on hero */}
+          <div className="absolute bottom-8 left-4 md:left-8">
+            <PostBadges
+              contentType={post.content_type}
+              isBreaking={post.is_breaking}
+              isFeatured={post.is_featured}
+              categories={categories?.map((c: PostCategory) => ({ name: c.name, color: c.color }))}
+            />
+          </div>
         </div>
-      </div>
 
       <div className="flex justify-center gap-6 px-4">
         <AdSidebar position="left" />
@@ -338,7 +347,8 @@ const PostDetail = () => {
         <AdSidebar position="right" />
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default PostDetail;

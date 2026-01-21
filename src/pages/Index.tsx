@@ -5,6 +5,7 @@ import { SuggestionsCarousel } from "@/components/SuggestionsCarousel";
 import { Separator } from "@/components/ui/separator";
 import { PageTransition } from "@/components/PageTransition";
 import { ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const videoLinks = [
@@ -56,7 +57,7 @@ const Index = () => {
             <a
               href="https://www.youtube.com/@STREETPOLYNEWS"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-widest text-dem hover:text-dem-foreground transition-colors"
             >
               View channel
@@ -70,7 +71,7 @@ const Index = () => {
                 key={video.id}
                 href={video.url}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="group flex flex-col rounded-2xl border border-border bg-card/80 transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg"
               >
                 <div className="overflow-hidden rounded-t-2xl bg-muted/30">
@@ -105,6 +106,28 @@ const Index = () => {
 
         {/* Featured Section */}
         <FeaturedSection />
+
+        {/* Official Store Promo */}
+        <section className="py-12 px-4">
+          <div className="max-w-screen-xl mx-auto bg-gradient-to-r from-rep/10 to-dem/10 rounded-3xl p-8 md:p-12 border border-border flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="text-center md:text-left">
+              <h2 className="font-display text-4xl md:text-6xl text-foreground mb-4">
+                THE OFFICIAL <span className="text-rep">STREETPOLY</span> STORE
+              </h2>
+              <p className="font-body text-muted-foreground text-lg max-w-xl">
+                Support independent journalism and wear the message. Get exclusive drops, 
+                streetwear essentials, and the latest Streetpoly gear.
+              </p>
+            </div>
+            <Link
+              to="/merch"
+              className="group relative px-10 py-5 bg-rep text-rep-foreground font-display text-xl uppercase tracking-widest rounded-xl transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(239,68,68,0.3)] flex items-center gap-3"
+            >
+              Visit Store
+              <ExternalLink className="w-6 h-6" />
+            </Link>
+          </div>
+        </section>
 
         {/* Divider */}
         <div className="flex items-center gap-3 md:gap-4 py-4 md:py-6 mt-2 md:mt-4">

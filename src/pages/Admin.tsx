@@ -12,9 +12,17 @@ import { useToast } from "@/hooks/use-toast";
 import { useCategories } from "@/hooks/useCategories";
 import { usePeople } from "@/hooks/usePeople";
 import { Loader2, Plus, Tags, Users } from "lucide-react";
+import { useHeaderVisible } from "@/hooks/useHeaderVisible";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Admin = () => {
+  const isVisible = useHeaderVisible();
+  const isMobile = useIsMobile();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const getPaddingTop = () => {
+    return isVisible ? (isMobile ? "pt-[100px]" : "pt-[116px]") : "pt-[36px]";
+  };
   const [formData, setFormData] = useState({
     title: "",
     subtitle: "",
@@ -202,7 +210,7 @@ const Admin = () => {
       <BreakingNewsBanner />
       <Navbar />
 
-      <main className="container mx-auto px-4 pt-36 pb-20">
+      <main className={`container mx-auto px-4 pb-20 transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}>
         <div className="max-w-2xl mx-auto">
           <h1 className="font-display text-4xl md:text-5xl text-foreground mb-8">
             Create <span className="text-primary">New Post</span>

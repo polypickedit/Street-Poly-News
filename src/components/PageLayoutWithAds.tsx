@@ -4,6 +4,8 @@ import { BreakingNewsBanner } from "@/components/BreakingNewsBanner";
 import { CategoryNav } from "@/components/CategoryNav";
 import { AdSidebar, MobileAdBanner } from "@/components/AdSidebar";
 import { BottomNav } from "@/components/BottomNav";
+import { useHeaderVisible } from "@/hooks/useHeaderVisible";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface PageLayoutWithAdsProps {
   children: ReactNode;
@@ -16,6 +18,16 @@ export const PageLayoutWithAds = ({
   showCategoryNav = true,
   showMobileAd = true,
 }: PageLayoutWithAdsProps) => {
+  const isVisible = useHeaderVisible();
+  const isMobile = useIsMobile();
+
+  const getPaddingTop = () => {
+    if (!showCategoryNav) {
+      return isVisible ? (isMobile ? "pt-[100px]" : "pt-[116px]") : "pt-[36px]";
+    }
+    return isVisible ? (isMobile ? "pt-[144px]" : "pt-[160px]") : "pt-[80px]";
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <BreakingNewsBanner />
@@ -23,9 +35,7 @@ export const PageLayoutWithAds = ({
       {showCategoryNav && <CategoryNav />}
 
       <div
-        className={`flex justify-center gap-0 lg:gap-0 px-0 sm:px-0 md:px-0 ${
-          showCategoryNav ? "pt-[144px] md:pt-[160px]" : "pt-[100px] md:pt-[116px]"
-        }`}
+        className={`flex justify-center gap-0 lg:gap-0 px-0 sm:px-0 md:px-0 transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}
       >
         <div className="hidden xl:flex items-start">
           <AdSidebar position="left" />

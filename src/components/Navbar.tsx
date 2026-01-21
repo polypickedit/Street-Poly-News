@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { SearchBar } from "@/components/SearchBar";
 import { motion, AnimatePresence } from "framer-motion";
+import { useHeaderVisible } from "@/hooks/useHeaderVisible";
 import logo from "@/assets/logo.svg";
 
 const navLinks = [
@@ -16,30 +17,9 @@ const navLinks = [
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const isVisible = useHeaderVisible();
   const location = useLocation();
   const { totalItems, setIsOpen: setCartOpen } = useCart();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const scrollThreshold = 10;
-
-      if (currentScrollY < scrollThreshold) {
-        setIsVisible(true);
-      } else if (currentScrollY > lastScrollY + 5) {
-        setIsVisible(false);
-      } else if (currentScrollY < lastScrollY - 5) {
-        setIsVisible(true);
-      }
-
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
 
   return (
     <AnimatePresence>
