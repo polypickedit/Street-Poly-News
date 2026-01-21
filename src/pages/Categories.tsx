@@ -8,7 +8,7 @@ const Categories = () => {
   const { data: categories, isLoading } = useCategories();
 
   return (
-    <PageLayoutWithAds showCategoryNav={false}>
+    <PageLayoutWithAds>
       <PageTransition>
         <div className="py-6 sm:py-8">
           <h1 className="text-2xl sm:text-3xl font-display font-bold mb-6">

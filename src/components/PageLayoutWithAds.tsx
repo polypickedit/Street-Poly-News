@@ -1,55 +1,59 @@
 import { ReactNode } from "react";
 import { Navbar } from "@/components/Navbar";
 import { BreakingNewsBanner } from "@/components/BreakingNewsBanner";
-import { CategoryNav } from "@/components/CategoryNav";
-import { AdSidebar, MobileAdBanner } from "@/components/AdSidebar";
+import { AdSidebar } from "@/components/AdSidebar";
+import { AdBanner } from "@/components/AdBanner";
 import { BottomNav } from "@/components/BottomNav";
 import { useHeaderVisible } from "@/hooks/useHeaderVisible";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface PageLayoutWithAdsProps {
   children: ReactNode;
-  showCategoryNav?: boolean;
-  showMobileAd?: boolean;
+  showAds?: boolean;
 }
 
 export const PageLayoutWithAds = ({
   children,
-  showCategoryNav = true,
-  showMobileAd = true,
+  showAds = true,
 }: PageLayoutWithAdsProps) => {
   const isVisible = useHeaderVisible();
   const isMobile = useIsMobile();
 
   const getPaddingTop = () => {
-    if (!showCategoryNav) {
-      return isVisible ? (isMobile ? "pt-[100px]" : "pt-[116px]") : "pt-[36px]";
-    }
-    return isVisible ? (isMobile ? "pt-[144px]" : "pt-[160px]") : "pt-[80px]";
+    return isVisible ? (isMobile ? "pt-[164px]" : "pt-[212px]") : "pt-[36px]";
   };
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <BreakingNewsBanner />
       <Navbar />
-      {showCategoryNav && <CategoryNav />}
 
       <div
-        className={`flex justify-center gap-0 lg:gap-0 px-0 sm:px-0 md:px-0 transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}
+        className={`flex justify-center gap-4 lg:gap-8 px-4 sm:px-6 md:px-8 transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}
       >
-        <div className="hidden xl:flex items-start">
+        <div className="hidden xl:flex items-start flex-shrink-0">
           <AdSidebar position="left" />
-          <div className="w-[1px] self-stretch bg-border/60 ml-6" />
         </div>
 
-        <main className="flex-1 max-w-6xl min-w-0 px-4 sm:px-6 md:px-8">
-          {/* Mobile/Tablet banner ad at top */}
-          {showMobileAd && <MobileAdBanner />}
+        <main className="flex-1 max-w-4xl min-w-0">
+          {/* Header Ad Space */}
+          {showAds && (
+            <div className="mb-12 mt-4">
+              <AdBanner />
+            </div>
+          )}
+          
           {children}
+
+          {/* Footer Ad Space */}
+          {showAds && (
+            <div className="mt-16 mb-8">
+              <AdBanner />
+            </div>
+          )}
         </main>
 
-        <div className="hidden xl:flex items-start">
-          <div className="w-[1px] self-stretch bg-border/60 mr-6" />
+        <div className="hidden xl:flex items-start flex-shrink-0">
           <AdSidebar position="right" />
         </div>
       </div>

@@ -18,7 +18,7 @@ export function CategoryNav() {
     <motion.div
       initial={false}
       animate={{ 
-        top: isVisible ? (isMobile ? 100 : 116) : 36 
+        top: isVisible ? (isMobile ? 160 : 208) : 36 
       }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="fixed left-0 right-0 z-40 border-b border-border bg-card/95 backdrop-blur-sm"

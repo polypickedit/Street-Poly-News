@@ -3,7 +3,7 @@ import { PageTransition } from "@/components/PageTransition";
 
 const About = () => {
   return (
-    <PageLayoutWithAds showCategoryNav={false}>
+    <PageLayoutWithAds>
       <PageTransition>
         <div className="max-w-3xl mx-auto py-8 md:py-12">
           <h1 className="font-display text-4xl md:text-6xl text-foreground mb-8">

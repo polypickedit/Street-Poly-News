@@ -1,7 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { usePerson, usePersonPosts } from "@/hooks/usePeople";
-import { Navbar } from "@/components/Navbar";
-import { BreakingNewsBanner } from "@/components/BreakingNewsBanner";
+import { PageLayoutWithAds } from "@/components/PageLayoutWithAds";
 import { PostCard } from "@/components/PostCard";
 import { Loader2, ArrowLeft, User } from "lucide-react";
 import { Post } from "@/hooks/usePosts";
@@ -15,37 +14,30 @@ const Person = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <BreakingNewsBanner />
-        <Navbar />
-        <div className="flex justify-center items-center pt-40">
+      <PageLayoutWithAds showCategoryNav={false}>
+        <div className="flex justify-center items-center py-20">
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
-      </div>
+      </PageLayoutWithAds>
     );
   }
 
   if (!person) {
     return (
-      <div className="min-h-screen bg-background">
-        <BreakingNewsBanner />
-        <Navbar />
-        <div className="container mx-auto px-4 pt-40 text-center">
+      <PageLayoutWithAds showCategoryNav={false}>
+        <div className="text-center py-20">
           <h1 className="font-display text-4xl text-foreground mb-4">Person Not Found</h1>
           <Link to="/" className="text-primary hover:underline">
             Return Home
           </Link>
         </div>
-      </div>
+      </PageLayoutWithAds>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <BreakingNewsBanner />
-      <Navbar />
-
-      <main className="container mx-auto px-4 pt-[120px] pb-20">
+    <PageLayoutWithAds>
+      <main className="w-full pb-20">
         <Link
           to="/"
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-8"
@@ -104,12 +96,10 @@ const Person = () => {
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground font-body text-center py-12">
-            No posts featuring this person yet.
-          </p>
+          <p className="text-muted-foreground font-body">No stories found featuring this person.</p>
         )}
       </main>
-    </div>
+    </PageLayoutWithAds>
   );
 };
 

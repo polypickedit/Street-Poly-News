@@ -8,6 +8,7 @@ import { RelatedPosts } from "@/components/RelatedPosts";
 import { PostBadges } from "@/components/PostBadges";
 import { PostTags } from "@/components/PostTags";
 import { AdSidebar } from "@/components/AdSidebar";
+import { AdBanner } from "@/components/AdBanner";
 import { ArrowLeft, Loader2, Share2, Eye, Calendar, Clock, Twitter, Facebook, Link2, Play } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -146,6 +147,11 @@ const PostDetail = () => {
       <Navbar />
       
       <div className={`transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}>
+        {/* Header Ad Space */}
+        <div className="container mx-auto px-4 mb-8 mt-4">
+          <AdBanner />
+        </div>
+
         {/* Hero Section with Thumbnail */}
         <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
           <img
@@ -281,6 +287,11 @@ const PostDetail = () => {
 
                 {/* Tags Section */}
                 <PostTags categories={categories} people={people} />
+              </div>
+
+              {/* Footer Ad Space */}
+              <div className="mt-8 mb-8">
+                <AdBanner />
               </div>
 
               {/* Comments Section */}

@@ -106,10 +106,10 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
   };
 
   return (
-    <aside className={`hidden xl:flex flex-col gap-6 w-[160px] sticky top-32 h-fit ${position === 'left' ? 'pl-4' : 'pr-4'}`}>
+    <aside className={`hidden xl:flex flex-col gap-6 w-[160px] sticky top-32 h-fit ${position === 'left' ? 'pl-0' : 'pr-0'}`}>
       {/* Skyscraper Ad 160x600 */}
       <div className="relative">
-        <span className="absolute -top-5 left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
+        <span className="absolute top-[10%] left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
           Advertisement
         </span>
         <a
@@ -169,7 +169,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
 
       {/* Medium Rectangle Ad 160x250 */}
       <div className="relative">
-        <span className="absolute -top-5 left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
+        <span className="absolute -top-1 left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
           Advertisement
         </span>
         <div
@@ -221,7 +221,7 @@ export const MobileAdBanner = () => {
   return (
     <div className="xl:hidden my-6">
       <div className="relative">
-        <span className="absolute -top-5 left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
+        <span className="absolute top-[10%] left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
           Advertisement
         </span>
         <a

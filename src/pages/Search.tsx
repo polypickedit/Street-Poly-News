@@ -1,6 +1,5 @@
 import { useSearchParams, Link } from "react-router-dom";
-import { Navbar } from "@/components/Navbar";
-import { BreakingNewsBanner } from "@/components/BreakingNewsBanner";
+import { PageLayoutWithAds } from "@/components/PageLayoutWithAds";
 import { useSearch } from "@/hooks/useSearch";
 import { PostCard } from "@/components/PostCard";
 import { Loader2, Search as SearchIcon } from "lucide-react";
@@ -24,11 +23,8 @@ const Search = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <BreakingNewsBanner />
-      <Navbar />
-
-      <main className="container mx-auto px-4 pt-[120px] pb-20">
+    <PageLayoutWithAds>
+      <main className="w-full pb-20">
         <h1 className="font-display text-4xl md:text-5xl text-foreground mb-8">
           Search <span className="text-primary">Results</span>
         </h1>
@@ -87,7 +83,7 @@ const Search = () => {
           </div>
         )}
       </main>
-    </div>
+    </PageLayoutWithAds>
   );
 };
 

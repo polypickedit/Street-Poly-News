@@ -22,6 +22,7 @@ export default {
         foreground: "hsl(var(--foreground))",
         dem: {
           DEFAULT: "#0047AB", // Democratic Blue
+          dark: "#002D6E",    // Darker Democratic Blue
           foreground: "#FFFFFF",
         },
         rep: {

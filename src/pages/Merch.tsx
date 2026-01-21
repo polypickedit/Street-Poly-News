@@ -51,7 +51,7 @@ const mockMerch = [
 
 const Merch = () => {
   return (
-    <PageLayoutWithAds showCategoryNav={false}>
+    <PageLayoutWithAds>
       <PageTransition>
         <div className="py-8 md:py-12">
           <div className="text-center mb-12">

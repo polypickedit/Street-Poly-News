@@ -53,7 +53,7 @@ export function SearchBar({ className, onClose }: SearchBarProps) {
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          className="pl-10 pr-10 bg-card border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-dem"
+          className="pl-10 pr-10 bg-card border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-dem text-center placeholder:text-center"
         />
         {query && (
           <button
