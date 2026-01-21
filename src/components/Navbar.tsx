@@ -178,7 +178,7 @@ export function Navbar() {
                           key={category.id}
                           to={`/?category=${category.slug}`}
                           onClick={() => setIsOpen(false)}
-                          className="font-display text-xl sm:text-2xl uppercase tracking-widest text-slate-400 hover:text-white transition-colors"
+                          className="font-display text-xl sm:text-2xl uppercase tracking-widest text-slate-400 hover:text-rep transition-colors"
                         >
                           {category.slug === "exclusive" ? "Exclusives" : category.name}
                         </Link>
@@ -186,7 +186,7 @@ export function Navbar() {
                       <Link
                         to="/?category=fashion"
                         onClick={() => setIsOpen(false)}
-                        className="font-display text-xl sm:text-2xl uppercase tracking-widest text-slate-400 hover:text-white transition-colors"
+                        className="font-display text-xl sm:text-2xl uppercase tracking-widest text-slate-400 hover:text-rep transition-colors"
                       >
                         Fashion
                       </Link>
