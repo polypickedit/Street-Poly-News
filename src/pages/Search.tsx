@@ -25,22 +25,24 @@ const Search = () => {
   return (
     <PageLayoutWithAds>
       <main className="w-full pb-20">
-        <h1 className="font-display text-4xl md:text-5xl text-foreground mb-8">
+        <h1 className="font-display text-4xl md:text-5xl text-foreground mb-8 text-center">
           Search <span className="text-primary">Results</span>
         </h1>
 
-        <form onSubmit={handleSubmit} className="mb-8 max-w-xl">
-          <div className="relative">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search stories, people, topics..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="pl-11 py-6 text-lg bg-card border-border"
-            />
-          </div>
-        </form>
+        <div className="flex justify-center w-full mb-12">
+          <form onSubmit={handleSubmit} className="w-full max-w-xl">
+            <div className="relative">
+              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search stories, people, topics..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="pl-12 pr-12 py-8 text-xl bg-card border-border text-center placeholder:text-center rounded-2xl shadow-lg focus:ring-2 focus:ring-primary/20 transition-all"
+              />
+            </div>
+          </form>
+        </div>
 
         {isLoading ? (
           <div className="flex justify-center py-12">

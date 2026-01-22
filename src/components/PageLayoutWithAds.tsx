@@ -31,7 +31,7 @@ export const PageLayoutWithAds = ({
       <div
         className={`flex justify-center gap-4 lg:gap-8 px-4 sm:px-6 md:px-8 transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}
       >
-        <div className="hidden xl:flex items-start flex-shrink-0">
+        <div className="hidden lg:flex items-start flex-shrink-0">
           <AdSidebar position="left" />
         </div>
 
@@ -53,7 +53,7 @@ export const PageLayoutWithAds = ({
           )}
         </main>
 
-        <div className="hidden xl:flex items-start flex-shrink-0">
+        <div className="hidden lg:flex items-start flex-shrink-0">
           <AdSidebar position="right" />
         </div>
       </div>

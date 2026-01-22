@@ -40,8 +40,8 @@ export function SearchBar({ className, onClose }: SearchBarProps) {
   };
 
   return (
-    <div ref={containerRef} className={`relative ${className}`}>
-      <form onSubmit={handleSubmit} className="relative">
+    <div ref={containerRef} className={`relative flex justify-center ${className}`}>
+      <form onSubmit={handleSubmit} className="relative w-full max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           ref={inputRef}
@@ -53,7 +53,7 @@ export function SearchBar({ className, onClose }: SearchBarProps) {
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          className="pl-10 pr-10 bg-card border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-dem text-center placeholder:text-center"
+          className="pl-10 pr-10 bg-card border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-dem text-center placeholder:text-center w-full"
         />
         {query && (
           <button

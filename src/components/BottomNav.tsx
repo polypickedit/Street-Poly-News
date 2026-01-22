@@ -123,9 +123,31 @@ export const BottomNav = () => {
                           className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                         >
                           <div className={`w-3 h-3 rounded-full cat-dot-${category.id}`} />
-                          <span className="text-sm font-medium">{category.name}</span>
+                          <span className="text-sm font-medium">
+                            {category.slug === "exclusive" ? "Exclusives" : category.name}
+                          </span>
                         </Link>
                       ))}
+                      {!categories?.some(c => c.slug === 'fashion') && (
+                        <Link
+                          to="/?category=fashion"
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                        >
+                          <div className="w-3 h-3 rounded-full bg-pink-500" />
+                          <span className="text-sm font-medium">Fashion</span>
+                        </Link>
+                      )}
+                      {!categories?.some(c => c.slug === 'health') && (
+                        <Link
+                          to="/?category=health"
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                        >
+                          <div className="w-3 h-3 rounded-full bg-green-500" />
+                          <span className="text-sm font-medium">Health</span>
+                        </Link>
+                      )}
                     </div>
                   </div>
 
@@ -134,6 +156,20 @@ export const BottomNav = () => {
                       Pages
                     </h3>
                     <div className="space-y-1">
+                      <Link
+                        to="/#videos"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center p-3 rounded-lg hover:bg-muted transition-colors"
+                      >
+                        <span className="text-sm font-medium">Videos</span>
+                      </Link>
+                      <Link
+                        to="/gallery"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center p-3 rounded-lg hover:bg-muted transition-colors"
+                      >
+                        <span className="text-sm font-medium">Gallery</span>
+                      </Link>
                       <Link
                         to="/merch"
                         onClick={() => setMenuOpen(false)}

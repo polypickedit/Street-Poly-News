@@ -106,7 +106,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
   };
 
   return (
-    <aside className={`hidden xl:flex flex-col items-center gap-6 w-[200px] sticky top-32 h-fit ${position === 'left' ? 'pl-0' : 'pr-0'}`}>
+    <aside className={`hidden lg:flex flex-col items-center gap-6 w-[200px] sticky top-32 h-fit ${position === 'left' ? 'pl-0' : 'pr-0'}`}>
       {/* Skyscraper Ad 160x600 */}
       <div className="relative">
         <span className="absolute -top-4 left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">

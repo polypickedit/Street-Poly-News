@@ -36,6 +36,10 @@
 
     --radius: 0.5rem;
 
+    --sidebar-width: 16rem;
+    --sidebar-width-mobile: 18rem;
+    --sidebar-width-icon: 3rem;
+
     --font-display: 'Bebas Neue', sans-serif;
     --font-body: 'Inter', sans-serif;
   }
