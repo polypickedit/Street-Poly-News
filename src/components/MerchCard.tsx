@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCart } from "@/contexts/CartContext";
+import { useCart } from "@/hooks/use-cart";
 import { toast } from "@/hooks/use-toast";
 
 const sizes = ["XS", "S", "M", "L", "XL", "2XL"];

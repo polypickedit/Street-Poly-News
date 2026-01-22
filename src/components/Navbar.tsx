@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ShoppingBag, Search } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useCart } from "@/contexts/CartContext";
+import { useCart } from "@/hooks/use-cart";
 import { SearchBar } from "@/components/SearchBar";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHeaderVisible } from "@/hooks/useHeaderVisible";

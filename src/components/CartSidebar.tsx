@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/contexts/CartContext";
+import { useCart } from "@/hooks/use-cart";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 
 export const CartSidebar = () => {
