@@ -49,7 +49,6 @@ export function ContactSubmissions() {
       if (error) throw error;
       setSubmissions(data || []);
     } catch (error) {
-      console.error("Error fetching submissions:", error);
       toast({
         title: "Error",
         description: "Failed to load contact submissions",
@@ -78,7 +77,6 @@ export function ContactSubmissions() {
         description: "Submission status has been updated successfully",
       });
     } catch (error) {
-      console.error("Error updating status:", error);
       toast({
         title: "Error",
         description: "Failed to update status",
@@ -105,7 +103,6 @@ export function ContactSubmissions() {
         description: "Submission has been deleted",
       });
     } catch (error) {
-      console.error("Error deleting submission:", error);
       toast({
         title: "Error",
         description: "Failed to delete submission",

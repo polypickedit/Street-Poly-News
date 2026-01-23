@@ -41,10 +41,11 @@ const Contact = () => {
       });
       
       setFormData({ name: "", email: "", subject: "", message: "" });
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "An unknown error occurred";
       toast({
         title: "Error sending message",
-        description: error.message || "Please try again later.",
+        description: message,
         variant: "destructive",
       });
     } finally {

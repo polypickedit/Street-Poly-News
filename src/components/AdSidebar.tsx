@@ -89,7 +89,6 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching affiliate link:", error);
         return null;
       }
       return data;
