@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { BreakingNewsBanner } from "@/components/BreakingNewsBanner";
@@ -20,7 +21,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 const Admin = () => {
   const isVisible = useHeaderVisible();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
+  };
 
   const getPaddingTop = () => {
     return isVisible ? (isMobile ? "pt-[100px]" : "pt-[116px]") : "pt-[36px]";
@@ -214,9 +221,14 @@ const Admin = () => {
 
       <main className={`container mx-auto px-4 pb-20 transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}>
         <div className="max-w-4xl mx-auto">
-          <h1 className="font-display text-4xl md:text-5xl text-foreground mb-8">
-            Admin <span className="text-primary">Dashboard</span>
-          </h1>
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="font-display text-4xl md:text-5xl text-foreground">
+              Admin <span className="text-primary">Dashboard</span>
+            </h1>
+            <Button variant="outline" onClick={handleSignOut}>
+              Sign Out
+            </Button>
+          </div>
 
           <Tabs defaultValue="posts" className="space-y-6">
             <TabsList className="grid w-full grid-cols-2 max-w-[400px]">

@@ -7,7 +7,9 @@ import { AnimatePresence } from "framer-motion";
 import { CartProvider } from "@/contexts/CartContext";
 import { CartSidebar } from "@/components/CartSidebar";
 import { TipButton } from "@/components/TipButton";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
+import Login from "./pages/Login";
 import PostDetail from "./pages/PostDetail";
 import Merch from "./pages/Merch";
 import About from "./pages/About";
@@ -34,7 +36,15 @@ const AnimatedRoutes = () => {
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <Admin />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/search" element={<Search />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/category/:slug" element={<Category />} />

@@ -8,7 +8,7 @@ export const CartSidebar = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetContent className="bg-card border-border w-full sm:max-w-md flex flex-col">
+      <SheetContent className="bg-card border-border w-[85vw] sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle className="font-display text-2xl text-foreground flex items-center gap-2">
             <ShoppingBag className="w-6 h-6 text-dem" />
