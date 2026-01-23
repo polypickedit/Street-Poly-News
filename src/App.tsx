@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import PostDetail from "./pages/PostDetail";
 import Merch from "./pages/Merch";
 import About from "./pages/About";
+import Contact from "./pages/Contact";
 import Gallery from "./pages/Gallery";
 import Admin from "./pages/Admin";
 import Search from "./pages/Search";
@@ -32,6 +33,7 @@ const AnimatedRoutes = () => {
         <Route path="/merch" element={<Merch />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/search" element={<Search />} />
         <Route path="/categories" element={<Categories />} />

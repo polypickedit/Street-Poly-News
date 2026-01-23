@@ -14,6 +14,7 @@ const navLinks = [
   { name: "Gallery", path: "/gallery" },
   { name: "Merch", path: "/merch" },
   { name: "About", path: "/about" },
+  { name: "Contact", path: "/contact" },
 ];
 
 export function Navbar() {

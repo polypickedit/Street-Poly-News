@@ -102,11 +102,11 @@ export const BottomNav = () => {
                   <span className="text-xs font-medium">Menu</span>
                 </button>
               </SheetTrigger>
-              <SheetContent side="bottom" className="h-[70vh] rounded-t-2xl">
+              <SheetContent side="bottom" className="h-[80vh] rounded-t-2xl overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle className="text-left">Menu</SheetTitle>
                 </SheetHeader>
-                <div className="mt-6 space-y-6">
+                <div className="mt-6 space-y-6 pb-20">
                   <div>
                     <h3 className="text-sm font-semibold text-muted-foreground mb-3">
                       Categories
@@ -183,6 +183,13 @@ export const BottomNav = () => {
                         className="flex items-center p-3 rounded-lg hover:bg-muted transition-colors"
                       >
                         <span className="text-sm font-medium">About</span>
+                      </Link>
+                      <Link
+                        to="/contact"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center p-3 rounded-lg hover:bg-muted transition-colors"
+                      >
+                        <span className="text-sm font-medium">Contact</span>
                       </Link>
                     </div>
                   </div>

@@ -2,11 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
-import { useEffect, useState } from "react";
 
 export function BreakingNewsBanner() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
   const { data: breakingPosts } = useQuery({
     queryKey: ["breaking-posts"],
     queryFn: async () => {
@@ -15,47 +12,47 @@ export function BreakingNewsBanner() {
         .select("*")
         .eq("is_breaking", true)
         .order("created_at", { ascending: false })
-        .limit(5);
+        .limit(10);
 
       if (error) throw error;
       return data;
     },
   });
 
-  useEffect(() => {
-    if (!breakingPosts?.length) return;
-    
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % breakingPosts.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [breakingPosts?.length]);
-
   if (!breakingPosts?.length) return null;
 
-  const currentPost = breakingPosts[currentIndex];
+  // Duplicate posts to ensure seamless loop
+  // If we have few posts, duplicate more times to fill width
+  const displayPosts = breakingPosts.length < 5 
+    ? [...breakingPosts, ...breakingPosts, ...breakingPosts, ...breakingPosts]
+    : [...breakingPosts, ...breakingPosts];
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] bg-rep text-rep-foreground">
-      <div className="container mx-auto px-4">
-        <Link
-          to={`/post/${currentPost.id}`}
-          className="flex items-center gap-3 py-2 hover:opacity-90 transition-opacity"
-        >
-          <div className="flex items-center gap-2 shrink-0">
-            <AlertTriangle className="w-4 h-4 animate-pulse" />
-            <span className="font-display text-sm tracking-wider">BREAKING</span>
+    <div className="fixed top-0 left-0 right-0 z-[60] bg-rep text-rep-foreground overflow-hidden border-b border-rep-foreground/10">
+      <div className="flex items-center h-10 relative">
+        {/* Static Badge */}
+        <div className="flex items-center gap-2 shrink-0 px-4 pl-4 md:pl-8 bg-rep z-20 relative h-full pr-6 shadow-[4px_0_24px_rgba(0,0,0,0.1)] after:content-[''] after:absolute after:right-0 after:top-0 after:bottom-0 after:w-4 after:bg-gradient-to-r after:from-rep after:to-transparent">
+          <AlertTriangle className="w-4 h-4 animate-pulse fill-current" />
+          <span className="font-display text-sm tracking-wider font-bold">BREAKING NEWS</span>
+        </div>
+
+        {/* Marquee Content */}
+        <div className="flex-1 overflow-hidden relative h-full flex items-center">
+          <div className="animate-marquee whitespace-nowrap flex items-center hover:[animation-play-state:paused] py-2">
+            {displayPosts.map((post, idx) => (
+              <Link
+                key={`${post.id}-${idx}`}
+                to={`/post/${post.id}`}
+                className="inline-flex items-center gap-3 mx-4 hover:opacity-80 transition-opacity group"
+              >
+                <span className="font-body text-sm font-medium">
+                  {post.title}
+                </span>
+                <span className="text-[10px] opacity-60 group-hover:opacity-100 transition-opacity">•</span>
+              </Link>
+            ))}
           </div>
-          <span className="font-body text-sm truncate">
-            {currentPost.title}
-          </span>
-          {breakingPosts.length > 1 && (
-            <span className="ml-auto text-xs opacity-70 shrink-0">
-              {currentIndex + 1}/{breakingPosts.length}
-            </span>
-          )}
-        </Link>
+        </div>
       </div>
     </div>
   );
