@@ -59,7 +59,7 @@ export const BottomNav = () => {
           animate={{ y: 0 }}
           exit={{ y: 100 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border safe-area-bottom"
+          className="fixed bottom-0 left-0 right-0 z-50 bg-dem-dark/95 backdrop-blur-sm border-t border-white/10 text-white safe-area-bottom"
         >
           <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-4">
             {navItems.map((item) => (
@@ -69,8 +69,8 @@ export const BottomNav = () => {
                 className={cn(
                   "relative flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-lg transition-colors",
                   isActive(item.path)
-                    ? "text-dem"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-white"
+                    : "text-white/60 hover:text-white"
                 )}
               >
                 <item.icon className={cn("h-5 w-5", isActive(item.path) && "animate-bounce-subtle")} />
@@ -80,7 +80,7 @@ export const BottomNav = () => {
                 {isActive(item.path) && (
                   <motion.div
                     layoutId="bottom-nav-indicator"
-                    className="absolute bottom-1 w-1 h-1 rounded-full bg-dem"
+                    className="absolute bottom-1 w-1 h-1 rounded-full bg-white"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}
@@ -93,22 +93,23 @@ export const BottomNav = () => {
                   type="button"
                   className={cn(
                     "flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-lg transition-colors",
-                    menuOpen
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground"
+                    menuOpen ? "text-white" : "text-white/70 hover:text-white"
                   )}
                 >
                   <Menu className="h-5 w-5" />
                   <span className="text-xs font-medium">Menu</span>
                 </button>
               </SheetTrigger>
-              <SheetContent side="bottom" className="h-[80vh] rounded-t-2xl overflow-y-auto">
+              <SheetContent
+                side="bottom"
+                className="h-[80vh] rounded-t-2xl overflow-y-auto bg-dem-dark text-white border border-white/10 shadow-xl"
+              >
                 <SheetHeader>
                   <SheetTitle className="text-left">Menu</SheetTitle>
                 </SheetHeader>
                 <div className="mt-6 space-y-6 pb-20">
                   <div>
-                    <h3 className="text-sm font-semibold text-muted-foreground mb-3">
+                    <h3 className="text-sm font-semibold text-white/70 mb-3">
                       Categories
                     </h3>
                     <div className="grid grid-cols-2 gap-2">
@@ -120,10 +121,10 @@ export const BottomNav = () => {
                           key={category.id}
                           to={`/category/${category.slug}`}
                           onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                          className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-colors"
                         >
                           <div className={`w-3 h-3 rounded-full cat-dot-${category.id}`} />
-                          <span className="text-sm font-medium">
+                          <span className="text-sm font-medium text-white">
                             {category.slug === "exclusive" ? "Exclusives" : category.name}
                           </span>
                         </Link>
@@ -132,64 +133,64 @@ export const BottomNav = () => {
                         <Link
                           to="/?category=fashion"
                           onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                        >
-                          <div className="w-3 h-3 rounded-full bg-pink-500" />
-                          <span className="text-sm font-medium">Fashion</span>
-                        </Link>
+                      className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-colors"
+                    >
+                      <div className="w-3 h-3 rounded-full bg-pink-500" />
+                      <span className="text-sm font-medium">Fashion</span>
+                    </Link>
                       )}
                       {!categories?.some(c => c.slug === 'health') && (
                         <Link
                           to="/?category=health"
                           onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                        >
-                          <div className="w-3 h-3 rounded-full bg-green-500" />
-                          <span className="text-sm font-medium">Health</span>
-                        </Link>
+                      className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-colors"
+                    >
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      <span className="text-sm font-medium">Health</span>
+                    </Link>
                       )}
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-semibold text-muted-foreground mb-3">
+                    <h3 className="text-sm font-semibold text-white/70 mb-3">
                       Pages
                     </h3>
                     <div className="space-y-1">
                       <Link
                         to="/#videos"
                         onClick={() => setMenuOpen(false)}
-                        className="flex items-center p-3 rounded-lg hover:bg-muted transition-colors"
+                        className="flex items-center p-3 rounded-lg hover:bg-white/10 transition-colors"
                       >
-                        <span className="text-sm font-medium">Videos</span>
+                        <span className="text-sm font-medium text-white">Videos</span>
                       </Link>
                       <Link
                         to="/gallery"
                         onClick={() => setMenuOpen(false)}
-                        className="flex items-center p-3 rounded-lg hover:bg-muted transition-colors"
+                        className="flex items-center p-3 rounded-lg hover:bg-white/10 transition-colors"
                       >
-                        <span className="text-sm font-medium">Gallery</span>
+                        <span className="text-sm font-medium text-white">Gallery</span>
                       </Link>
                       <Link
                         to="/merch"
                         onClick={() => setMenuOpen(false)}
-                        className="flex items-center p-3 rounded-lg hover:bg-muted transition-colors"
+                        className="flex items-center p-3 rounded-lg hover:bg-white/10 transition-colors"
                       >
-                        <span className="text-sm font-medium">Merch</span>
+                        <span className="text-sm font-medium text-white">Merch</span>
                       </Link>
                       <Link
                         to="/about"
                         onClick={() => setMenuOpen(false)}
-                        className="flex items-center p-3 rounded-lg hover:bg-muted transition-colors"
+                        className="flex items-center p-3 rounded-lg hover:bg-white/10 transition-colors"
                       >
-                        <span className="text-sm font-medium">About</span>
+                        <span className="text-sm font-medium text-white">About</span>
                       </Link>
                       <Link
                         to="/contact"
                         onClick={() => setMenuOpen(false)}
-                        className="flex items-center p-3 rounded-lg hover:bg-muted transition-colors"
+                        className="flex items-center p-3 rounded-lg hover:bg-white/10 transition-colors"
                       >
-                        <span className="text-sm font-medium">Contact</span>
+                        <span className="text-sm font-medium text-white">Contact</span>
                       </Link>
                     </div>
                   </div>
