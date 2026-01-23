@@ -14,6 +14,8 @@ import { usePeople } from "@/hooks/usePeople";
 import { Loader2, Plus, Tags, Users } from "lucide-react";
 import { useHeaderVisible } from "@/hooks/useHeaderVisible";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ContactSubmissions } from "@/components/ContactSubmissions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Admin = () => {
   const isVisible = useHeaderVisible();
@@ -211,12 +213,21 @@ const Admin = () => {
       <Navbar />
 
       <main className={`container mx-auto px-4 pb-20 transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}>
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <h1 className="font-display text-4xl md:text-5xl text-foreground mb-8">
-            Create <span className="text-primary">New Post</span>
+            Admin <span className="text-primary">Dashboard</span>
           </h1>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <Tabs defaultValue="posts" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
+              <TabsTrigger value="posts">Create Post</TabsTrigger>
+              <TabsTrigger value="messages">Messages</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="posts">
+              <div className="max-w-2xl mx-auto">
+                <h2 className="font-display text-2xl text-foreground mb-6">Create New Post</h2>
+                <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
             <div className="space-y-2">
               <Label htmlFor="title" className="font-body text-foreground">
@@ -498,6 +509,13 @@ const Admin = () => {
               )}
             </Button>
           </form>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="messages">
+              <ContactSubmissions />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>
