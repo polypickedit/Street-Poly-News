@@ -1,0 +1,17 @@
+{
+  "name": "Streetpoly News",
+  "short_name": "Streetpoly",
+  "description": "Unfiltered news from the streets. Real stories, real voices, real impact.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#002D6E",
+  "theme_color": "#002D6E",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

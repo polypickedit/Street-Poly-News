@@ -37,7 +37,7 @@ export function Navbar() {
             animate={{ y: 0 }}
             exit={{ y: -100 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed top-[36px] left-0 right-0 z-50 !bg-[#002D6E]/95 backdrop-blur border-b border-blue-900/50 lg:shadow-[0_1px_0_0_rgba(255,255,255,0.04)]"
+            className="fixed top-10 left-0 right-0 z-50 bg-dem-dark border-b border-blue-900/50 lg:shadow-[0_1px_0_0_rgba(255,255,255,0.04)]"
           >
             <div className="container mx-auto px-4 relative">
               <div className="flex h-24 md:h-32 items-center justify-between">
@@ -116,7 +116,7 @@ export function Navbar() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute top-full left-0 right-0 !bg-[#002D6E]/95 border-b border-blue-900/50 p-4 flex justify-center z-40"
+                    className="absolute top-full left-0 right-0 !bg-[#002D6E] border-b border-blue-900/50 p-4 flex justify-center z-40"
                   >
                     <SearchBar 
                       className="w-full max-w-2xl" 
@@ -166,7 +166,7 @@ export function Navbar() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-full right-4 w-64 mt-2 !bg-[#002D6E]/95 backdrop-blur border border-blue-900/50 shadow-xl py-6 px-4 flex flex-col gap-6 rounded-xl max-h-[80vh] overflow-y-auto"
+                    className="absolute top-full right-4 w-64 mt-2 !bg-dem-dark border border-blue-900/50 shadow-xl py-6 px-4 flex flex-col gap-6 rounded-xl max-h-[80vh] overflow-y-auto"
                   >
                     {/* Main Nav Links */}
                     <div className="flex flex-col items-center gap-6">

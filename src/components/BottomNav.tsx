@@ -59,7 +59,7 @@ export const BottomNav = () => {
           animate={{ y: 0 }}
           exit={{ y: 100 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="md:hidden fixed bottom-0 left-0 right-0 z-50 !bg-[#002D6E]/95 backdrop-blur border-t border-blue-900/50 text-white safe-area-bottom"
+          className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-dem-dark border-t border-blue-900/50 text-white safe-area-bottom"
         >
           <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-4">
             {navItems.map((item) => (
@@ -100,11 +100,8 @@ export const BottomNav = () => {
                   <span className="text-xs font-medium">Menu</span>
                 </button>
               </SheetTrigger>
-              <SheetContent
-                side="bottom"
-                className="h-[80vh] rounded-t-2xl overflow-y-auto bg-dem-dark/95 text-white border border-blue-900/50 shadow-xl"
-              >
-                <SheetHeader>
+              <SheetContent side="left" aria-describedby={undefined} className="w-[300px] !bg-dem-dark border-r border-white/10 p-6 overflow-y-auto">
+                <SheetHeader className="mb-8">
                   <SheetTitle className="text-left">Menu</SheetTitle>
                 </SheetHeader>
                 <div className="mt-6 space-y-6 pb-20">

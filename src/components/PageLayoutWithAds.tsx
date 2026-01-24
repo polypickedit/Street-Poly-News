@@ -10,23 +10,29 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface PageLayoutWithAdsProps {
   children: ReactNode;
   showAds?: boolean;
+  headerContent?: ReactNode;
+  mainClassName?: string;
 }
 
 export const PageLayoutWithAds = ({
   children,
   showAds = true,
+  headerContent,
+  mainClassName = "max-w-4xl",
 }: PageLayoutWithAdsProps) => {
   const isVisible = useHeaderVisible();
   const isMobile = useIsMobile();
 
   const getPaddingTop = () => {
-    return isVisible ? (isMobile ? "pt-[132px]" : "pt-[164px]") : "pt-[36px]";
+    return isVisible ? (isMobile ? "pt-[136px]" : "pt-[168px]") : "pt-10";
   };
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <BreakingNewsBanner />
       <Navbar />
+
+      {headerContent}
 
       <div
         className={`flex justify-center gap-4 lg:gap-8 px-4 sm:px-6 md:px-8 transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}
@@ -35,7 +41,7 @@ export const PageLayoutWithAds = ({
           <AdSidebar position="left" />
         </div>
 
-        <main className="flex-1 max-w-4xl min-w-0">
+        <main className={`flex-1 min-w-0 ${mainClassName}`}>
           {/* Header Ad Space */}
           {showAds && (
             <div className="mb-12 mt-4">
