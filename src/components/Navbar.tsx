@@ -51,7 +51,7 @@ export function Navbar() {
                       <img 
                         src={logo} 
                         alt="Streetpoly News" 
-                        className="w-full h-full object-cover group-hover:rotate-3 transition-transform scale-[1.02]"
+                        className="w-full h-full object-cover group-hover:rotate-3 transition-transform scale-[1.02] transform-gpu"
                       />
                     </div>
                     <span className="font-display text-2xl md:text-5xl tracking-widest text-blue-50 leading-none">
