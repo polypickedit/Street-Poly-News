@@ -3,6 +3,8 @@ import { injectSpeedInsights } from "@vercel/speed-insights";
 import App from "./App.tsx";
 import "./index.css";
 
-injectSpeedInsights();
+if (import.meta.env.PROD) {
+  injectSpeedInsights();
+}
 
 createRoot(document.getElementById("root")!).render(<App />);
