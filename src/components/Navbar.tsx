@@ -40,53 +40,48 @@ export function Navbar() {
             className="fixed top-[36px] left-0 right-0 z-50 bg-[#002D6E]/95 backdrop-blur border-b border-blue-900/50 lg:shadow-[0_1px_0_0_rgba(255,255,255,0.04)]"
           >
             <div className="container mx-auto px-4 relative">
-              <div className="flex h-16 md:h-20 items-center justify-between">
-                {/* Left: Hamburger Menu */}
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="p-2 text-blue-200/70 hover:text-blue-100 transition-colors"
-                    aria-label="Toggle menu"
-                  >
-                    {isOpen ? <X size={24} /> : <Menu size={24} />}
-                  </button>
-                  
-                  {/* Desktop Search Toggle (moved to left for balance or keep right? User said 'Icons balanced left/right'. 
-                      Let's put Search on Left to balance Cart on Right? Or Menu on Left, Search/Cart on Right.
-                      User example: Left: hamburger. Right: search, profile.
-                      Let's follow user example.
-                  */}
-                </div>
-
-                {/* Center: Logo */}
-                <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
+              <div className="flex h-24 md:h-32 items-center justify-between">
+                {/* Logo Section */}
+                <div className="flex items-center">
                   <Link 
                     to="/" 
-                    className="flex items-center gap-2 md:gap-3 group transition-transform hover:scale-[1.02]"
+                    className="flex items-center gap-3 md:gap-6 group transition-transform hover:scale-[1.02]"
                   >
-                    <div className="bg-white rounded-full flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-white/20 transition-all duration-300 border border-white w-8 h-8 md:w-10 md:h-10">
+                    <div className="bg-white rounded-full flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-white/20 transition-all duration-300 border-2 border-white w-16 h-16 md:w-24 md:h-24">
                       <img 
                         src={logo} 
                         alt="Streetpoly News" 
                         className="w-full h-full object-cover group-hover:rotate-3 transition-transform scale-[1.02]"
                       />
                     </div>
-                    <span className="font-display text-lg md:text-2xl tracking-widest text-blue-50 leading-none">
+                    <span className="font-display text-2xl md:text-5xl tracking-widest text-blue-50 leading-none">
                       STREETPOLY <span className="text-rep ml-1">NEWS</span>
                     </span>
                   </Link>
                 </div>
 
-                {/* Right: Search & Cart */}
+                {/* Desktop Search Bar - Centered */}
+                <div className="hidden lg:flex flex-1 justify-center px-8">
+                  {showSearch && (
+                    <SearchBar 
+                      className="w-full max-w-md" 
+                      onClose={() => setShowSearch(false)} 
+                    />
+                  )}
+                </div>
+
+                {/* Right: Actions */}
                 <div className="flex items-center gap-2 md:gap-4">
-                  {/* Search Toggle */}
-                  <button
-                    onClick={() => setShowSearch(!showSearch)}
-                    aria-label="Search"
-                    className="p-2 text-blue-200/70 hover:text-blue-100 transition-colors"
-                  >
-                    <Search size={24} />
-                  </button>
+                  {/* Search Toggle (Desktop only shows if search hidden, Mobile always shows) */}
+                  {(!showSearch || window.innerWidth < 1024) && (
+                    <button
+                      onClick={() => setShowSearch(!showSearch)}
+                      aria-label="Search"
+                      className="p-2 text-blue-200/70 hover:text-blue-100 transition-colors"
+                    >
+                      <Search size={24} />
+                    </button>
+                  )}
 
                   {/* Shopping Bag */}
                   <button
@@ -101,6 +96,15 @@ export function Navbar() {
                         {totalItems}
                       </span>
                     )}
+                  </button>
+
+                  {/* Hamburger Menu */}
+                  <button
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="p-2 text-blue-200/70 hover:text-blue-100 transition-colors"
+                    aria-label="Toggle menu"
+                  >
+                    {isOpen ? <X size={24} /> : <Menu size={24} />}
                   </button>
                 </div>
               </div>
