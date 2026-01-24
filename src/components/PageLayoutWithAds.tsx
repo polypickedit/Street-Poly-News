@@ -20,7 +20,7 @@ export const PageLayoutWithAds = ({
   const isMobile = useIsMobile();
 
   const getPaddingTop = () => {
-    return isVisible ? (isMobile ? "pt-[164px]" : "pt-[212px]") : "pt-[36px]";
+    return isVisible ? (isMobile ? "pt-[100px]" : "pt-[116px]") : "pt-[36px]";
   };
 
   return (
