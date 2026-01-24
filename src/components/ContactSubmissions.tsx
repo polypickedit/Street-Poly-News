@@ -36,28 +36,28 @@ export function ContactSubmissions() {
   const { toast } = useToast();
 
   useEffect(() => {
+    const fetchSubmissions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("contact_submissions")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        setSubmissions(data || []);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load contact submissions",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchSubmissions();
-  }, []);
-
-  const fetchSubmissions = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("contact_submissions")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setSubmissions(data || []);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load contact submissions",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [toast]);
 
   const updateStatus = async (id: string, newStatus: string) => {
     try {
