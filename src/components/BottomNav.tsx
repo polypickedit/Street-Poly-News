@@ -59,7 +59,7 @@ export const BottomNav = () => {
           animate={{ y: 0 }}
           exit={{ y: 100 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-dem-dark/95 backdrop-blur-sm border-t border-white/10 text-white safe-area-bottom"
+          className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-dem-dark/95 backdrop-blur border-t border-blue-900/50 text-white safe-area-bottom"
         >
           <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-4">
             {navItems.map((item) => (
@@ -69,8 +69,8 @@ export const BottomNav = () => {
                 className={cn(
                   "relative flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-lg transition-colors",
                   isActive(item.path)
-                    ? "text-white"
-                    : "text-white/60 hover:text-white"
+                    ? "text-blue-50"
+                    : "text-blue-200/70 hover:text-blue-100"
                 )}
               >
                 <item.icon className={cn("h-5 w-5", isActive(item.path) && "animate-bounce-subtle")} />
@@ -93,7 +93,7 @@ export const BottomNav = () => {
                   type="button"
                   className={cn(
                     "flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-lg transition-colors",
-                    menuOpen ? "text-white" : "text-white/70 hover:text-white"
+                    menuOpen ? "text-blue-50" : "text-blue-200/70 hover:text-blue-100"
                   )}
                 >
                   <Menu className="h-5 w-5" />
@@ -102,7 +102,7 @@ export const BottomNav = () => {
               </SheetTrigger>
               <SheetContent
                 side="bottom"
-                className="h-[80vh] rounded-t-2xl overflow-y-auto bg-dem-dark text-white border border-white/10 shadow-xl"
+                className="h-[80vh] rounded-t-2xl overflow-y-auto bg-dem-dark/95 text-white border border-blue-900/50 shadow-xl"
               >
                 <SheetHeader>
                   <SheetTitle className="text-left">Menu</SheetTitle>
