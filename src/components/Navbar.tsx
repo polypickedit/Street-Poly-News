@@ -48,7 +48,7 @@ export function Navbar() {
                     className="flex items-center gap-3 md:gap-6 group transition-transform hover:scale-[1.02]"
                   >
                     {/* Mobile Logo (Seal) - Temporarily using main logo with background until seal is ready */}
-                    <div className="md:hidden bg-white rounded-full flex items-center justify-center w-16 h-16 shrink-0 filter drop-shadow-lg border-2 border-white overflow-hidden">
+                    <div className="md:hidden bg-white rounded-full flex items-center justify-center w-16 h-16 shrink-0 shadow-lg border-2 border-white overflow-hidden">
                       <img 
                         src={logo} 
                         alt="Streetpoly News" 
