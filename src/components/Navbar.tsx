@@ -42,19 +42,19 @@ export function Navbar() {
             <div className="container mx-auto px-4 relative">
               <div className="flex h-24 md:h-32 items-center justify-between">
                 {/* Logo Section */}
-                <div className="flex items-center">
+                <div className="flex items-center shrink-0">
                   <Link 
                     to="/" 
-                    className="flex items-center gap-3 md:gap-6 group transition-transform hover:scale-[1.02]"
+                    className="flex items-center gap-2 md:gap-6 group transition-transform hover:scale-[1.02]"
                   >
-                    <div className="bg-white rounded-full flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-white/20 transition-all duration-300 border-2 border-white w-16 h-16 md:w-24 md:h-24">
+                    <div className="bg-white rounded-full flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-white/20 transition-all duration-300 border-2 border-white w-10 h-10 sm:w-16 sm:h-16 md:w-24 md:h-24 shrink-0">
                       <img 
                         src={logo} 
                         alt="Streetpoly News" 
                         className="w-full h-full object-cover group-hover:rotate-3 transition-transform scale-[1.02]"
                       />
                     </div>
-                    <span className="font-display text-2xl md:text-5xl tracking-widest text-blue-50 leading-none">
+                    <span className="font-display text-lg sm:text-2xl md:text-5xl tracking-widest text-blue-50 leading-none">
                       STREETPOLY <span className="text-rep ml-1">NEWS</span>
                     </span>
                   </Link>

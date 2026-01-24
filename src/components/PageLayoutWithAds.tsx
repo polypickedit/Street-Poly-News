@@ -24,7 +24,9 @@ export const PageLayoutWithAds = ({
   const isMobile = useIsMobile();
 
   const getPaddingTop = () => {
-    return isVisible ? (isMobile ? "pt-[136px]" : "pt-[168px]") : "pt-10";
+    // Mobile: 40 (banner) + 96 (nav top) + 40 (nav bot) = 176px
+    // Desktop: 40 (banner) + 128 (nav top) + 50 (nav bot) = 218px
+    return isVisible ? (isMobile ? "pt-[176px]" : "pt-[218px]") : "pt-10";
   };
 
   return (
