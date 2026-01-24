@@ -166,7 +166,7 @@ export function Navbar() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-full right-4 w-64 mt-2 bg-dem-dark border border-blue-900/50 shadow-xl py-6 px-4 flex flex-col gap-6 rounded-xl max-h-[80vh] overflow-y-auto"
+                    className="absolute top-full right-4 w-64 mt-2 !bg-[#002D6E]/95 backdrop-blur border border-blue-900/50 shadow-xl py-6 px-4 flex flex-col gap-6 rounded-xl max-h-[80vh] overflow-y-auto"
                   >
                     {/* Main Nav Links */}
                     <div className="flex flex-col items-center gap-6">
