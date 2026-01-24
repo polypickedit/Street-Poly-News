@@ -28,7 +28,7 @@ export function BreakingNewsBanner() {
     : [...breakingPosts, ...breakingPosts];
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] bg-rep text-white overflow-hidden border-b border-white/10">
+    <div className="fixed top-0 left-0 right-0 z-[60] bg-rep text-white overflow-hidden border-b border-blue-900 md:border-white/10">
       <div className="flex items-center h-10 relative">
         {/* Static Badge */}
         <div className="flex items-center gap-2 shrink-0 px-4 pl-4 md:pl-8 bg-rep z-20 relative h-full pr-6 shadow-[4px_0_24px_rgba(0,0,0,0.1)] after:content-[''] after:absolute after:right-0 after:top-0 after:bottom-0 after:w-4 after:bg-gradient-to-r after:from-rep after:to-transparent">
