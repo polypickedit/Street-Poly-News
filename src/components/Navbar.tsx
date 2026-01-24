@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useHeaderVisible } from "@/hooks/useHeaderVisible";
 import { useCategories } from "@/hooks/useCategories";
 import logo from "@/assets/logo.svg";
+import mobileSeal from "@/assets/mobile-seal.png";
 
 const navLinks = [
   { name: "Home", path: "/" },
@@ -33,10 +34,10 @@ export function Navbar() {
       <AnimatePresence>
         {headerVisible && (
           <motion.nav
-            initial={{ y: -100 }}
-            animate={{ y: 0 }}
-            exit={{ y: -100 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             className="fixed top-10 left-0 right-0 z-50 bg-dem-dark border-b border-blue-900/50 lg:shadow-[0_1px_0_0_rgba(255,255,255,0.04)]"
           >
             <div className="container mx-auto px-4 relative">
@@ -45,29 +46,29 @@ export function Navbar() {
                 <div className="flex items-center shrink-0">
                   <Link 
                     to="/" 
-                    className="flex items-center gap-3 md:gap-6 group transition-transform hover:scale-[1.02]"
+                    className="flex items-center gap-3 md:gap-6 group"
                   >
-                    {/* Mobile Logo (Seal) - Temporarily using main logo with background until seal is ready */}
-                    <div className="md:hidden bg-white rounded-full flex items-center justify-center w-16 h-16 shrink-0 shadow-lg border-2 border-white overflow-hidden">
+                    <div className="shrink-0 w-[56px] h-[56px] md:w-24 md:h-24">
                       <img 
-                        src={logo} 
-                        alt="Streetpoly News" 
-                        className="w-full h-full object-cover"
+                        src={mobileSeal}
+                        alt="Streetpoly News"
+                        width={56}
+                        height={56}
+                        className="block md:hidden w-full h-full object-cover object-center"
                       />
-                    </div>
-
-                    {/* Desktop Logo (Original) */}
-                    <div className="hidden md:flex bg-white rounded-full items-center justify-center overflow-hidden shadow-lg group-hover:shadow-white/20 transition-all duration-300 border-2 border-white w-24 h-24 shrink-0">
                       <img 
-                        src={logo} 
-                        alt="Streetpoly News" 
-                        className="w-full h-full object-cover group-hover:rotate-3 transition-transform scale-[1.02] transform-gpu"
+                        src={logo}
+                        alt="Streetpoly News"
+                        width={96}
+                        height={96}
+                        className="hidden md:block w-full h-full object-contain"
                       />
                     </div>
 
                     <span className="font-display text-2xl md:text-5xl tracking-widest text-blue-50 leading-none">
                       STREETPOLY <span className="text-rep ml-1">NEWS</span>
                     </span>
+
                   </Link>
                 </div>
 
@@ -124,10 +125,10 @@ export function Navbar() {
               <AnimatePresence>
                 {showSearch && (
                   <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute top-full left-0 right-0 !bg-[#002D6E] border-b border-blue-900/50 p-4 flex justify-center z-40"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute top-full left-0 right-0 bg-dem-dark border-b border-blue-900/50 p-4 flex justify-center z-40"
                   >
                     <SearchBar 
                       className="w-full max-w-2xl" 
@@ -173,9 +174,9 @@ export function Navbar() {
               <AnimatePresence>
                 {isOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
                     className="absolute top-full right-4 w-64 mt-2 !bg-dem-dark border border-blue-900/50 shadow-xl py-6 px-4 flex flex-col gap-6 rounded-xl max-h-[80vh] overflow-y-auto"
                   >

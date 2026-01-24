@@ -102,12 +102,6 @@
   width: 8px;
 }
 
-/* Force hardware acceleration and clean rendering for images/logos */
-img, svg {
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  transform: translateZ(0);
-}
 
 ::-webkit-scrollbar-track {
   background: hsl(var(--background));
