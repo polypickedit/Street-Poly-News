@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useHeaderVisible } from "@/hooks/useHeaderVisible";
 import { useCategories } from "@/hooks/useCategories";
 import logo from "@/assets/logo.svg";
+import mobileSeal from "@/assets/mobile-seal.png";
 
 const navLinks = [
   { name: "Home", path: "/" },
@@ -47,13 +48,24 @@ export function Navbar() {
                     to="/" 
                     className="flex items-center gap-3 md:gap-6 group transition-transform hover:scale-[1.02]"
                   >
-                    <div className="bg-white rounded-full flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-white/20 transition-all duration-300 border-2 border-white w-16 h-16 md:w-24 md:h-24 shrink-0">
+                    {/* Mobile Logo (Seal) */}
+                    <div className="md:hidden flex items-center justify-center w-16 h-16 shrink-0 filter drop-shadow-lg">
+                      <img 
+                        src={mobileSeal} 
+                        alt="Streetpoly News" 
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+
+                    {/* Desktop Logo (Original) */}
+                    <div className="hidden md:flex bg-white rounded-full items-center justify-center overflow-hidden shadow-lg group-hover:shadow-white/20 transition-all duration-300 border-2 border-white w-24 h-24 shrink-0">
                       <img 
                         src={logo} 
                         alt="Streetpoly News" 
                         className="w-full h-full object-cover group-hover:rotate-3 transition-transform scale-[1.02] transform-gpu"
                       />
                     </div>
+
                     <span className="font-display text-2xl md:text-5xl tracking-widest text-blue-50 leading-none">
                       STREETPOLY <span className="text-rep ml-1">NEWS</span>
                     </span>
