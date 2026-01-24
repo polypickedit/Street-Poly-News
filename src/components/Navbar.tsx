@@ -77,7 +77,7 @@ export function Navbar() {
                     <button
                       onClick={() => setShowSearch(!showSearch)}
                       aria-label="Search"
-                      className="p-2 text-blue-200/70 hover:text-blue-100 transition-colors"
+                      className="p-2 text-blue-200/70 hover:text-rep transition-colors"
                     >
                       <Search size={24} />
                     </button>
@@ -87,7 +87,7 @@ export function Navbar() {
                   <button
                     onClick={() => setCartOpen(true)}
                     aria-label="Open cart"
-                    className="relative p-2 text-blue-200/70 hover:text-blue-100 transition-colors"
+                    className="relative p-2 text-blue-200/70 hover:text-rep transition-colors"
                     title="Merch Store"
                   >
                     <ShoppingBag size={24} />
@@ -101,7 +101,7 @@ export function Navbar() {
                   {/* Hamburger Menu */}
                   <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="p-2 text-blue-200/70 hover:text-blue-100 transition-colors"
+                    className="p-2 text-blue-200/70 hover:text-rep transition-colors"
                     aria-label="Toggle menu"
                   >
                     {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -130,7 +130,7 @@ export function Navbar() {
                 <div className="flex items-center justify-start md:justify-center gap-x-6 md:gap-x-8 px-4 min-w-max mx-auto">
                   <Link
                     to="/"
-                    className="font-display text-base uppercase tracking-[0.2em] text-blue-200/70 hover:text-blue-100 transition-colors whitespace-nowrap"
+                    className="font-display text-base uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
                   >
                     All
                   </Link>
@@ -138,20 +138,20 @@ export function Navbar() {
                     <Link
                       key={category.id}
                       to={`/?category=${category.slug}`}
-                      className="font-display text-base uppercase tracking-[0.2em] text-blue-200/70 hover:text-blue-100 transition-colors whitespace-nowrap"
+                      className="font-display text-base uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
                     >
                       {category.slug === "exclusive" ? "Exclusives" : category.name}
                     </Link>
                   ))}
                   <Link
                     to="/?category=fashion"
-                    className="font-display text-base uppercase tracking-[0.2em] text-blue-200/70 hover:text-blue-100 transition-colors whitespace-nowrap"
+                    className="font-display text-base uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
                   >
                     Fashion
                   </Link>
                   <Link
                     to="/?category=health"
-                    className="font-display text-base uppercase tracking-[0.2em] text-blue-200/70 hover:text-blue-100 transition-colors whitespace-nowrap"
+                    className="font-display text-base uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
                   >
                     Health
                   </Link>
@@ -175,7 +175,7 @@ export function Navbar() {
                           key={link.name}
                           to={link.path}
                           onClick={() => setIsOpen(false)}
-                          className={`font-display text-xl md:text-2xl uppercase tracking-tighter hover:text-blue-100 transition-colors ${
+                          className={`font-display text-xl md:text-2xl uppercase tracking-tighter hover:text-rep transition-colors ${
                             location.pathname === link.path ? "text-blue-50" : "text-blue-200/70"
                           }`}
                         >

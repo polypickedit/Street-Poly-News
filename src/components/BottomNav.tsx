@@ -70,7 +70,7 @@ export const BottomNav = () => {
                   "relative flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-lg transition-colors",
                   isActive(item.path)
                     ? "text-blue-50"
-                    : "text-blue-200/70 hover:text-blue-100"
+                    : "text-blue-200/70 hover:text-rep"
                 )}
               >
                 <item.icon className={cn("h-5 w-5", isActive(item.path) && "animate-bounce-subtle")} />
@@ -93,7 +93,7 @@ export const BottomNav = () => {
                   type="button"
                   className={cn(
                     "flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-lg transition-colors",
-                    menuOpen ? "text-blue-50" : "text-blue-200/70 hover:text-blue-100"
+                    menuOpen ? "text-blue-50" : "text-blue-200/70 hover:text-rep"
                   )}
                 >
                   <Menu className="h-5 w-5" />
