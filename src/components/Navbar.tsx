@@ -116,7 +116,7 @@ export function Navbar() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute top-full left-0 right-0 bg-dem-dark/95 border-b border-blue-900/50 p-4 flex justify-center z-40"
+                    className="absolute top-full left-0 right-0 !bg-[#002D6E]/95 border-b border-blue-900/50 p-4 flex justify-center z-40"
                   >
                     <SearchBar 
                       className="w-full max-w-2xl" 

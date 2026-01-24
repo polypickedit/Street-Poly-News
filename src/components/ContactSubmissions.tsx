@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Table,
@@ -35,29 +35,29 @@ export function ContactSubmissions() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchSubmissions = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("contact_submissions")
-          .select("*")
-          .order("created_at", { ascending: false });
+  const fetchSubmissions = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("contact_submissions")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-        if (error) throw error;
-        setSubmissions(data || []);
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to load contact submissions",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSubmissions();
+      if (error) throw error;
+      setSubmissions(data || []);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load contact submissions",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
+
+  useEffect(() => {
+    fetchSubmissions();
+  }, [fetchSubmissions]);
 
   const updateStatus = async (id: string, newStatus: string) => {
     try {
