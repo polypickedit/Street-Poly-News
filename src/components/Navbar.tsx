@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useHeaderVisible } from "@/hooks/useHeaderVisible";
 import { useCategories } from "@/hooks/useCategories";
 import logo from "@/assets/logo.svg";
+import mobileSeal from "@/assets/mobile-seal.png";
 
 const navLinks = [
   { name: "Home", path: "/" },
@@ -45,24 +46,17 @@ export function Navbar() {
                 <div className="flex items-center shrink-0">
                   <Link 
                     to="/" 
-                    className="flex items-center gap-3 md:gap-6 group transition-transform hover:scale-[1.02]"
+                    className="flex items-center gap-3 md:gap-6 group"
                   >
-                    {/* Mobile Logo (Seal) - Temporarily using main logo with background until seal is ready */}
-                    <div className="md:hidden bg-white rounded-full flex items-center justify-center w-16 h-16 shrink-0 shadow-lg border-2 border-white overflow-hidden">
-                      <img 
-                        src={logo} 
-                        alt="Streetpoly News" 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-
-                    {/* Desktop Logo (Original) */}
-                    <div className="hidden md:flex bg-white rounded-full items-center justify-center overflow-hidden shadow-lg group-hover:shadow-white/20 transition-all duration-300 border-2 border-white w-24 h-24 shrink-0">
-                      <img 
-                        src={logo} 
-                        alt="Streetpoly News" 
-                        className="w-full h-full object-cover group-hover:rotate-3 transition-transform scale-[1.02] transform-gpu"
-                      />
+                    <div className="shrink-0 md:bg-white md:rounded-full md:flex md:items-center md:justify-center md:shadow-lg md:border-2 md:border-white md:w-24 md:h-24 md:overflow-hidden">
+                      <picture>
+                        <source media="(max-width: 768px)" srcSet={mobileSeal} />
+                        <img 
+                          src={logo} 
+                          alt="Streetpoly News" 
+                          className="w-14 h-14 md:w-full md:h-full object-cover"
+                        />
+                      </picture>
                     </div>
 
                     <span className="font-display text-2xl md:text-5xl tracking-widest text-blue-50 leading-none">
