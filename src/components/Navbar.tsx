@@ -37,7 +37,7 @@ export function Navbar() {
             animate={{ y: 0 }}
             exit={{ y: -100 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed top-[36px] left-0 right-0 z-50 bg-[#002D6E]/95 backdrop-blur border-b border-blue-900/50 lg:shadow-[0_1px_0_0_rgba(255,255,255,0.04)]"
+            className="fixed top-[36px] left-0 right-0 z-50 !bg-[#002D6E]/95 backdrop-blur border-b border-blue-900/50 lg:shadow-[0_1px_0_0_rgba(255,255,255,0.04)]"
           >
             <div className="container mx-auto px-4 relative">
               <div className="flex h-24 md:h-32 items-center justify-between">
