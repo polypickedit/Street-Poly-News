@@ -21,6 +21,7 @@ const navLinks = [
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [mobileLogoErrored, setMobileLogoErrored] = useState(false);
   const { data: categories } = useCategories();
   const isVisible = useHeaderVisible();
   const location = useLocation();
@@ -50,11 +51,12 @@ export function Navbar() {
                   >
                     <div className="shrink-0 w-[56px] h-[56px] md:w-24 md:h-24">
                       <img 
-                        src={mobileSeal}
+                        src={mobileLogoErrored ? logo : mobileSeal}
                         alt="Streetpoly News"
                         width={56}
                         height={56}
-                        className="block md:hidden w-full h-full object-cover object-center"
+                        className="block md:hidden w-full h-full object-contain"
+                        onError={() => setMobileLogoErrored(true)}
                       />
                       <img 
                         src={logo}
