@@ -16,10 +16,11 @@ interface Ad {
 }
 
 const mockAd: Ad = {
-  title: "YOUR AD HERE",
-  subtitle: "Reach 40k+ readers daily",
+  title: "NEW MUSIC MONDAYS",
+  subtitle: "Showcase your band or artist",
   bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
-  text: "ADVERTISE NOW",
+  text: "BOOK NOW",
+  link: "https://www.istaybooked.com",
   isAlbum: false,
   affiliateName: null,
 };

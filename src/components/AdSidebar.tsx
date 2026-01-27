@@ -1,6 +1,8 @@
 import { Download, Music } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import newMusicMondaysSideBanner from "@/assets/New Music Monday Side banner ad.png";
+import stripClubSlotsAd from "@/assets/Strip_Club_Slots_ad-removebg-preview.png";
 
 const SUPABASE_URL = "https://duldhllwapsjytdzpjfz.supabase.co";
 
@@ -12,28 +14,34 @@ interface Ad {
   link?: string;
   isAlbum?: boolean;
   albumArt?: string;
+  image?: string;
   affiliateName?: string | null;
+  imageClasses?: string;
 }
 
 const mockAds: { skyscraper: Ad[]; rectangle: Ad[]; banner: Ad[] } = {
   skyscraper: [
     {
-      title: "YOUR AD HERE",
-      subtitle: "Reach 40k+ readers",
+      title: "NEW MUSIC MONDAYS",
+      subtitle: "Showcase your band or artist",
       bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
-      text: "ADVERTISE",
-      link: "/advertise",
+      text: "BOOK NOW",
+      link: "https://www.istaybooked.com",
       isAlbum: false,
+      image: newMusicMondaysSideBanner,
       affiliateName: null,
+      imageClasses: "object-cover object-center scale-110",
     },
     {
-      title: "YOUR AD HERE",
-      subtitle: "Premium Placement",
+      title: "STRIP CLUB SLOTS",
+      subtitle: "Play Now",
       bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
-      text: "ADVERTISE",
+      text: "PLAY NOW",
       link: "/advertise",
       isAlbum: false,
+      image: stripClubSlotsAd,
       affiliateName: null,
+      imageClasses: "object-cover object-top scale-[1.2] origin-top",
     },
   ],
   rectangle: [
@@ -58,10 +66,11 @@ const mockAds: { skyscraper: Ad[]; rectangle: Ad[]; banner: Ad[] } = {
   ],
   banner: [
     {
-      title: "YOUR AD HERE",
-      subtitle: "Contact us to advertise",
+      title: "NEW MUSIC MONDAYS",
+      subtitle: "Now booking for Monday night spots",
       bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
-      text: "ADVERTISE NOW",
+      text: "BOOK NOW",
+      link: "https://www.istaybooked.com",
       isAlbum: false,
       affiliateName: null,
     },
@@ -105,9 +114,9 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
   };
 
   return (
-    <aside className={`hidden lg:flex flex-col items-center gap-6 w-[200px] sticky top-32 h-fit ${position === 'left' ? 'pl-0' : 'pr-0'}`}>
-      {/* Skyscraper Ad 160x600 */}
-      <div className="relative">
+    <aside className="hidden lg:flex flex-col items-center gap-6 sticky top-32 h-fit w-[260px]">
+      {/* Skyscraper Ad 260x600 */}
+      <div className="relative w-full flex flex-col items-center">
         <span className="absolute -top-4 left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
           Advertisement
         </span>
@@ -115,9 +124,15 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
           href={getTrackedUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className={`w-[180px] h-[600px] bg-gradient-to-b ${skyAd.bg} rounded-lg flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20`}
+          className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
         >
-          {skyAd.isAlbum ? (
+          {skyAd.image ? (
+            <img
+              src={skyAd.image}
+              alt={skyAd.title}
+              className={`w-full h-full ${skyAd.imageClasses || ""}`}
+            />
+          ) : skyAd.isAlbum ? (
             <>
               {/* Album artwork */}
               <div className="w-[130px] h-[130px] rounded-lg overflow-hidden mb-4 shadow-xl border-2 border-white/20">
@@ -166,13 +181,13 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
         </a>
       </div>
 
-      {/* Medium Rectangle Ad 160x250 */}
-      <div className="relative">
+      {/* Medium Rectangle Ad 260x250 */}
+      <div className="relative w-full flex flex-col items-center">
         <span className="absolute -top-4 left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
           Advertisement
         </span>
         <div
-          className={`w-[160px] h-[250px] bg-gradient-to-b ${rectAd.bg} rounded-lg flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20`}
+          className={`h-[250px] bg-gradient-to-b ${rectAd.bg} rounded-lg flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20 w-full`}
         >
           <div className="text-foreground/90 font-display text-xl leading-tight mb-2">
             {rectAd.title}
