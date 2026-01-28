@@ -49,13 +49,13 @@ export function Navbar() {
                     to="/" 
                     className="flex items-center gap-3 md:gap-6 group"
                   >
-                    <div className="shrink-0 w-[56px] h-[56px] md:w-24 md:h-24">
+                    <div className="shrink-0 w-[56px] h-[56px] md:w-24 md:h-24 relative shadow-lg md:shadow-none rounded-full overflow-hidden">
                       <img 
                         src={mobileLogoErrored ? logo : mobileSeal}
                         alt="Streetpoly News"
                         width={56}
                         height={56}
-                        className="block md:hidden w-full h-full object-contain"
+                        className="block md:hidden w-full h-full object-contain filter-none"
                         onError={() => setMobileLogoErrored(true)}
                       />
                       <img 
