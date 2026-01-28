@@ -1,8 +1,10 @@
 import { Download, Music } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import newMusicMondaysSideBanner from "@/assets/New Music Monday Side banner ad.png";
 import stripClubSlotsAd from "@/assets/Strip_Club_Slots_ad-removebg-preview.png";
+import streetPolyMerchAd from "@/assets/StreetPolyMerch_Ad.jpeg";
 
 const SUPABASE_URL = "https://duldhllwapsjytdzpjfz.supabase.co";
 
@@ -50,10 +52,13 @@ const mockAds: { skyscraper: Ad[]; rectangle: Ad[]; banner: Ad[] } = {
   ],
   rectangle: [
     {
-      title: "YOUR AD HERE",
-      subtitle: "Promote your brand",
+      title: "STREETPOLY MERCH",
+      subtitle: "Available Now!",
       bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
-      text: "GET STARTED",
+      text: "ORDER NOW",
+      link: "/merch",
+      image: streetPolyMerchAd,
+      zoom: 1,
     },
     {
       title: "YOUR AD HERE",
@@ -62,10 +67,13 @@ const mockAds: { skyscraper: Ad[]; rectangle: Ad[]; banner: Ad[] } = {
       text: "LEARN MORE",
     },
     {
-      title: "YOUR AD HERE",
-      subtitle: "Daily Traffic",
+      title: "STREETPOLY MERCH",
+      subtitle: "Available Now!",
       bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
-      text: "BOOK NOW",
+      text: "ORDER NOW",
+      link: "/merch",
+      image: streetPolyMerchAd,
+      zoom: 1,
     },
   ],
   banner: [
@@ -86,6 +94,40 @@ interface AdSidebarProps {
 }
 
 export const AdSidebar = ({ position }: AdSidebarProps) => {
+  const sidebarRef = useRef<HTMLElement>(null);
+  const [stickyStyle, setStickyStyle] = useState<React.CSSProperties>({ top: "8rem" });
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (!sidebarRef.current) return;
+      
+      const sidebarHeight = sidebarRef.current.offsetHeight;
+      const windowHeight = window.innerHeight;
+      
+      // If sidebar fits in viewport (with header offset), stick to top (top-32 = 8rem)
+      // If it doesn't fit, stick to bottom (bottom-6 = 1.5rem) so user can see full content
+      if (windowHeight >= sidebarHeight + 160) {
+        setStickyStyle({ top: "8rem" });
+      } else {
+        setStickyStyle({ bottom: "1.5rem" });
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    
+    // Use ResizeObserver to detect content changes (e.g. image loading, affiliate data)
+    const resizeObserver = new ResizeObserver(handleResize);
+    if (sidebarRef.current) {
+      resizeObserver.observe(sidebarRef.current);
+    }
+    
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
+    };
+  }, []);
+
   const skyAd = mockAds.skyscraper[position === "left" ? 0 : 1];
   const rectAd = mockAds.rectangle[position === "left" ? 0 : 2];
 
@@ -118,7 +160,11 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
   };
 
   return (
-    <aside className="hidden lg:flex flex-col items-center gap-6 sticky top-32 h-fit w-[260px]">
+    <aside 
+      ref={sidebarRef}
+      className="hidden lg:flex flex-col items-center gap-6 sticky h-fit w-[260px]"
+      style={stickyStyle}
+    >
       {/* Skyscraper Ad 260x600 */}
       <div className="relative w-full flex flex-col items-center">
         <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
@@ -198,19 +244,37 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
         <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
           Advertisement
         </span>
-        <div
-          className={`h-[250px] bg-gradient-to-b ${rectAd.bg} rounded-lg flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20 w-full`}
+        <a
+          href={rectAd.link || "#"}
+          target={rectAd.link ? "_blank" : undefined}
+          rel={rectAd.link ? "noopener noreferrer" : undefined}
+          className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${rectAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `h-[250px] bg-gradient-to-b ${rectAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
         >
-          <div className="text-foreground/90 font-display text-xl leading-tight mb-2">
-            {rectAd.title}
-          </div>
-          <div className="text-foreground/70 font-body text-xs mb-4">
-            {rectAd.subtitle}
-          </div>
-          <div className="bg-foreground text-background font-display text-xs px-4 py-1.5 rounded-full">
-            {rectAd.text}
-          </div>
-        </div>
+          {rectAd.image ? (
+            <img
+              src={rectAd.image}
+              alt={rectAd.title}
+              style={{
+                objectFit: 'contain',
+                width: '100%',
+                height: 'auto',
+                display: 'block'
+              }}
+            />
+          ) : (
+            <>
+              <div className="text-foreground/90 font-display text-xl leading-tight mb-2">
+                {rectAd.title}
+              </div>
+              <div className="text-foreground/70 font-body text-xs mb-4">
+                {rectAd.subtitle}
+              </div>
+              <div className="bg-foreground text-background font-display text-xs px-4 py-1.5 rounded-full">
+                {rectAd.text}
+              </div>
+            </>
+          )}
+        </a>
       </div>
     </aside>
   );
