@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import streetPolyMerchAd from "@/assets/StreetPolyMerch_Ad.jpeg";
 
 const Index = () => {
   const { data: posts = [] } = useQuery({
@@ -175,7 +176,7 @@ const Index = () => {
               available now.
             </p>
             <Link
-              to="/store"
+              to="/merch"
               className="mt-4 inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-full font-semibold w-fit hover:bg-primary/90 transition-colors"
             >
               Shop the Store
@@ -183,9 +184,8 @@ const Index = () => {
             </Link>
           </div>
           <div className="w-48 h-48 md:w-56 md:h-56 flex-shrink-0">
-            {/* TODO: Replace with a locally hosted image to avoid cross-origin errors */}
             <img
-              src="/placeholder-t-shirt.png" // Replace with the actual path to the local image
+              src={streetPolyMerchAd}
               alt="Street Politics merchandise"
               className="w-full h-full object-contain"
             />
@@ -194,13 +194,6 @@ const Index = () => {
 
         <div className="my-8 md:my-12 px-4">
           <AdBanner />
-        </div>
-
-        {/* Divider */}
-        <div className="flex items-center gap-3 md:gap-4 py-4 md:py-6 mt-2 md:mt-4">
-          <Separator className="flex-1" />
-          <span className="text-muted-foreground/40 text-[10px] md:text-xs font-body uppercase tracking-widest">Latest</span>
-          <Separator className="flex-1" />
         </div>
 
         {/* Latest Stories Title */}
