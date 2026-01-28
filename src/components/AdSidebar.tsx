@@ -18,7 +18,7 @@ interface Ad {
   image?: string;
   affiliateName?: string | null;
   imageClasses?: string;
-  zoom?: number;
+  scaleClass?: string;
   objectPosition?: string;
 }
 
@@ -33,7 +33,7 @@ const mockAds: { skyscraper: Ad[]; square: Ad[]; banner: Ad[] } = {
       isAlbum: false,
       image: newMusicMondaysSideBanner,
       affiliateName: null,
-      zoom: 1.08,
+      scaleClass: "scale-[1.08]",
       objectPosition: "center",
     },
     {
@@ -45,7 +45,7 @@ const mockAds: { skyscraper: Ad[]; square: Ad[]; banner: Ad[] } = {
       isAlbum: false,
       image: stripClubSlotsAd,
       affiliateName: null,
-      zoom: 1.2,
+      scaleClass: "scale-[1.2]",
       objectPosition: "top",
     },
   ],
@@ -57,7 +57,7 @@ const mockAds: { skyscraper: Ad[]; square: Ad[]; banner: Ad[] } = {
       text: "ORDER NOW",
       link: "/merch",
       image: streetPolyMerchAd,
-      zoom: 1,
+      scaleClass: "scale-100",
     },
     {
       title: "YOUR AD HERE",
@@ -72,7 +72,7 @@ const mockAds: { skyscraper: Ad[]; square: Ad[]; banner: Ad[] } = {
       text: "ORDER NOW",
       link: "/merch",
       image: streetPolyMerchAd,
-      zoom: 1,
+      scaleClass: "scale-100",
     },
   ],
   banner: [
@@ -143,10 +143,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
             <img
               src={skyAd.image}
               alt={skyAd.title}
-              className={`w-full h-full block object-cover object-${skyAd.objectPosition ?? 'center'} origin-${skyAd.objectPosition === 'top' ? 'top' : 'center'} scale-[var(--scale)]`}
-              style={{
-                '--scale': skyAd.zoom ?? 1
-              } as React.CSSProperties}
+              className={`w-full h-full block object-cover object-${skyAd.objectPosition ?? 'center'} origin-${skyAd.objectPosition === 'top' ? 'top' : 'center'} ${skyAd.scaleClass ?? 'scale-100'}`}
             />
           ) : skyAd.isAlbum ? (
             <>
