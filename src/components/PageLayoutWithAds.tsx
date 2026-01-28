@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Navbar } from "@/components/Navbar";
 import { BreakingNewsBanner } from "@/components/BreakingNewsBanner";
-import { AdSidebar, MobileSquareAd } from "@/components/AdSidebar";
+import { AdSidebar, MobileSquareAd, MobileSkyscraperAd } from "@/components/AdSidebar";
 import { AdBanner } from "@/components/AdBanner";
 import { BottomNav } from "@/components/BottomNav";
 import { useHeaderVisible } from "@/hooks/useHeaderVisible";
@@ -51,6 +51,8 @@ export const PageLayoutWithAds = ({
             </div>
           )}
           
+          {showAds && <MobileSkyscraperAd index={0} />}
+          {showAds && <MobileSkyscraperAd index={1} />}
           {showAds && <MobileSquareAd />}
           
           {children}

@@ -66,7 +66,7 @@ export const AdBanner = ({ className = "", showLabel = true }: AdBannerProps) =>
         href={getTrackedUrl()}
         target="_blank"
         rel="noopener noreferrer"
-        className={`w-full h-32 md:h-40 bg-gradient-to-r ${mockAd.bg} rounded-[32px] flex items-center justify-between px-6 md:px-10 cursor-pointer hover:scale-[1.02] transition-all duration-300 shadow-2xl hover:shadow-dem/20 border-2 border-dashed border-muted-foreground/30 relative overflow-hidden group`}
+        className={`w-full h-32 md:h-40 bg-gradient-to-r ${mockAd.bg} rounded-2xl flex items-center justify-between px-6 md:px-10 cursor-pointer hover:scale-[1.02] transition-all duration-300 shadow-2xl hover:shadow-dem/20 border-2 border-dashed border-muted-foreground/30 relative overflow-hidden group`}
       >
         <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
         <div className="flex items-center gap-6 md:gap-8 relative z-10">
