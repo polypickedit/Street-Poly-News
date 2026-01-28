@@ -1,13 +1,29 @@
 import { PageLayoutWithAds } from "@/components/PageLayoutWithAds";
 import { FeaturedSection } from "@/components/FeaturedSection";
-import { InfinitePostFeed } from "@/components/InfinitePostFeed";
+import { PostCard } from "@/components/PostCard";
+import { AdBanner } from "@/components/AdBanner";
 import { SuggestionsCarousel } from "@/components/SuggestionsCarousel";
 import { Separator } from "@/components/ui/separator";
 import { PageTransition } from "@/components/PageTransition";
 import { ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
 const Index = () => {
+  const { data: posts = [] } = useQuery({
+    queryKey: ["posts", "latest"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("posts")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(18);
+      if (error) throw error;
+      return data;
+    },
+  });
   const videoLinks = [
     {
       id: "3PXQSs-FsK4",
@@ -25,26 +41,72 @@ const Index = () => {
       url: "https://www.youtube.com/watch?v=Uxnw9TANizo",
       thumbnail: "https://i.ytimg.com/vi/Uxnw9TANizo/hqdefault.jpg",
     },
+    {
+      id: "video3",
+      title: "New Video Title 3",
+      description: "Description for new video 3.",
+      url: "https://www.youtube.com/watch?v=video3",
+      thumbnail: "https://i.ytimg.com/vi/3PXQSs-FsK4/hqdefault.jpg",
+    },
+    {
+      id: "video4",
+      title: "New Video Title 4",
+      description: "Description for new video 4.",
+      url: "https://www.youtube.com/watch?v=video4",
+      thumbnail: "https://i.ytimg.com/vi/Uxnw9TANizo/hqdefault.jpg",
+    },
+    {
+      id: "video5",
+      title: "New Video Title 5",
+      description: "Description for new video 5.",
+      url: "https://www.youtube.com/watch?v=video5",
+      thumbnail: "https://i.ytimg.com/vi/3PXQSs-FsK4/hqdefault.jpg",
+    },
+    {
+      id: "video6",
+      title: "New Video Title 6",
+      description: "Description for new video 6.",
+      url: "https://www.youtube.com/watch?v=video6",
+      thumbnail: "https://i.ytimg.com/vi/Uxnw9TANizo/hqdefault.jpg",
+    },
+    {
+      id: "video7",
+      title: "New Video Title 7",
+      description: "Description for new video 7.",
+      url: "https://www.youtube.com/watch?v=video7",
+      thumbnail: "https://i.ytimg.com/vi/3PXQSs-FsK4/hqdefault.jpg",
+    },
+    {
+      id: "video8",
+      title: "New Video Title 8",
+      description: "Description for new video 8.",
+      url: "https://www.youtube.com/watch?v=video8",
+      thumbnail: "https://i.ytimg.com/vi/Uxnw9TANizo/hqdefault.jpg",
+    },
+    {
+      id: "video9",
+      title: "New Video Title 9",
+      description: "Description for new video 9.",
+      url: "https://www.youtube.com/watch?v=video9",
+      thumbnail: "https://i.ytimg.com/vi/3PXQSs-FsK4/hqdefault.jpg",
+    },
   ];
 
   return (
-    <PageLayoutWithAds>
+    <PageLayoutWithAds mainClassName="w-full">
       <PageTransition>
-        {/* Hero Section */}
-        <section className="pt-8 md:pt-16 pb-8 md:pb-12">
-          <div className="text-center px-4 md:px-6">
-            <h1 className="font-display text-3xl sm:text-5xl md:text-7xl lg:text-8xl text-foreground mb-3 md:mb-4 tracking-wide leading-tight">
-              <span className="text-dem">STREETPOLY</span> <span className="text-rep">NEWS</span>
-            </h1>
-            <p className="font-body text-dem text-sm sm:text-lg md:text-xl max-w-2xl mx-auto px-2">
-              Unfiltered news from the streets. Real stories, real voices, real impact.
-            </p>
-            <div className="mt-4 md:mt-6 w-16 md:w-24 h-1 bg-rep mx-auto"></div>
-          </div>
-        </section>
+        {/* Divider */}
+        <div className="flex items-center gap-3 md:gap-4 py-3 md:py-4 px-4">
+          <Separator className="flex-1" />
+          <span className="text-muted-foreground/40 text-[10px] md:text-xs font-body uppercase tracking-widest">Featured</span>
+          <Separator className="flex-1" />
+        </div>
+
+        {/* Featured Section */}
+        <FeaturedSection />
 
         {/* Video Links */}
-        <section className="mb-6 md:mb-10">
+        <section className="mb-6 md:mb-10 px-4">
           <div className="flex items-center justify-between gap-4 mb-3">
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground font-body">
@@ -65,7 +127,7 @@ const Index = () => {
             </a>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {videoLinks.map((video) => (
               <a
                 key={video.id}
@@ -97,37 +159,37 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Divider */}
-        <div className="flex items-center gap-3 md:gap-4 py-3 md:py-4">
-          <Separator className="flex-1" />
-          <span className="text-muted-foreground/40 text-[10px] md:text-xs font-body uppercase tracking-widest">Featured</span>
-          <Separator className="flex-1" />
-        </div>
-
-        {/* Featured Section */}
-        <FeaturedSection />
-
         {/* Official Store Promo */}
-        <section className="py-8 md:py-12 px-4">
-          <div className="max-w-screen-xl mx-auto bg-gradient-to-r from-rep/10 to-dem/10 rounded-3xl p-6 md:p-12 border border-border flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8">
-            <div className="text-center md:text-left">
-              <h2 className="font-display text-3xl md:text-4xl lg:text-6xl text-foreground mb-3 md:mb-4">
-                THE OFFICIAL <span className="text-rep">STREETPOLY</span> STORE
-              </h2>
-              <p className="font-body text-muted-foreground text-base md:text-lg max-w-xl">
-                Support independent journalism and wear the message. Get exclusive drops, 
-                streetwear essentials, and the latest Streetpoly gear.
-              </p>
-            </div>
+        <section className="bg-card border border-border rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-8 mb-6 md:mb-10 px-4">
+          <div className="flex-1">
+            <h2 className="font-display text-3xl md:text-4xl text-foreground">
+              Rep the Movement
+            </h2>
+            <p className="text-muted-foreground mt-2 text-base md:text-lg">
+              Get the official Street Politics gear. Hoodies, tees, and more
+              available now.
+            </p>
             <Link
-              to="/merch"
-              className="group relative px-8 py-4 md:px-10 md:py-5 bg-rep text-rep-foreground font-display text-lg md:text-xl uppercase tracking-widest rounded-xl transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(239,68,68,0.3)] flex items-center gap-3"
+              to="/store"
+              className="mt-4 inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-full font-semibold w-fit hover:bg-primary/90 transition-colors"
             >
-              Visit Store
-              <ExternalLink className="w-5 h-5 md:w-6 md:h-6" />
+              Shop the Store
+              <ExternalLink className="w-4 h-4" />
             </Link>
           </div>
+          <div className="w-48 h-48 md:w-56 md:h-56 flex-shrink-0">
+            {/* TODO: Replace with a locally hosted image to avoid cross-origin errors */}
+            <img
+              src="/placeholder-t-shirt.png" // Replace with the actual path to the local image
+              alt="Street Politics merchandise"
+              className="w-full h-full object-contain"
+            />
+          </div>
         </section>
+
+        <div className="my-8 md:my-12 px-4">
+          <AdBanner />
+        </div>
 
         {/* Divider */}
         <div className="flex items-center gap-3 md:gap-4 py-4 md:py-6 mt-2 md:mt-4">
@@ -136,12 +198,42 @@ const Index = () => {
           <Separator className="flex-1" />
         </div>
 
-        {/* Posts Feed */}
-        <section id="videos" className="pb-8 md:pb-12">
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-foreground mb-6 md:mb-8">
+        {/* Latest Stories Title */}
+        <div className="flex items-center gap-3 md:gap-4 py-3 md:py-4 px-4">
+          <Separator className="flex-1" />
+          <span className="text-muted-foreground/40 text-[10px] md:text-xs font-body uppercase tracking-widest">
             Latest Stories
-          </h2>
-          <InfinitePostFeed />
+          </span>
+          <Separator className="flex-1" />
+        </div>
+
+        {/* Posts Feed */}
+        <section id="videos" className="pb-8 md:pb-12 px-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+            {posts.slice(0, 9).map((post, index) => (
+              <div 
+                key={post.id}
+                className={`animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both delay-${Math.min(index, 10)}`}
+              >
+                <PostCard {...post} />
+              </div>
+            ))}
+          </div>
+
+          <div className="my-8 md:my-12">
+            <AdBanner />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+            {posts.slice(9, 18).map((post, index) => (
+              <div 
+                key={post.id}
+                className={`animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both delay-${Math.min(index, 10)}`}
+              >
+                <PostCard {...post} />
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* Suggestions Carousel */}

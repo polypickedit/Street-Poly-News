@@ -37,13 +37,11 @@ export const PageLayoutWithAds = ({
       {headerContent}
 
       <div
-        className={`flex justify-center gap-4 lg:gap-8 px-4 sm:px-6 md:px-8 transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}
+        className={`grid grid-cols-[auto_1fr_auto] gap-4 lg:gap-8 px-4 sm:px-6 md:px-8 transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}
       >
-        <div className="hidden lg:flex items-start flex-shrink-0">
-          <AdSidebar position="left" />
-        </div>
+        <AdSidebar position="left" />
 
-        <main className={`flex-1 min-w-0 ${mainClassName}`}>
+        <main className={`min-w-0 ${mainClassName}`}>
           {/* Header Ad Space */}
           {showAds && (
             <div className="mb-12 mt-4">
@@ -65,9 +63,7 @@ export const PageLayoutWithAds = ({
           )}
         </main>
 
-        <div className="hidden lg:flex items-start flex-shrink-0">
-          <AdSidebar position="right" />
-        </div>
+        <AdSidebar position="right" />
       </div>
 
       <BottomNav />

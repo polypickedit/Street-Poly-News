@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Play, Flame } from "lucide-react";
 import { format } from "date-fns";
 import { Post } from "@/hooks/usePosts";
+import { PostCard } from "./PostCard";
 
 export function FeaturedSection() {
   const location = useLocation();
@@ -48,84 +49,59 @@ export function FeaturedSection() {
     post.thumbnail_url || `https://img.youtube.com/vi/${post.youtube_id}/hqdefault.jpg`;
 
   return (
-    <section className="py-4 md:py-6 px-4">
-      <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
-        <Flame className="w-4 h-4 md:w-5 md:h-5 text-rep" />
-        <h2 className="font-display text-xl md:text-2xl text-foreground">Featured Stories</h2>
-        <div className="flex-1 h-px bg-border ml-2" />
-      </div>
-      
-      <div className="space-y-4 md:space-y-6">
-        {/* Main Featured - Full width */}
-        <Link
-          to={`/post/${mainFeatured.id}`}
-          className="group relative aspect-video lg:aspect-[21/9] min-h-[200px] lg:min-h-[400px] rounded-lg overflow-hidden block"
-        >
-          <img
-            src={getThumbnail(mainFeatured)}
-            alt={mainFeatured.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent w-full flex justify-center items-center" />
-          <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
-            <div className="flex items-center gap-2 mb-2">
-              {mainFeatured.is_breaking && (
-                <span className="px-2 py-1 bg-rep text-rep-foreground text-[10px] md:text-xs font-body uppercase tracking-wider rounded">
-                  Breaking
-                </span>
-              )}
-              <span className="px-2 py-1 bg-dem text-dem-foreground text-[10px] md:text-xs font-body uppercase tracking-wider rounded">
-                Featured
-              </span>
-            </div>
-            <h3 className="font-display text-2xl sm:text-3xl md:text-4xl text-foreground leading-tight mb-2 group-hover:text-dem transition-colors">
-              {mainFeatured.title}
-            </h3>
-            {mainFeatured.subtitle && (
-              <p className="text-muted-foreground font-body text-xs md:text-sm line-clamp-2 hidden sm:block">
-                {mainFeatured.subtitle}
-              </p>
-            )}
-          </div>
-          <div className="absolute top-3 md:top-4 right-3 md:right-4 w-10 h-10 md:w-12 md:h-12 rounded-full bg-dem/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <Play className="w-5 h-5 md:w-6 md:h-6 text-dem-foreground ml-0.5" fill="currentColor" />
-          </div>
-        </Link>
-
-        {/* Side Featured Items - 2x3 Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {sideFeatured.map((post) => (
-            <Link
-              key={post.id}
-              to={`/post/${post.id}`}
-              className="group relative aspect-video rounded-lg overflow-hidden"
-            >
-              <img
-                src={getThumbnail(post)}
-                alt={post.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  {post.is_breaking && (
-                    <span className="px-1.5 py-0.5 bg-rep/80 text-rep-foreground text-[8px] md:text-[10px] font-body uppercase tracking-wider rounded">
-                      Breaking
-                    </span>
-                  )}
-                  <span className="px-1.5 py-0.5 bg-dem/80 text-dem-foreground text-[8px] md:text-[10px] font-body uppercase tracking-wider rounded">
+    <section className="py-4 md:py-6">
+      <div className="px-4">
+        <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6 px-4">
+          <Flame className="w-4 h-4 md:w-5 md:h-5 text-rep" />
+          <h2 className="font-display text-xl md:text-2xl text-foreground">Featured Stories</h2>
+          <div className="flex-1 h-px bg-border ml-2" />
+        </div>
+        
+        <div className="space-y-4 md:space-y-6">
+          <Link
+            to={`/post/${mainFeatured.id}`}
+            className="group relative block aspect-video w-full overflow-hidden rounded-2xl lg:aspect-[21/9]"
+          >
+            <img
+              src={getThumbnail(mainFeatured)}
+              alt={mainFeatured.title}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
+            <div className="absolute bottom-0 left-0 p-4 md:p-6">
+              <div className="flex items-center gap-3">
+                {mainFeatured.is_featured && (
+                  <span className="rounded-full bg-blue-500/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-blue-400 backdrop-blur-sm">
                     Featured
                   </span>
-                </div>
-                <h4 className="font-display text-lg md:text-xl text-foreground leading-tight group-hover:text-dem transition-colors line-clamp-2">
-                  {post.title}
-                </h4>
+                )}
+                <span className="text-xs uppercase tracking-widest text-white/60">
+                  {mainFeatured.content_type}
+                </span>
               </div>
-              <div className="absolute top-3 md:top-4 right-3 md:right-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-dem/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Play className="w-4 h-4 md:w-5 md:h-5 text-dem-foreground ml-0.5" fill="currentColor" />
-              </div>
-            </Link>
-          ))}
+              <h2 className="mt-2 font-display text-xl text-white sm:text-2xl md:text-4xl">
+                {mainFeatured.title}
+              </h2>
+            </div>
+          </Link>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+            {sideFeatured.map((post) => (
+              <PostCard
+                key={post.id}
+                id={post.id}
+                title={post.title}
+                subtitle={post.subtitle}
+                youtube_id={post.youtube_id}
+                thumbnail_url={post.thumbnail_url}
+                created_at={post.created_at}
+                content_type={post.content_type}
+                is_breaking={post.is_breaking ?? false}
+                is_featured={post.is_featured ?? false}
+                view_count={post.view_count}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>

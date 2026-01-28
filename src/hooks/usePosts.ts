@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-const POSTS_PER_PAGE = 10;
+const POSTS_PER_PAGE = 9;
 
 export interface Post {
   id: number;
