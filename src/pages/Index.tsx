@@ -105,6 +105,11 @@ const Index = () => {
         {/* Featured Section */}
         <FeaturedSection />
 
+        {/* Ad Banner */}
+        <div className="my-8 md:my-12 px-4">
+          <AdBanner />
+        </div>
+
         {/* Video Links */}
         <section className="mb-6 md:mb-10 px-4">
           <div className="flex items-center justify-between gap-4 mb-3">
