@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Slot, SlotAccess } from '@/types/slots';
+import { Slot, SlotAccess, Entitlement } from '@/types/slots';
 
 export const useSlotAccess = (slotSlug: string) => {
   const [access, setAccess] = useState<SlotAccess>({ hasAccess: true }); // Default to true for now to avoid breaking UI while tables are missing
@@ -8,17 +8,54 @@ export const useSlotAccess = (slotSlug: string) => {
 
   useEffect(() => {
     const checkAccess = async () => {
+      // Mock data for development when database records are missing
+      const MOCK_SLOTS: Record<string, Slot> = {
+        'new-music-mondays': {
+          id: 'mock-music-id',
+          name: 'New Music Mondays',
+          slug: 'new-music-mondays',
+          description: 'Weekly track reviews',
+          slot_type: 'service',
+          visibility: 'public',
+          monetization_model: 'free',
+          price: 0,
+          billing_interval: null,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        'featured-interview': {
+          id: 'mock-interview-id',
+          name: 'Featured Interview',
+          slug: 'featured-interview',
+          description: '1-on-1 interviews',
+          slot_type: 'service',
+          visibility: 'public',
+          monetization_model: 'free',
+          price: 0,
+          billing_interval: null,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      };
+
       try {
         setLoading(true);
         
         // 1. Get the slot
-        const { data: slot, error: slotError } = await supabase
-          .from('slots' as any)
+        const { data: slot, error: slotError } = await (supabase as unknown as { from: (t: string) => { select: (p: string) => { eq: (k: string, v: string) => { single: () => Promise<{ data: unknown; error: unknown }> } } } })
+          .from('slots')
           .select('*')
           .eq('slug', slotSlug)
           .single();
 
         if (slotError || !slot) {
+          // Check if we have a mock fallback for this slug
+          if (MOCK_SLOTS[slotSlug]) {
+            setAccess({ hasAccess: true, slot: MOCK_SLOTS[slotSlug] });
+            return;
+          }
           console.error('Slot not found:', slotSlug);
           setAccess({ hasAccess: true }); // Fallback
           return;
@@ -54,8 +91,8 @@ export const useSlotAccess = (slotSlug: string) => {
         }
 
         // 4. Check entitlements for 'paid' visibility
-        const { data: entitlement, error: entError } = await supabase
-          .from('entitlements' as any)
+        const { data: entitlement, error: entError } = await (supabase as unknown as { from: (t: string) => { select: (p: string) => { eq: (k1: string, v1: string) => { eq: (k2: string, v2: string) => { eq: (k3: string, v3: boolean) => { maybeSingle: () => Promise<{ data: unknown; error: unknown }> } } } } } })
+          .from('entitlements')
           .select('*')
           .eq('user_id', session.user.id)
           .eq('slot_id', typedSlot.id)
@@ -71,8 +108,10 @@ export const useSlotAccess = (slotSlug: string) => {
           return;
         }
 
+        const typedEntitlement = entitlement as unknown as Entitlement;
+
         // Check expiration
-        if (entitlement.expires_at && new Date(entitlement.expires_at) < new Date()) {
+        if (typedEntitlement.expires_at && new Date(typedEntitlement.expires_at) < new Date()) {
           setAccess({ 
             hasAccess: false, 
             reason: 'payment_required', 
