@@ -6,7 +6,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHeaderVisible } from "@/hooks/useHeaderVisible";
 import { useCategories } from "@/hooks/useCategories";
-import logo from "@/assets/logo.svg";
+import logo from "/logo.svg";
 import mobileSeal from "@/assets/mobile-seal.png";
 
 const navLinks = [
