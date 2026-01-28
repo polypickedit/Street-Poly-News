@@ -17,6 +17,8 @@ interface Ad {
   image?: string;
   affiliateName?: string | null;
   imageClasses?: string;
+  zoom?: number;
+  objectPosition?: string;
 }
 
 const mockAds: { skyscraper: Ad[]; rectangle: Ad[]; banner: Ad[] } = {
@@ -30,7 +32,8 @@ const mockAds: { skyscraper: Ad[]; rectangle: Ad[]; banner: Ad[] } = {
       isAlbum: false,
       image: newMusicMondaysSideBanner,
       affiliateName: null,
-      imageClasses: "object-cover object-center scale-110",
+      zoom: 1.08,
+      objectPosition: "center",
     },
     {
       title: "STRIP CLUB SLOTS",
@@ -41,7 +44,8 @@ const mockAds: { skyscraper: Ad[]; rectangle: Ad[]; banner: Ad[] } = {
       isAlbum: false,
       image: stripClubSlotsAd,
       affiliateName: null,
-      imageClasses: "object-cover object-top scale-[1.2] origin-top",
+      zoom: 1.2,
+      objectPosition: "top",
     },
   ],
   rectangle: [
@@ -117,7 +121,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
     <aside className="hidden lg:flex flex-col items-center gap-6 sticky top-32 h-fit w-[260px]">
       {/* Skyscraper Ad 260x600 */}
       <div className="relative w-full flex flex-col items-center">
-        <span className="absolute -top-4 left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
+        <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
           Advertisement
         </span>
         <a
@@ -130,7 +134,15 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
             <img
               src={skyAd.image}
               alt={skyAd.title}
-              className={`w-full h-full ${skyAd.imageClasses || ""}`}
+              style={{
+                objectFit: 'cover',
+                objectPosition: skyAd.objectPosition ?? 'center',
+                transform: `scale(${skyAd.zoom ?? 1})`,
+                transformOrigin: skyAd.objectPosition === 'top' ? 'top center' : 'center center',
+                width: '100%',
+                height: '100%',
+                display: 'block'
+              }}
             />
           ) : skyAd.isAlbum ? (
             <>
@@ -183,7 +195,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
 
       {/* Medium Rectangle Ad 260x250 */}
       <div className="relative w-full flex flex-col items-center">
-        <span className="absolute -top-4 left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
+        <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
           Advertisement
         </span>
         <div
