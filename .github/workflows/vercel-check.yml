@@ -1,0 +1,18 @@
+name: Vercel Check
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  notify-vercel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: 'notify vercel'
+        uses: 'vercel/repository-dispatch/actions/status@v1'
+        with:
+          name: Vercel - streetpolynews.com: Github Check
