@@ -29,6 +29,14 @@
 </head>
 
   <body>
+    <script>
+      // Defensive guard against brittle third-party scripts (e.g. h1-check.js)
+      if (typeof window !== 'undefined') {
+        window.detectStore = window.detectStore || function() { 
+          return Promise.resolve({}); 
+        };
+      }
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
