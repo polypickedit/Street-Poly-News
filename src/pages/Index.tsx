@@ -28,7 +28,7 @@ const Index = () => {
   ];
 
   return (
-    <PageLayoutWithAds showMobileAd={false}>
+    <PageLayoutWithAds>
       <PageTransition>
         {/* Hero Section */}
         <section className="pt-8 md:pt-16 pb-8 md:pb-12">

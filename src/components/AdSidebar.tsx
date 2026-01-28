@@ -1,6 +1,5 @@
 import { Download, Music } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import newMusicMondaysSideBanner from "@/assets/New Music Monday Side banner ad.png";
 import stripClubSlotsAd from "@/assets/Strip_Club_Slots_ad-removebg-preview.png";
@@ -23,7 +22,7 @@ interface Ad {
   objectPosition?: string;
 }
 
-const mockAds: { skyscraper: Ad[]; rectangle: Ad[]; banner: Ad[] } = {
+const mockAds: { skyscraper: Ad[]; square: Ad[]; banner: Ad[] } = {
   skyscraper: [
     {
       title: "NEW MUSIC MONDAYS",
@@ -50,7 +49,7 @@ const mockAds: { skyscraper: Ad[]; rectangle: Ad[]; banner: Ad[] } = {
       objectPosition: "top",
     },
   ],
-  rectangle: [
+  square: [
     {
       title: "STREETPOLY MERCH",
       subtitle: "Available Now!",
@@ -94,42 +93,8 @@ interface AdSidebarProps {
 }
 
 export const AdSidebar = ({ position }: AdSidebarProps) => {
-  const sidebarRef = useRef<HTMLElement>(null);
-  const [stickyStyle, setStickyStyle] = useState<React.CSSProperties>({ top: "8rem" });
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (!sidebarRef.current) return;
-      
-      const sidebarHeight = sidebarRef.current.offsetHeight;
-      const windowHeight = window.innerHeight;
-      
-      // If sidebar fits in viewport (with header offset), stick to top (top-32 = 8rem)
-      // If it doesn't fit, stick to bottom (bottom-6 = 1.5rem) so user can see full content
-      if (windowHeight >= sidebarHeight + 160) {
-        setStickyStyle({ top: "8rem" });
-      } else {
-        setStickyStyle({ bottom: "1.5rem" });
-      }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    
-    // Use ResizeObserver to detect content changes (e.g. image loading, affiliate data)
-    const resizeObserver = new ResizeObserver(handleResize);
-    if (sidebarRef.current) {
-      resizeObserver.observe(sidebarRef.current);
-    }
-    
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      resizeObserver.disconnect();
-    };
-  }, []);
-
   const skyAd = mockAds.skyscraper[position === "left" ? 0 : 1];
-  const rectAd = mockAds.rectangle[position === "left" ? 0 : 2];
+  const sqAd = mockAds.square[position === "left" ? 0 : 2];
 
   // Fetch affiliate link for tracked ads
   const { data: affiliateLink } = useQuery({
@@ -161,9 +126,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
 
   return (
     <aside 
-      ref={sidebarRef}
-      className="hidden lg:flex flex-col items-center gap-6 sticky h-fit w-[260px]"
-      style={stickyStyle}
+      className="hidden lg:flex flex-col items-center gap-6 sticky top-32 h-fit max-h-[calc(100vh-9rem)] w-[260px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
     >
       {/* Skyscraper Ad 260x600 */}
       <div className="relative w-full flex flex-col items-center">
@@ -180,15 +143,10 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
             <img
               src={skyAd.image}
               alt={skyAd.title}
+              className={`w-full h-full block object-cover object-${skyAd.objectPosition ?? 'center'} origin-${skyAd.objectPosition === 'top' ? 'top' : 'center'} scale-[var(--scale)]`}
               style={{
-                objectFit: 'cover',
-                objectPosition: skyAd.objectPosition ?? 'center',
-                transform: `scale(${skyAd.zoom ?? 1})`,
-                transformOrigin: skyAd.objectPosition === 'top' ? 'top center' : 'center center',
-                width: '100%',
-                height: '100%',
-                display: 'block'
-              }}
+                '--scale': skyAd.zoom ?? 1
+              } as React.CSSProperties}
             />
           ) : skyAd.isAlbum ? (
             <>
@@ -239,38 +197,33 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
         </a>
       </div>
 
-      {/* Medium Rectangle Ad 260x250 */}
+      {/* Square Ad 260x260 */}
       <div className="relative w-full flex flex-col items-center">
         <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
           Advertisement
         </span>
         <a
-          href={rectAd.link || "#"}
-          target={rectAd.link ? "_blank" : undefined}
-          rel={rectAd.link ? "noopener noreferrer" : undefined}
-          className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${rectAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `h-[250px] bg-gradient-to-b ${rectAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
+          href={sqAd.link || "#"}
+          target={sqAd.link ? "_blank" : undefined}
+          rel={sqAd.link ? "noopener noreferrer" : undefined}
+          className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `aspect-square bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
         >
-          {rectAd.image ? (
+          {sqAd.image ? (
             <img
-              src={rectAd.image}
-              alt={rectAd.title}
-              style={{
-                objectFit: 'contain',
-                width: '100%',
-                height: 'auto',
-                display: 'block'
-              }}
+              src={sqAd.image}
+              alt={sqAd.title}
+              className="object-contain w-full h-auto block"
             />
           ) : (
             <>
               <div className="text-foreground/90 font-display text-xl leading-tight mb-2">
-                {rectAd.title}
+                {sqAd.title}
               </div>
               <div className="text-foreground/70 font-body text-xs mb-4">
-                {rectAd.subtitle}
+                {sqAd.subtitle}
               </div>
               <div className="bg-foreground text-background font-display text-xs px-4 py-1.5 rounded-full">
-                {rectAd.text}
+                {sqAd.text}
               </div>
             </>
           )}
@@ -318,7 +271,7 @@ export const MobileAdBanner = () => {
           href={getTrackedUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className={`w-full h-20 md:h-24 bg-gradient-to-r ${bannerAd.bg} rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20`}
+          className={`w-full h-20 md:h-24 bg-gradient-to-r ${bannerAd.bg} rounded-[32px] flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20`}
         >
           <div className="flex items-center gap-3 md:gap-4">
             {bannerAd.isAlbum && (
@@ -345,6 +298,46 @@ export const MobileAdBanner = () => {
           <div className="flex items-center gap-2 bg-foreground text-background font-display text-xs md:text-sm px-4 py-2 rounded-full flex-shrink-0">
             {bannerAd.text}
           </div>
+        </a>
+      </div>
+    </div>
+  );
+};
+
+export const MobileSquareAd = () => {
+  const sqAd = mockAds.square[0];
+
+  return (
+    <div className="lg:hidden w-full my-6 flex justify-center">
+      <div className="relative w-full max-w-[300px] flex flex-col items-center">
+        <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
+          Advertisement
+        </span>
+        <a
+          href={sqAd.link || "#"}
+          target={sqAd.link ? "_blank" : undefined}
+          rel={sqAd.link ? "noopener noreferrer" : undefined}
+          className={`rounded-[32px] flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent aspect-square" : `aspect-square bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
+        >
+          {sqAd.image ? (
+            <img
+              src={sqAd.image}
+              alt={sqAd.title}
+              className="object-contain w-full h-auto block"
+            />
+          ) : (
+            <>
+              <div className="text-foreground/90 font-display text-xl leading-tight mb-2">
+                {sqAd.title}
+              </div>
+              <div className="text-foreground/70 font-body text-xs mb-4">
+                {sqAd.subtitle}
+              </div>
+              <div className="bg-foreground text-background font-display text-xs px-4 py-1.5 rounded-full">
+                {sqAd.text}
+              </div>
+            </>
+          )}
         </a>
       </div>
     </div>
