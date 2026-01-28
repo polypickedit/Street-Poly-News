@@ -1,4 +1,3 @@
-import React from "react";
 import { Download, Music } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -140,6 +139,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
         {isInternal ? (
           <Link
             to={skyAd.link || "#"}
+            title={skyAd.title}
             className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
           >
             {skyAd.image ? (
@@ -200,6 +200,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
             href={getTrackedUrl()}
             target="_blank"
             rel="noopener noreferrer"
+            title={skyAd.title}
             className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
           >
             {skyAd.image ? (
@@ -266,6 +267,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
         {sqAd.link?.startsWith("/") ? (
           <Link
             to={sqAd.link}
+            title={sqAd.title}
             className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 border-2 border-dashed border-muted-foreground/20`}`}
           >
             {sqAd.image ? (
@@ -290,9 +292,10 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
           </Link>
         ) : (
           <a
-            href={sqAd.link}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={sqAd.link || "#"}
+            target={sqAd.link ? "_blank" : undefined}
+            rel={sqAd.link ? "noopener noreferrer" : undefined}
+            title={sqAd.title}
             className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 border-2 border-dashed border-muted-foreground/20`}`}
           >
             {sqAd.image ? (
@@ -512,6 +515,7 @@ export const MobileSkyscraperAd = ({ index = 0 }: { index?: number }) => {
         {isInternal ? (
           <Link
             to={skyAd.link || "#"}
+            title={skyAd.title}
             className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
           >
             <AdContent />
@@ -521,6 +525,7 @@ export const MobileSkyscraperAd = ({ index = 0 }: { index?: number }) => {
             href={getTrackedUrl()}
             target="_blank"
             rel="noopener noreferrer"
+            title={skyAd.title}
             className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
           >
             <AdContent />
@@ -568,6 +573,7 @@ export const MobileSquareAd = () => {
         {isInternal ? (
           <Link
             to={sqAd.link || "#"}
+            title={sqAd.title}
             className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `aspect-square bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
           >
             <AdContent />
@@ -577,6 +583,7 @@ export const MobileSquareAd = () => {
             href={sqAd.link || "#"}
             target={sqAd.link ? "_blank" : undefined}
             rel={sqAd.link ? "noopener noreferrer" : undefined}
+            title={sqAd.title}
             className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `aspect-square bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
           >
             <AdContent />
