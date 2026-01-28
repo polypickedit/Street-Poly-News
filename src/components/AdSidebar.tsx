@@ -203,13 +203,13 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
           href={sqAd.link}
           target="_blank"
           rel="noopener noreferrer"
-          className={`h-[260px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 border-2 border-dashed border-muted-foreground/20`}`}
+          className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 border-2 border-dashed border-muted-foreground/20`}`}
         >
           {sqAd.image ? (
             <img
               src={sqAd.image}
               alt={sqAd.title}
-              className={`w-full h-full block object-cover ${sqAd.scaleClass ?? 'scale-100'}`}
+              className={`w-full h-auto block object-contain ${sqAd.scaleClass ?? 'scale-100'}`}
             />
           ) : (
             <>
@@ -407,7 +407,7 @@ export const MobileSquareAd = () => {
             <img
               src={sqAd.image}
               alt={sqAd.title}
-              className="object-contain w-auto h-auto max-w-full block mx-auto"
+              className="object-contain w-full h-auto block"
             />
           ) : (
             <>
