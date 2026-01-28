@@ -65,7 +65,7 @@ const Index = () => {
             </a>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {videoLinks.map((video) => (
               <a
                 key={video.id}
@@ -108,23 +108,23 @@ const Index = () => {
         <FeaturedSection />
 
         {/* Official Store Promo */}
-        <section className="py-12 px-4">
-          <div className="max-w-screen-xl mx-auto bg-gradient-to-r from-rep/10 to-dem/10 rounded-3xl p-8 md:p-12 border border-border flex flex-col md:flex-row items-center justify-between gap-8">
+        <section className="py-8 md:py-12 px-4">
+          <div className="max-w-screen-xl mx-auto bg-gradient-to-r from-rep/10 to-dem/10 rounded-3xl p-6 md:p-12 border border-border flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8">
             <div className="text-center md:text-left">
-              <h2 className="font-display text-4xl md:text-6xl text-foreground mb-4">
+              <h2 className="font-display text-3xl md:text-4xl lg:text-6xl text-foreground mb-3 md:mb-4">
                 THE OFFICIAL <span className="text-rep">STREETPOLY</span> STORE
               </h2>
-              <p className="font-body text-muted-foreground text-lg max-w-xl">
+              <p className="font-body text-muted-foreground text-base md:text-lg max-w-xl">
                 Support independent journalism and wear the message. Get exclusive drops, 
                 streetwear essentials, and the latest Streetpoly gear.
               </p>
             </div>
             <Link
               to="/merch"
-              className="group relative px-10 py-5 bg-rep text-rep-foreground font-display text-xl uppercase tracking-widest rounded-xl transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(239,68,68,0.3)] flex items-center gap-3"
+              className="group relative px-8 py-4 md:px-10 md:py-5 bg-rep text-rep-foreground font-display text-lg md:text-xl uppercase tracking-widest rounded-xl transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(239,68,68,0.3)] flex items-center gap-3"
             >
               Visit Store
-              <ExternalLink className="w-6 h-6" />
+              <ExternalLink className="w-5 h-5 md:w-6 md:h-6" />
             </Link>
           </div>
         </section>

@@ -26,7 +26,7 @@ export function FeaturedSection() {
         `)
         .eq("is_featured", true)
         .order("created_at", { ascending: false })
-        .limit(5);
+        .limit(7);
 
       if (currentCategory) {
         query = query.eq("post_categories.categories.slug", currentCategory);
@@ -42,31 +42,31 @@ export function FeaturedSection() {
   if (isLoading || !featuredPosts?.length) return null;
 
   const mainFeatured = featuredPosts[0];
-  const sideFeatured = featuredPosts.slice(1, 4);
+  const sideFeatured = featuredPosts.slice(1, 7); // Get 6 side videos for 2x3 grid
 
   const getThumbnail = (post: Post) =>
     post.thumbnail_url || `https://img.youtube.com/vi/${post.youtube_id}/hqdefault.jpg`;
 
   return (
-    <section className="py-4 md:py-6">
+    <section className="py-4 md:py-6 px-4">
       <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
         <Flame className="w-4 h-4 md:w-5 md:h-5 text-rep" />
         <h2 className="font-display text-xl md:text-2xl text-foreground">Featured Stories</h2>
         <div className="flex-1 h-px bg-border ml-2" />
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        {/* Main Featured */}
+      <div className="space-y-4 md:space-y-6">
+        {/* Main Featured - Full width */}
         <Link
           to={`/post/${mainFeatured.id}`}
-          className="sm:col-span-2 lg:col-span-2 lg:row-span-2 group relative aspect-video lg:aspect-auto min-h-[200px] lg:min-h-[400px] rounded-lg overflow-hidden"
+          className="group relative aspect-video lg:aspect-[21/9] min-h-[200px] lg:min-h-[400px] rounded-lg overflow-hidden block"
         >
           <img
             src={getThumbnail(mainFeatured)}
             alt={mainFeatured.title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent w-full flex justify-center items-center" />
           <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
             <div className="flex items-center gap-2 mb-2">
               {mainFeatured.is_breaking && (
@@ -92,22 +92,27 @@ export function FeaturedSection() {
           </div>
         </Link>
 
-        {/* Small Featured Items */}
-        <div className="flex flex-col gap-3 sm:gap-4 h-full">
+        {/* Side Featured Items - 2x3 Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {sideFeatured.map((post) => (
             <Link
               key={post.id}
               to={`/post/${post.id}`}
-              className="group flex-1 relative rounded-lg overflow-hidden min-h-[120px] lg:min-h-0"
+              className="group relative aspect-video rounded-lg overflow-hidden"
             >
               <img
                 src={getThumbnail(post)}
                 alt={post.title}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
                 <div className="flex items-center gap-2 mb-1">
+                  {post.is_breaking && (
+                    <span className="px-1.5 py-0.5 bg-rep/80 text-rep-foreground text-[8px] md:text-[10px] font-body uppercase tracking-wider rounded">
+                      Breaking
+                    </span>
+                  )}
                   <span className="px-1.5 py-0.5 bg-dem/80 text-dem-foreground text-[8px] md:text-[10px] font-body uppercase tracking-wider rounded">
                     Featured
                   </span>
@@ -115,6 +120,9 @@ export function FeaturedSection() {
                 <h4 className="font-display text-lg md:text-xl text-foreground leading-tight group-hover:text-dem transition-colors line-clamp-2">
                   {post.title}
                 </h4>
+              </div>
+              <div className="absolute top-3 md:top-4 right-3 md:right-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-dem/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Play className="w-4 h-4 md:w-5 md:h-5 text-dem-foreground ml-0.5" fill="currentColor" />
               </div>
             </Link>
           ))}
