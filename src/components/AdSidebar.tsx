@@ -195,31 +195,31 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
       </div>
 
       {/* Square Ad 260x260 */}
-      <div className="relative w-full flex flex-col items-center">
+      <div className="relative w-full flex flex-col items-center text-center">
         <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
           Advertisement
         </span>
         <a
-          href={sqAd.link || "#"}
-          target={sqAd.link ? "_blank" : undefined}
-          rel={sqAd.link ? "noopener noreferrer" : undefined}
-          className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `aspect-square bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
+          href={sqAd.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`h-[260px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 border-2 border-dashed border-muted-foreground/20`}`}
         >
           {sqAd.image ? (
             <img
               src={sqAd.image}
               alt={sqAd.title}
-              className="object-contain w-full h-auto block"
+              className={`w-full h-full block object-cover ${sqAd.scaleClass ?? 'scale-100'}`}
             />
           ) : (
             <>
-              <div className="text-foreground/90 font-display text-xl leading-tight mb-2">
+              <div className="text-foreground/90 font-display text-4xl leading-tight mb-2">
                 {sqAd.title}
               </div>
-              <div className="text-foreground/70 font-body text-xs mb-4">
+              <div className="text-foreground/70 font-body text-sm mb-6">
                 {sqAd.subtitle}
               </div>
-              <div className="bg-foreground text-background font-display text-xs px-4 py-1.5 rounded-full">
+              <div className="bg-foreground text-background font-display text-sm px-6 py-2 rounded-full">
                 {sqAd.text}
               </div>
             </>
@@ -407,7 +407,7 @@ export const MobileSquareAd = () => {
             <img
               src={sqAd.image}
               alt={sqAd.title}
-              className="object-contain w-full h-auto block"
+              className="object-contain w-auto h-auto max-w-full block mx-auto"
             />
           ) : (
             <>

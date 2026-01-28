@@ -49,8 +49,6 @@ export const PageLayoutWithAds = ({
             </div>
           )}
           
-          {showAds && <MobileSkyscraperAd index={0} />}
-          {showAds && <MobileSkyscraperAd index={1} />}
           {showAds && <MobileSquareAd />}
           
           {children}

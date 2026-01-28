@@ -51,9 +51,9 @@ const mockMerch = [
 
 const Merch = () => {
   return (
-    <PageLayoutWithAds>
+    <PageLayoutWithAds mainClassName="max-w-7xl mx-auto">
       <PageTransition>
-        <div className="py-8 md:py-12">
+        <div className="px-4 sm:px-6 lg:px-8 py-8 md:py-12">
           <div className="text-center mb-12">
             <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-dem/10 flex items-center justify-center mx-auto mb-6 md:mb-8">
               <ShoppingBag className="w-8 h-8 md:w-10 md:h-10 text-dem" />
