@@ -7,13 +7,21 @@ export function useHeaderVisible() {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      const scrollThreshold = 10;
+      const scrollThreshold = 100;
 
+      // Always show header at the very top
       if (currentScrollY < scrollThreshold) {
         setIsVisible(true);
-      } else if (currentScrollY > lastScrollY + 5) {
+        setLastScrollY(currentScrollY);
+        return;
+      }
+
+      // Hide/Show logic for scrolling
+      if (currentScrollY > lastScrollY + 15) {
+        // Scrolling down - hide
         setIsVisible(false);
-      } else if (currentScrollY < lastScrollY - 5) {
+      } else if (currentScrollY < lastScrollY - 15) {
+        // Scrolling up - show
         setIsVisible(true);
       }
 

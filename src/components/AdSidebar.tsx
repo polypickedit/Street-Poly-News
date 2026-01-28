@@ -140,7 +140,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
           <Link
             to={skyAd.link || "#"}
             title={skyAd.title}
-            className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
+            className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
           >
             {skyAd.image ? (
               <img
@@ -201,7 +201,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
             target="_blank"
             rel="noopener noreferrer"
             title={skyAd.title}
-            className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
+            className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
           >
             {skyAd.image ? (
               <img
@@ -268,7 +268,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
           <Link
             to={sqAd.link}
             title={sqAd.title}
-            className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 border-2 border-dashed border-muted-foreground/20`}`}
+            className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 border-2 border-muted-foreground/20`}`}
           >
             {sqAd.image ? (
               <img
@@ -296,7 +296,7 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
             target={sqAd.link ? "_blank" : undefined}
             rel={sqAd.link ? "noopener noreferrer" : undefined}
             title={sqAd.title}
-            className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 border-2 border-dashed border-muted-foreground/20`}`}
+            className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 border-2 border-muted-foreground/20`}`}
           >
             {sqAd.image ? (
               <img
@@ -363,7 +363,7 @@ export const MobileAdBanner = () => {
         {isInternal ? (
           <Link
             to={bannerAd.link || "#"}
-            className={`w-full h-20 md:h-24 bg-gradient-to-r ${bannerAd.bg} rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20`}
+            className={`w-full h-20 md:h-24 bg-gradient-to-r ${bannerAd.bg} rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-muted-foreground/20`}
           >
             <div className="flex items-center gap-3 md:gap-4">
               {bannerAd.isAlbum && (
@@ -396,7 +396,7 @@ export const MobileAdBanner = () => {
             href={getTrackedUrl()}
             target="_blank"
             rel="noopener noreferrer"
-            className={`w-full h-20 md:h-24 bg-gradient-to-r ${bannerAd.bg} rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20`}
+            className={`w-full h-20 md:h-24 bg-gradient-to-r ${bannerAd.bg} rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-muted-foreground/20`}
           >
             <div className="flex items-center gap-3 md:gap-4">
               {bannerAd.isAlbum && (
@@ -516,7 +516,7 @@ export const MobileSkyscraperAd = ({ index = 0 }: { index?: number }) => {
           <Link
             to={skyAd.link || "#"}
             title={skyAd.title}
-            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
+            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
           >
             <AdContent />
           </Link>
@@ -526,7 +526,7 @@ export const MobileSkyscraperAd = ({ index = 0 }: { index?: number }) => {
             target="_blank"
             rel="noopener noreferrer"
             title={skyAd.title}
-            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
+            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
           >
             <AdContent />
           </a>
@@ -574,7 +574,7 @@ export const MobileSquareAd = () => {
           <Link
             to={sqAd.link || "#"}
             title={sqAd.title}
-            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `aspect-square bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
+            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `aspect-square bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
           >
             <AdContent />
           </Link>
@@ -584,7 +584,7 @@ export const MobileSquareAd = () => {
             target={sqAd.link ? "_blank" : undefined}
             rel={sqAd.link ? "noopener noreferrer" : undefined}
             title={sqAd.title}
-            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `aspect-square bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
+            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `aspect-square bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
           >
             <AdContent />
           </a>

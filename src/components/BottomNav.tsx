@@ -28,13 +28,17 @@ export const BottomNav = () => {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      const scrollThreshold = 10;
+      const scrollThreshold = 100;
 
       if (currentScrollY < scrollThreshold) {
         setIsVisible(true);
-      } else if (currentScrollY > lastScrollY + 5) {
+        setLastScrollY(currentScrollY);
+        return;
+      }
+
+      if (currentScrollY > lastScrollY + 15) {
         setIsVisible(false);
-      } else if (currentScrollY < lastScrollY - 5) {
+      } else if (currentScrollY < lastScrollY - 15) {
         setIsVisible(true);
       }
 

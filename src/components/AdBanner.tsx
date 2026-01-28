@@ -101,7 +101,7 @@ export const AdBanner = ({ className = "", showLabel = true }: AdBannerProps) =>
         <Link
           to={mockAd.link || "#"}
           title={mockAd.title}
-          className={`w-full h-32 md:h-40 bg-gradient-to-r ${mockAd.bg} rounded-2xl flex items-center justify-between px-6 md:px-10 cursor-pointer hover:scale-[1.02] transition-all duration-300 shadow-2xl hover:shadow-dem/20 border-2 border-dashed border-muted-foreground/30 relative overflow-hidden group`}
+          className={`w-full h-32 md:h-40 bg-gradient-to-r ${mockAd.bg} rounded-2xl flex items-center justify-between px-6 md:px-10 cursor-pointer hover:scale-[1.02] transition-all duration-300 shadow-2xl hover:shadow-dem/20 border-2 border-muted-foreground/30 relative overflow-hidden group`}
         >
           <AdContent />
         </Link>
@@ -111,7 +111,7 @@ export const AdBanner = ({ className = "", showLabel = true }: AdBannerProps) =>
           target="_blank"
           rel="noopener noreferrer"
           title={mockAd.title}
-          className={`w-full h-32 md:h-40 bg-gradient-to-r ${mockAd.bg} rounded-2xl flex items-center justify-between px-6 md:px-10 cursor-pointer hover:scale-[1.02] transition-all duration-300 shadow-2xl hover:shadow-dem/20 border-2 border-dashed border-muted-foreground/30 relative overflow-hidden group`}
+          className={`w-full h-32 md:h-40 bg-gradient-to-r ${mockAd.bg} rounded-2xl flex items-center justify-between px-6 md:px-10 cursor-pointer hover:scale-[1.02] transition-all duration-300 shadow-2xl hover:shadow-dem/20 border-2 border-muted-foreground/30 relative overflow-hidden group`}
         >
           <AdContent />
         </a>
