@@ -1,6 +1,7 @@
 import React from "react";
 import { Download, Music } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import newMusicMondaysSideBanner from "@/assets/New Music Monday Side banner ad.png";
 import stripClubSlotsAd from "@/assets/Strip_Club_Slots_ad-removebg-preview.png";
@@ -82,7 +83,7 @@ const mockAds: { skyscraper: Ad[]; square: Ad[]; banner: Ad[] } = {
       subtitle: "Now booking for Monday night spots",
       bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
       text: "BOOK NOW",
-      link: "https://www.istaybooked.com",
+      link: "/booking",
       isAlbum: false,
       affiliateName: null,
     },
@@ -125,6 +126,8 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
     return skyAd.link;
   };
 
+  const isInternal = skyAd.link?.startsWith("/");
+
   return (
     <aside 
       className="hidden lg:flex flex-col items-center gap-6 sticky top-32 h-fit max-h-[calc(100vh-9rem)] w-[260px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
@@ -134,65 +137,125 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
         <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
           Advertisement
         </span>
-        <a
-          href={getTrackedUrl()}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
-        >
-          {skyAd.image ? (
-            <img
-              src={skyAd.image}
-              alt={skyAd.title}
-              className={`w-full h-full block object-cover object-${skyAd.objectPosition ?? 'center'} origin-${skyAd.objectPosition === 'top' ? 'top' : 'center'} ${skyAd.scaleClass ?? 'scale-100'}`}
-            />
-          ) : skyAd.isAlbum ? (
-            <>
-              {/* Album artwork */}
-              <div className="w-[130px] h-[130px] rounded-lg overflow-hidden mb-4 shadow-xl border-2 border-white/20">
-                <img 
-                  src={skyAd.albumArt} 
-                  alt={skyAd.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="text-foreground/60 font-body text-xs uppercase tracking-wider mb-1">
-                New Album
-              </div>
-              <div className="text-foreground font-display text-3xl leading-tight mb-1">
-                {skyAd.title}
-              </div>
-              <div className="text-foreground/80 font-body text-sm mb-4">
-                {skyAd.subtitle}
-              </div>
-              <div className="flex items-center gap-2 bg-dem text-dem-foreground font-display text-sm px-5 py-2.5 rounded-full">
-                <Download className="w-4 h-4" />
-                {skyAd.text}
-              </div>
-              <div className="mt-4 flex items-center gap-1.5 text-foreground/50 text-xs font-body">
-                <Music className="w-3 h-3" />
-                Stream or Download
-              </div>
-              {affiliateLink && (
-                <div className="mt-2 text-foreground/30 text-[10px] font-body">
-                  {affiliateLink.click_count} clicks
+        {isInternal ? (
+          <Link
+            to={skyAd.link || "#"}
+            className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
+          >
+            {skyAd.image ? (
+              <img
+                src={skyAd.image}
+                alt={skyAd.title}
+                className={`w-full h-full block object-cover object-${skyAd.objectPosition ?? 'center'} origin-${skyAd.objectPosition === 'top' ? 'top' : 'center'} ${skyAd.scaleClass ?? 'scale-100'}`}
+              />
+            ) : skyAd.isAlbum ? (
+              <>
+                {/* Album artwork */}
+                <div className="w-[130px] h-[130px] rounded-lg overflow-hidden mb-4 shadow-xl border-2 border-white/20">
+                  <img 
+                    src={skyAd.albumArt} 
+                    alt={skyAd.title}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-              )}
-            </>
-          ) : (
-            <>
-              <div className="text-foreground/90 font-display text-2xl leading-tight mb-2">
-                {skyAd.title}
-              </div>
-              <div className="text-foreground/70 font-body text-sm mb-6">
-                {skyAd.subtitle}
-              </div>
-              <div className="bg-foreground text-background font-display text-sm px-6 py-2 rounded-full">
-                {skyAd.text}
-              </div>
-            </>
-          )}
-        </a>
+                <div className="text-foreground/60 font-body text-xs uppercase tracking-wider mb-1">
+                  New Album
+                </div>
+                <div className="text-foreground font-display text-3xl leading-tight mb-1">
+                  {skyAd.title}
+                </div>
+                <div className="text-foreground/80 font-body text-sm mb-4">
+                  {skyAd.subtitle}
+                </div>
+                <div className="flex items-center gap-2 bg-dem text-dem-foreground font-display text-sm px-5 py-2.5 rounded-full">
+                  <Download className="w-4 h-4" />
+                  {skyAd.text}
+                </div>
+                <div className="mt-4 flex items-center gap-1.5 text-foreground/50 text-xs font-body">
+                  <Music className="w-3 h-3" />
+                  Stream or Download
+                </div>
+                {affiliateLink && (
+                  <div className="mt-2 text-foreground/30 text-[10px] font-body">
+                    {affiliateLink.click_count} clicks
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="text-foreground/90 font-display text-2xl leading-tight mb-2">
+                  {skyAd.title}
+                </div>
+                <div className="text-foreground/70 font-body text-sm mb-6">
+                  {skyAd.subtitle}
+                </div>
+                <div className="bg-foreground text-background font-display text-sm px-6 py-2 rounded-full">
+                  {skyAd.text}
+                </div>
+              </>
+            )}
+          </Link>
+        ) : (
+          <a
+            href={getTrackedUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
+          >
+            {skyAd.image ? (
+              <img
+                src={skyAd.image}
+                alt={skyAd.title}
+                className={`w-full h-full block object-cover object-${skyAd.objectPosition ?? 'center'} origin-${skyAd.objectPosition === 'top' ? 'top' : 'center'} ${skyAd.scaleClass ?? 'scale-100'}`}
+              />
+            ) : skyAd.isAlbum ? (
+              <>
+                {/* Album artwork */}
+                <div className="w-[130px] h-[130px] rounded-lg overflow-hidden mb-4 shadow-xl border-2 border-white/20">
+                  <img 
+                    src={skyAd.albumArt} 
+                    alt={skyAd.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="text-foreground/60 font-body text-xs uppercase tracking-wider mb-1">
+                  New Album
+                </div>
+                <div className="text-foreground font-display text-3xl leading-tight mb-1">
+                  {skyAd.title}
+                </div>
+                <div className="text-foreground/80 font-body text-sm mb-4">
+                  {skyAd.subtitle}
+                </div>
+                <div className="flex items-center gap-2 bg-dem text-dem-foreground font-display text-sm px-5 py-2.5 rounded-full">
+                  <Download className="w-4 h-4" />
+                  {skyAd.text}
+                </div>
+                <div className="mt-4 flex items-center gap-1.5 text-foreground/50 text-xs font-body">
+                  <Music className="w-3 h-3" />
+                  Stream or Download
+                </div>
+                {affiliateLink && (
+                  <div className="mt-2 text-foreground/30 text-[10px] font-body">
+                    {affiliateLink.click_count} clicks
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="text-foreground/90 font-display text-2xl leading-tight mb-2">
+                  {skyAd.title}
+                </div>
+                <div className="text-foreground/70 font-body text-sm mb-6">
+                  {skyAd.subtitle}
+                </div>
+                <div className="bg-foreground text-background font-display text-sm px-6 py-2 rounded-full">
+                  {skyAd.text}
+                </div>
+              </>
+            )}
+          </a>
+        )}
       </div>
 
       {/* Square Ad 260x260 */}
@@ -200,32 +263,59 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
         <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
           Advertisement
         </span>
-        <a
-          href={sqAd.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 border-2 border-dashed border-muted-foreground/20`}`}
-        >
-          {sqAd.image ? (
-            <img
-              src={sqAd.image}
-              alt={sqAd.title}
-              className={`w-full h-auto block object-contain ${sqAd.scaleClass ?? 'scale-100'}`}
-            />
-          ) : (
-            <>
-              <div className="text-foreground/90 font-display text-4xl leading-tight mb-2">
-                {sqAd.title}
-              </div>
-              <div className="text-foreground/70 font-body text-sm mb-6">
-                {sqAd.subtitle}
-              </div>
-              <div className="bg-foreground text-background font-display text-sm px-6 py-2 rounded-full">
-                {sqAd.text}
-              </div>
-            </>
-          )}
-        </a>
+        {sqAd.link?.startsWith("/") ? (
+          <Link
+            to={sqAd.link}
+            className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 border-2 border-dashed border-muted-foreground/20`}`}
+          >
+            {sqAd.image ? (
+              <img
+                src={sqAd.image}
+                alt={sqAd.title}
+                className={`w-full h-auto block object-contain ${sqAd.scaleClass ?? 'scale-100'}`}
+              />
+            ) : (
+              <>
+                <div className="text-foreground/90 font-display text-4xl leading-tight mb-2">
+                  {sqAd.title}
+                </div>
+                <div className="text-foreground/70 font-body text-sm mb-6">
+                  {sqAd.subtitle}
+                </div>
+                <div className="bg-foreground text-background font-display text-sm px-6 py-2 rounded-full">
+                  {sqAd.text}
+                </div>
+              </>
+            )}
+          </Link>
+        ) : (
+          <a
+            href={sqAd.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 border-2 border-dashed border-muted-foreground/20`}`}
+          >
+            {sqAd.image ? (
+              <img
+                src={sqAd.image}
+                alt={sqAd.title}
+                className={`w-full h-auto block object-contain ${sqAd.scaleClass ?? 'scale-100'}`}
+              />
+            ) : (
+              <>
+                <div className="text-foreground/90 font-display text-4xl leading-tight mb-2">
+                  {sqAd.title}
+                </div>
+                <div className="text-foreground/70 font-body text-sm mb-6">
+                  {sqAd.subtitle}
+                </div>
+                <div className="bg-foreground text-background font-display text-sm px-6 py-2 rounded-full">
+                  {sqAd.text}
+                </div>
+              </>
+            )}
+          </a>
+        )}
       </div>
     </aside>
   );
@@ -256,8 +346,10 @@ export const MobileAdBanner = () => {
     if (affiliateLink?.id) {
       return `${SUPABASE_URL}/functions/v1/track-click?id=${affiliateLink.id}`;
     }
-    return "#";
+    return bannerAd.link || "#";
   };
+
+  const isInternal = bannerAd.link?.startsWith("/");
 
   return (
     <div className="xl:hidden my-6">
@@ -265,38 +357,71 @@ export const MobileAdBanner = () => {
         <span className="absolute top-[3%] left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
           Advertisement
         </span>
-        <a
-          href={getTrackedUrl()}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`w-full h-20 md:h-24 bg-gradient-to-r ${bannerAd.bg} rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20`}
-        >
-          <div className="flex items-center gap-3 md:gap-4">
-            {bannerAd.isAlbum && (
-              <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden shadow-xl border-2 border-white/20 flex-shrink-0">
-                <img 
-                  src={bannerAd.albumArt} 
-                  alt={bannerAd.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-            <div>
-              <div className="text-foreground/60 font-body text-[10px] uppercase tracking-wider">
-                New Album
-              </div>
-              <div className="text-foreground font-display text-xl md:text-2xl leading-tight">
-                {bannerAd.title}
-              </div>
-              <div className="text-foreground/70 font-body text-xs">
-                {bannerAd.subtitle}
+        {isInternal ? (
+          <Link
+            to={bannerAd.link || "#"}
+            className={`w-full h-20 md:h-24 bg-gradient-to-r ${bannerAd.bg} rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20`}
+          >
+            <div className="flex items-center gap-3 md:gap-4">
+              {bannerAd.isAlbum && (
+                <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden shadow-xl border-2 border-white/20 flex-shrink-0">
+                  <img 
+                    src={bannerAd.albumArt} 
+                    alt={bannerAd.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div>
+                <div className="text-foreground/60 font-body text-[10px] uppercase tracking-wider">
+                  New Album
+                </div>
+                <div className="text-foreground font-display text-xl md:text-2xl leading-tight">
+                  {bannerAd.title}
+                </div>
+                <div className="text-foreground/70 font-body text-xs">
+                  {bannerAd.subtitle}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2 bg-foreground text-background font-display text-xs md:text-sm px-4 py-2 rounded-full flex-shrink-0">
-            {bannerAd.text}
-          </div>
-        </a>
+            <div className="flex items-center gap-2 bg-foreground text-background font-display text-xs md:text-sm px-4 py-2 rounded-full flex-shrink-0">
+              {bannerAd.text}
+            </div>
+          </Link>
+        ) : (
+          <a
+            href={getTrackedUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`w-full h-20 md:h-24 bg-gradient-to-r ${bannerAd.bg} rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-dashed border-muted-foreground/20`}
+          >
+            <div className="flex items-center gap-3 md:gap-4">
+              {bannerAd.isAlbum && (
+                <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden shadow-xl border-2 border-white/20 flex-shrink-0">
+                  <img 
+                    src={bannerAd.albumArt} 
+                    alt={bannerAd.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div>
+                <div className="text-foreground/60 font-body text-[10px] uppercase tracking-wider">
+                  New Album
+                </div>
+                <div className="text-foreground font-display text-xl md:text-2xl leading-tight">
+                  {bannerAd.title}
+                </div>
+                <div className="text-foreground/70 font-body text-xs">
+                  {bannerAd.subtitle}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 bg-foreground text-background font-display text-xs md:text-sm px-4 py-2 rounded-full flex-shrink-0">
+              {bannerAd.text}
+            </div>
+          </a>
+        )}
       </div>
     </div>
   );

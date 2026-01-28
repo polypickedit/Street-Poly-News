@@ -37,31 +37,39 @@ export const PageLayoutWithAds = ({
       {headerContent}
 
       <div
-        className={`grid grid-cols-[auto_1fr_auto] gap-4 lg:gap-8 px-4 sm:px-6 md:px-8 transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}
+        className={`grid grid-cols-1 lg:grid-cols-[260px_minmax(0,56rem)_260px] justify-center gap-4 lg:gap-8 px-4 sm:px-6 md:px-8 transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}
       >
-        <AdSidebar position="left" />
+        <div className="hidden lg:block">
+          <AdSidebar position="left" />
+        </div>
 
-        <main className={`min-w-0 ${mainClassName}`}>
-          {/* Header Ad Space */}
-          {showAds && (
-            <div className="mb-12 mt-4">
-              <AdBanner />
+        <main className={`min-w-0 w-full flex flex-col items-center`}>
+          <div className="w-full flex flex-col items-center">
+            {/* Header Ad Space */}
+            {showAds && (
+              <div className="mb-12 mt-4 w-full">
+                <AdBanner />
+              </div>
+            )}
+            
+            {showAds && <MobileSquareAd />}
+            
+            <div className="w-full">
+              {children}
             </div>
-          )}
-          
-          {showAds && <MobileSquareAd />}
-          
-          {children}
 
-          {/* Footer Ad Space */}
-          {showAds && (
-            <div className="mt-16 mb-8">
-              <AdBanner />
-            </div>
-          )}
+            {/* Footer Ad Space */}
+            {showAds && (
+              <div className="mt-16 mb-8 w-full">
+                <AdBanner />
+              </div>
+            )}
+          </div>
         </main>
 
-        <AdSidebar position="right" />
+        <div className="hidden lg:block">
+          <AdSidebar position="right" />
+        </div>
       </div>
 
       <BottomNav />
