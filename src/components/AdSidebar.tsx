@@ -454,61 +454,78 @@ export const MobileSkyscraperAd = ({ index = 0 }: { index?: number }) => {
     return skyAd.link;
   };
 
+  const isInternal = skyAd.link?.startsWith("/");
+
+  const AdContent = () => (
+    <>
+      {skyAd.image ? (
+        <img
+          src={skyAd.image}
+          alt={skyAd.title}
+          className={`w-full h-auto block object-contain`}
+        />
+      ) : skyAd.isAlbum ? (
+        <>
+          <div className="w-[130px] h-[130px] rounded-lg overflow-hidden mb-4 shadow-xl border-2 border-white/20">
+            <img 
+              src={skyAd.albumArt} 
+              alt={skyAd.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="text-foreground/60 font-body text-xs uppercase tracking-wider mb-1">
+            New Album
+          </div>
+          <div className="text-foreground font-display text-3xl leading-tight mb-1">
+            {skyAd.title}
+          </div>
+          <div className="text-foreground/80 font-body text-sm mb-4">
+            {skyAd.subtitle}
+          </div>
+          <div className="flex items-center gap-2 bg-dem text-dem-foreground font-display text-sm px-5 py-2.5 rounded-full">
+            <Download className="w-4 h-4" />
+            {skyAd.text}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="text-foreground/90 font-display text-2xl leading-tight mb-2">
+            {skyAd.title}
+          </div>
+          <div className="text-foreground/70 font-body text-sm mb-6">
+            {skyAd.subtitle}
+          </div>
+          <div className="bg-foreground text-background font-display text-sm px-6 py-2 rounded-full">
+            {skyAd.text}
+          </div>
+        </>
+      )}
+    </>
+  );
+
   return (
     <div className="lg:hidden w-full my-6 flex justify-center">
       <div className="relative w-full max-w-sm flex flex-col items-center">
         <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
           Advertisement
         </span>
-        <a
-          href={getTrackedUrl()}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
-        >
-          {skyAd.image ? (
-            <img
-              src={skyAd.image}
-              alt={skyAd.title}
-              className={`w-full h-auto block object-contain`}
-            />
-          ) : skyAd.isAlbum ? (
-            <>
-              <div className="w-[130px] h-[130px] rounded-lg overflow-hidden mb-4 shadow-xl border-2 border-white/20">
-                <img 
-                  src={skyAd.albumArt} 
-                  alt={skyAd.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="text-foreground/60 font-body text-xs uppercase tracking-wider mb-1">
-                New Album
-              </div>
-              <div className="text-foreground font-display text-3xl leading-tight mb-1">
-                {skyAd.title}
-              </div>
-              <div className="text-foreground/80 font-body text-sm mb-4">
-                {skyAd.subtitle}
-              </div>
-              <div className="flex items-center gap-2 bg-dem text-dem-foreground font-display text-sm px-5 py-2.5 rounded-full">
-                <Download className="w-4 h-4" />
-                {skyAd.text}
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-foreground/90 font-display text-2xl leading-tight mb-2">
-                {skyAd.title}
-              </div>
-              <div className="text-foreground/70 font-body text-sm mb-6">
-                {skyAd.subtitle}
-              </div>
-              <div className="bg-foreground text-background font-display text-sm px-6 py-2 rounded-full">
-                {skyAd.text}
-              </div>
-            </>
-          )}
-        </a>
+        {isInternal ? (
+          <Link
+            to={skyAd.link || "#"}
+            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
+          >
+            <AdContent />
+          </Link>
+        ) : (
+          <a
+            href={getTrackedUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
+          >
+            <AdContent />
+          </a>
+        )}
       </div>
     </div>
   );
@@ -516,6 +533,31 @@ export const MobileSkyscraperAd = ({ index = 0 }: { index?: number }) => {
 
 export const MobileSquareAd = () => {
   const sqAd = mockAds.square[0];
+  const isInternal = sqAd.link?.startsWith("/");
+
+  const AdContent = () => (
+    <>
+      {sqAd.image ? (
+        <img
+          src={sqAd.image}
+          alt={sqAd.title}
+          className="object-contain w-full h-auto block"
+        />
+      ) : (
+        <>
+          <div className="text-foreground/90 font-display text-xl leading-tight mb-2">
+            {sqAd.title}
+          </div>
+          <div className="text-foreground/70 font-body text-xs mb-4">
+            {sqAd.subtitle}
+          </div>
+          <div className="bg-foreground text-background font-display text-xs px-4 py-1.5 rounded-full">
+            {sqAd.text}
+          </div>
+        </>
+      )}
+    </>
+  );
 
   return (
     <div className="lg:hidden w-full my-6 flex justify-center">
@@ -523,32 +565,23 @@ export const MobileSquareAd = () => {
         <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
           Advertisement
         </span>
-        <a
-          href={sqAd.link || "#"}
-          target={sqAd.link ? "_blank" : undefined}
-          rel={sqAd.link ? "noopener noreferrer" : undefined}
-          className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `aspect-square bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
-        >
-          {sqAd.image ? (
-            <img
-              src={sqAd.image}
-              alt={sqAd.title}
-              className="object-contain w-full h-auto block"
-            />
-          ) : (
-            <>
-              <div className="text-foreground/90 font-display text-xl leading-tight mb-2">
-                {sqAd.title}
-              </div>
-              <div className="text-foreground/70 font-body text-xs mb-4">
-                {sqAd.subtitle}
-              </div>
-              <div className="bg-foreground text-background font-display text-xs px-4 py-1.5 rounded-full">
-                {sqAd.text}
-              </div>
-            </>
-          )}
-        </a>
+        {isInternal ? (
+          <Link
+            to={sqAd.link || "#"}
+            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `aspect-square bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
+          >
+            <AdContent />
+          </Link>
+        ) : (
+          <a
+            href={sqAd.link || "#"}
+            target={sqAd.link ? "_blank" : undefined}
+            rel={sqAd.link ? "noopener noreferrer" : undefined}
+            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `aspect-square bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 text-center border-2 border-dashed border-muted-foreground/20`}`}
+          >
+            <AdContent />
+          </a>
+        )}
       </div>
     </div>
   );
