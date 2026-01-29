@@ -56,7 +56,12 @@ export function InfinitePostFeed() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
         {posts.map((post, index) => {
           const delayClass = `delay-${Math.min(index, 10)}`;
-          const showAd = (index + 1) % 7 === 0;
+          const showAd = (index + 1) % 6 === 0;
+          const adType = "donTrip";
+          
+          if (showAd) {
+            console.log(`[InfinitePostFeed] Rendering ad slot at index ${index} with type: ${adType}`);
+          }
           
           return (
             <Fragment key={post.id}>
@@ -83,7 +88,7 @@ export function InfinitePostFeed() {
                     <span className="text-[10px] font-body text-muted-foreground uppercase tracking-[0.2em]">Advertisement</span>
                     <div className="h-px flex-1 bg-border" />
                   </div>
-                  <AdBanner showLabel={false} />
+                  <AdBanner showLabel={false} type={adType} />
                 </div>
               )}
             </Fragment>

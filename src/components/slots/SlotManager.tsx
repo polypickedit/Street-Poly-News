@@ -17,7 +17,8 @@ export const SlotManager = () => {
   const fetchSlots = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from('slots' as any)
+      // @ts-expect-error - slots table is not in the generated types
+      .from('slots')
       .select('*')
       .order('created_at', { ascending: false });
     

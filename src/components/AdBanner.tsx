@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import donTripAd from "@/assets/Don Trip ad.jpeg";
 
 const SUPABASE_URL = "https://duldhllwapsjytdzpjfz.supabase.co";
 
@@ -12,81 +13,99 @@ interface Ad {
   link?: string;
   isAlbum?: boolean;
   albumArt?: string;
+  image?: string;
   affiliateName?: string | null;
 }
 
-const mockAd: Ad = {
-  title: "NEW MUSIC MONDAYS",
-  subtitle: "Showcase your band or artist",
-  bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
-  text: "BOOK NOW",
-  link: "/booking",
-  isAlbum: false,
-  affiliateName: null,
+const ads: Record<string, Ad> = {
+  donTrip: {
+    title: "DON TRIP - TRAUMA BOND",
+    subtitle: "Listen now on all platforms",
+    bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
+    text: "LISTEN NOW",
+    link: "https://itunes.apple.com",
+    isAlbum: false,
+    image: donTripAd,
+    affiliateName: null,
+  }
 };
 
 interface AdBannerProps {
   className?: string;
   showLabel?: boolean;
+  type?: "donTrip";
 }
 
-export const AdBanner = ({ className = "", showLabel = true }: AdBannerProps) => {
+export const AdBanner = ({ className = "", showLabel = true, type = "donTrip" }: AdBannerProps) => {
+  const currentAd = ads[type];
+  console.log(`[AdBanner] Rendering ${type} ad`);
+
   const { data: affiliateLink } = useQuery({
-    queryKey: ["affiliate-link", mockAd.affiliateName],
+    queryKey: ["affiliate-link", currentAd.affiliateName],
     queryFn: async () => {
-      if (!mockAd.affiliateName) return null;
+      if (!currentAd.affiliateName) return null;
       
       const { data, error } = await supabase
         .from("affiliate_links")
         .select("id, click_count")
-        .eq("name", mockAd.affiliateName)
+        .eq("name", currentAd.affiliateName)
         .maybeSingle();
 
       if (error) return null;
       return data;
     },
-    enabled: !!mockAd.affiliateName,
+    enabled: !!currentAd.affiliateName,
   });
 
   const getTrackedUrl = () => {
     if (affiliateLink?.id) {
       return `${SUPABASE_URL}/functions/v1/track-click?id=${affiliateLink.id}`;
     }
-    return mockAd.link || "#";
+    return currentAd.link || "#";
   };
 
-  const isInternal = mockAd.link?.startsWith("/");
+  const isInternal = currentAd.link?.startsWith("/");
 
   const AdContent = () => (
     <>
-      <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <div className="flex items-center gap-6 md:gap-8 relative z-10">
-        {mockAd.isAlbum && (
-          <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden shadow-2xl border-2 border-white/20 flex-shrink-0 transform -rotate-3 group-hover:rotate-0 transition-transform duration-500">
-            <img 
-              src={mockAd.albumArt} 
-              alt={mockAd.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
-        <div>
-          {mockAd.isAlbum && (
-            <div className="text-foreground/60 font-body text-xs uppercase tracking-[0.2em] mb-2">
-              New Album
+      {currentAd.image ? (
+        <img 
+          src={currentAd.image} 
+          alt={currentAd.title} 
+          className="w-full h-auto block rounded-lg"
+        />
+      ) : (
+        <>
+          <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center gap-6 md:gap-8 relative z-10">
+            {currentAd.isAlbum && (
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden shadow-2xl border-2 border-white/20 flex-shrink-0 transform -rotate-3 group-hover:rotate-0 transition-transform duration-500">
+                <img 
+                  src={currentAd.albumArt} 
+                  alt={currentAd.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            <div>
+              {currentAd.isAlbum && (
+                <div className="text-foreground/60 font-body text-xs uppercase tracking-[0.2em] mb-2">
+                  New Album
+                </div>
+              )}
+              <div className="text-foreground font-display text-2xl md:text-4xl leading-tight mb-2">
+                {currentAd.title}
+              </div>
+              <div className="text-foreground/70 font-body text-base md:text-lg">
+                {currentAd.subtitle}
+              </div>
             </div>
-          )}
-          <div className="text-foreground font-display text-2xl md:text-4xl leading-tight mb-2">
-            {mockAd.title}
           </div>
-          <div className="text-foreground/70 font-body text-base md:text-lg">
-            {mockAd.subtitle}
+          <div className="flex items-center gap-3 bg-foreground text-background font-display text-sm md:text-base px-8 py-4 rounded-full flex-shrink-0 shadow-lg group-hover:bg-dem group-hover:text-dem-foreground transition-colors relative z-10">
+            {currentAd.text}
           </div>
-        </div>
-      </div>
-      <div className="flex items-center gap-3 bg-foreground text-background font-display text-sm md:text-base px-8 py-4 rounded-full flex-shrink-0 shadow-lg group-hover:bg-dem group-hover:text-dem-foreground transition-colors relative z-10">
-        {mockAd.text}
-      </div>
+        </>
+      )}
     </>
   );
 
@@ -99,9 +118,9 @@ export const AdBanner = ({ className = "", showLabel = true }: AdBannerProps) =>
       )}
       {isInternal ? (
         <Link
-          to={mockAd.link || "#"}
-          title={mockAd.title}
-          className={`w-full h-32 md:h-40 bg-gradient-to-r ${mockAd.bg} rounded-2xl flex items-center justify-between px-6 md:px-10 cursor-pointer hover:scale-[1.02] transition-all duration-300 shadow-2xl hover:shadow-dem/20 border-2 border-muted-foreground/30 relative overflow-hidden group`}
+          to={currentAd.link || "#"}
+          title={currentAd.title}
+          className={`w-full ${currentAd.image ? "h-auto bg-transparent p-0 border-0 shadow-none" : `h-32 md:h-40 bg-gradient-to-r ${currentAd.bg} px-6 md:px-10 border-2 border-muted-foreground/30 shadow-2xl`} rounded-2xl flex items-start justify-center cursor-pointer hover:scale-[1.02] transition-all duration-300 hover:shadow-dem/20 relative overflow-hidden group`}
         >
           <AdContent />
         </Link>
@@ -110,8 +129,8 @@ export const AdBanner = ({ className = "", showLabel = true }: AdBannerProps) =>
           href={getTrackedUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          title={mockAd.title}
-          className={`w-full h-32 md:h-40 bg-gradient-to-r ${mockAd.bg} rounded-2xl flex items-center justify-between px-6 md:px-10 cursor-pointer hover:scale-[1.02] transition-all duration-300 shadow-2xl hover:shadow-dem/20 border-2 border-muted-foreground/30 relative overflow-hidden group`}
+          title={currentAd.title}
+          className={`w-full ${currentAd.image ? "h-auto bg-transparent p-0 border-0 shadow-none" : `h-32 md:h-40 bg-gradient-to-r ${currentAd.bg} px-6 md:px-10 border-2 border-muted-foreground/30 shadow-2xl`} rounded-2xl flex items-start justify-center cursor-pointer hover:scale-[1.02] transition-all duration-300 hover:shadow-dem/20 relative overflow-hidden group`}
         >
           <AdContent />
         </a>

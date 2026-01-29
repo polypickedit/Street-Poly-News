@@ -1,7 +1,7 @@
 import { PageLayoutWithAds } from "@/components/PageLayoutWithAds";
 import { FeaturedSection } from "@/components/FeaturedSection";
-import { PostCard } from "@/components/PostCard";
 import { AdBanner } from "@/components/AdBanner";
+import { InfinitePostFeed } from "@/components/InfinitePostFeed";
 import { SuggestionsCarousel } from "@/components/SuggestionsCarousel";
 import { Separator } from "@/components/ui/separator";
 import { PageTransition } from "@/components/PageTransition";
@@ -192,46 +192,16 @@ const Index = () => {
           </div>
         </section>
 
-        <div className="my-8 md:my-12 px-4">
-          <AdBanner />
-        </div>
-
-        {/* Latest Stories Title */}
-        <div className="flex items-center gap-3 md:gap-4 py-3 md:py-4 px-4">
-          <Separator className="flex-1" />
-          <span className="text-muted-foreground/40 text-[10px] md:text-xs font-body uppercase tracking-widest">
-            Latest Stories
-          </span>
-          <Separator className="flex-1" />
-        </div>
-
         {/* Posts Feed */}
         <section id="videos" className="pb-8 md:pb-12 px-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
-            {posts.slice(0, 9).map((post, index) => (
-              <div 
-                key={post.id}
-                className={`animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both delay-${Math.min(index, 10)}`}
-              >
-                <PostCard {...post} />
-              </div>
-            ))}
+          <div className="flex items-center gap-3 md:gap-4 py-3 md:py-4 mb-6">
+            <Separator className="flex-1" />
+            <span className="text-muted-foreground/40 text-[10px] md:text-xs font-body uppercase tracking-widest">
+              Latest Stories
+            </span>
+            <Separator className="flex-1" />
           </div>
-
-          <div className="my-8 md:my-12">
-            <AdBanner />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
-            {posts.slice(9, 18).map((post, index) => (
-              <div 
-                key={post.id}
-                className={`animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both delay-${Math.min(index, 10)}`}
-              >
-                <PostCard {...post} />
-              </div>
-            ))}
-          </div>
+          <InfinitePostFeed />
         </section>
 
         {/* Suggestions Carousel */}

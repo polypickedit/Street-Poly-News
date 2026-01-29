@@ -8,9 +8,14 @@ enable_signup = true
 
 [auth.email]
 enable_confirmations = false
+enable_signup = true
 
 [auth.external.google]
-enabled = false
+enabled = true
+# These are placeholders for local development. 
+# Real values are needed for actual Google sign-in to work.
+client_id = "your-client-id"
+secret = "your-secret"
 
 [functions.track-click]
 verify_jwt = false

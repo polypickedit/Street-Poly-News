@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 
 export function BreakingNewsBanner() {
-  const { data: breakingPosts } = useQuery({
+  const { data: breakingPosts, error } = useQuery({
     queryKey: ["breaking-posts"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -19,13 +19,17 @@ export function BreakingNewsBanner() {
     },
   });
 
-  if (!breakingPosts?.length) return null;
+  const isLoading = !breakingPosts && !error;
 
-  // Duplicate posts to ensure seamless loop
-  // If we have few posts, duplicate more times to fill width
-  const displayPosts = breakingPosts.length < 5 
-    ? [...breakingPosts, ...breakingPosts, ...breakingPosts, ...breakingPosts]
-    : [...breakingPosts, ...breakingPosts];
+  // For testing/debugging, we'll render a placeholder if no posts are found
+  // This helps confirm the component is actually mounting and visible
+  const hasPosts = breakingPosts && breakingPosts.length > 0;
+  
+  const displayPosts = hasPosts 
+    ? (breakingPosts!.length < 5 
+        ? [...breakingPosts!, ...breakingPosts!, ...breakingPosts!, ...breakingPosts!]
+        : [...breakingPosts!, ...breakingPosts!])
+    : [{ id: "placeholder", title: "No active breaking news. Add posts in Admin with 'Breaking' checked." }];
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[60] bg-rep text-white overflow-hidden border-b border-blue-900 md:border-white/10">

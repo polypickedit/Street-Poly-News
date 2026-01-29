@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Upload, Music, Mic2, Calendar as CalendarIcon, User, Mail, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BookingFormProps {
   type: "music" | "interview";
@@ -29,29 +31,92 @@ interface BookingFormData {
   name: string;
   email: string;
   artistName: string;
-  slotType: string;
+  slotType: "new-music-monday" | "interview" | "showcase";
   preferredDate: string;
   description: string;
   links: string;
 }
 
 export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
-  const form = useForm<BookingFormData>({
-    defaultValues: {
-      name: "",
-      email: "",
-      artistName: "",
-      slotType: type === "music" ? "new-music-monday" : "interview",
-      preferredDate: "",
-      description: "",
-      links: "",
-    },
-  });
+  const defaultValues: BookingFormData = {
+    name: "",
+    email: "",
+    artistName: "",
+    slotType: type === "music" ? "new-music-monday" : "interview",
+    preferredDate: "",
+    description: "",
+    links: "",
+  };
 
-  const onSubmit = (data: BookingFormData) => {
-    console.log("Form submitted:", data);
-    toast.success("Booking request submitted successfully!");
-    onSuccess?.();
+  const form = useForm<BookingFormData>({
+    defaultValues,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const slotLabels: Record<BookingFormData["slotType"], string> = {
+    "new-music-monday": "New Music Monday",
+    interview: "Featured Interview",
+    showcase: "Featured Showcase",
+  };
+
+  const onSubmit = async (data: BookingFormData) => {
+    setIsSubmitting(true);
+    const artistName = data.artistName.trim() || data.name.trim() || "Unknown Artist";
+    const preferredDate = data.preferredDate || new Date().toISOString().split("T")[0];
+    const [primaryLink] = data.links.split(/\s+/).filter(Boolean);
+    const genre = slotLabels[data.slotType] ?? data.slotType;
+    const mood = data.description.trim() || "Needs artist input";
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: existingArtist } = await (supabase as any)
+        .from("artists")
+        .select("id")
+        .eq("email", data.email)
+        .maybeSingle();
+
+      let artistId = existingArtist?.id;
+
+      if (!artistId) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: newArtist, error: artistError } = await (supabase as any)
+          .from("artists")
+          .insert({
+            name: artistName,
+            email: data.email,
+          })
+          .select("id")
+          .single();
+
+        if (artistError) throw artistError;
+        artistId = newArtist.id;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: submissionError } = await (supabase as any).from("submissions").insert({
+        artist_id: artistId,
+        track_title: `${slotLabels[data.slotType] || "Submission"} — ${artistName}`,
+        artist_name: artistName,
+        spotify_track_url: primaryLink || "https://streetpolynews.com/booking",
+        release_date: preferredDate,
+        genre,
+        mood,
+        status: "pending",
+        payment_status: "unpaid",
+        notes_internal: `${data.description}\nPreferred slot: ${slotLabels[data.slotType] ?? data.slotType}\nPreferred date: ${preferredDate}\nLinks: ${data.links}`,
+      });
+
+      if (submissionError) throw submissionError;
+
+      toast.success("Booking request submitted successfully!");
+      form.reset(defaultValues);
+      onSuccess?.();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "An unknown error occurred";
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -187,8 +252,12 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
           </div>
         </div>
 
-        <Button type="submit" className={`w-full rounded-full h-12 text-white font-medium ${type === "music" ? "bg-dem hover:bg-dem/90" : "bg-rep hover:bg-rep/90"}`}>
-          Submit Booking Request
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className={`w-full rounded-full h-12 text-white font-medium transition ${type === "music" ? "bg-dem hover:bg-dem/90" : "bg-rep hover:bg-rep/90"} ${isSubmitting ? "opacity-80 cursor-wait" : ""}`}
+        >
+          {isSubmitting ? "Submitting..." : "Submit Booking Request"}
         </Button>
       </form>
     </Form>

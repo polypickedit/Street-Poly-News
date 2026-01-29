@@ -6,8 +6,7 @@ import { Loader2 } from "lucide-react";
 export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const location = useLocation();
-
+  
   useEffect(() => {
     const checkRole = async () => {
       try {
@@ -38,8 +37,8 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
           console.warn("AdminRoute: RPC check failed, falling back to direct query:", rpcError);
           
           // Fallback: Direct query to user_roles
-          // @ts-expect-error - user_roles and roles are not in the generated types yet
-          const { data: roles, error: rolesError } = await supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: roles, error: rolesError } = await (supabase as any)
             .from("user_roles")
             .select("role_id, roles(name)")
             .eq("user_id", session.user.id);

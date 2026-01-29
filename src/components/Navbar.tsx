@@ -136,6 +136,7 @@ export function Navbar() {
                   {/* Search Toggle (Desktop only shows if search hidden, Mobile always shows) */}
                   {(!showSearch || window.innerWidth < 1024) && (
                     <button
+                      type="button"
                       onClick={() => setShowSearch(!showSearch)}
                       aria-label="Search"
                       className="p-2 text-blue-200/70 hover:text-rep transition-colors"
@@ -146,21 +147,22 @@ export function Navbar() {
 
                   {/* Shopping Bag */}
                   <button
+                    type="button"
                     onClick={() => setCartOpen(true)}
-                    aria-label="Open cart"
-                    className="relative p-2 text-blue-200/70 hover:text-rep transition-colors"
-                    title="Merch Store"
+                    className="p-2 text-blue-200/70 hover:text-rep transition-colors relative"
+                    aria-label="Shopping bag"
                   >
                     <ShoppingBag size={24} />
                     {totalItems > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-rep text-white text-xs font-body w-5 h-5 rounded-full flex items-center justify-center shadow-sm">
+                      <span className="absolute top-0 right-0 h-4 w-4 bg-rep text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                         {totalItems}
                       </span>
                     )}
                   </button>
 
-                  {/* Hamburger Menu */}
+                  {/* Menu Toggle */}
                   <button
+                    type="button"
                     onClick={() => setIsOpen(!isOpen)}
                     className="p-2 text-blue-200/70 hover:text-rep transition-colors"
                     aria-label="Toggle menu"
