@@ -1,50 +1,32 @@
-# Development TODOs — Mobile Logo & Responsive Behavior
+# Production Readiness Checklist
 
-## Logo Completed
+This project currently wires up the front-end routes, Supabase RPCs/policies, and Stripe hooks, but a few outstanding moves are still needed before the newsroom and admin portal are fully functional in a deployed environment.
 
-- Mobile PNG renders at 56×56 with object-contain; desktop uses SVG at 96×96
-- Mobile img has onError fallback to SVG to avoid missing logo
-- Code refs: [Navbar.tsx](file:///Users/nineel/Documents/street-politics-feed-main/src/components/Navbar.tsx), [use-mobile.tsx](file:///Users/nineel/Documents/street-politics-feed-main/src/hooks/use-mobile.tsx)
+## 1. Secrets & Runtime Config
 
-## Logo Pending
+- Remove the tracked `.env` file (it currently exposes `STRIPE_SECRET_KEY` and Supabase keys) and add it to `.gitignore`; keep real secrets in `.env.local` or, better, in the deployment platform’s secret store, then rotate any leaked credentials.
+- Populate every required env var: the client needs `VITE_SUPABASE_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY`, while the Supabase functions and server-side hooks also require `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET`.
+- Keep production site URLs and OIDC redirect entries updated (see `supabase/config.toml`) so auth flows redirect to the live domain instead of `http://localhost:5173`.
 
-- Trim mobile PNG to remove excess transparent margins; re-export final asset and update import
-- Evaluate mobile logo container size (56×56 vs 64×64) and adopt final spec
-- Compress mobile asset (PNG/WebP) for performance while preserving clarity; target < 120 kB
-- Cross-device verification: iOS Safari, Android Chrome, desktop Chrome/Firefox; confirm no distortion at breakpoints
-- Document asset policy in code comments: mobile uses PNG (object-contain), desktop uses SVG (object-contain)
+## 2. Supabase Backend & Roles
 
-## Ad Placement & Rendering
+- Run `supabase db push` (or equivalent migrations) so `roles`, `user_roles`, `slots`, `slot_entitlements`, `admin_actions`, and other tables/policies defined in `supabase/migrations/*.sql` exist before the UI needs them.
+- Ensure the helper RPC `public.is_admin_or_editor()` and its dependent policies are in place; the client relies on this RPC in `AdminRoute`/`Navbar`/`BottomNav`.
+- Seed at least one admin user, assign them the `admin` role (see `20260129014210_assign_admin_wr3ckdowwt.sql`), and document how to add additional admins so the `/admin` section is reachable.
 
-### Ad Completed
+## 3. Authentication & Admin Guard
 
-- Implemented "New Music Mondays" ad in sidebar slot
-- Switched image rendering to `object-contain` to prevent cropping (sides/bottom)
-- Integrated "Don Trip - Trauma Bond" ad as alternating middle ad in the post feed
-- Implemented ad rotation logic (Iron Mike every 7 posts, Don Trip every 14 posts)
-- Added debug logs to track ad rendering and type selection in the feed
+- Decide whether open sign-ups (currently enabled with no confirmation in `config.toml`) are acceptable; if not, require email confirmations, disable public sign-up, or add an invite-only gate before someone can reach `supabase.auth.signUp`.
+- Double-check that the admin login form and session handling (`src/pages/Login.tsx`) surface clear errors, and that `AdminRoute` fails closed if the RPC fails or the user lacks `admin/editor` roles.
 
-### Ad Pending
+## 4. Monetization / Stripe Flows
 
-- Verify ad visibility and aspect ratio fit within 180x600 container
-- Adjust container background if letterboxing occurs
-- Cross-device verification of ad rendering
+- Deploy the Supabase Edge Functions `create-checkout-session` and `stripe-webhook` with the correct secrets so checkout calls can be created and payouts reconcile with the `slot_entitlements` table.
+- Register the webhook endpoint in Stripe and copy the webhook signing secret into `STRIPE_WEBHOOK_SECRET`; the function currently logs events and gives entitlements based on `metadata`.
+- Verify the `slots` pricing seed (see `20260129040000_monetization_wiring.sql`) matches the UI, and that `slot_entitlements` enforcement (via triggers on `payments`/`submissions`) is aligned with what admins expect.
 
-## Sidebar Ad Specifications
+## 5. Validation & Launch Checklist
 
-- **Dimensions**: 260px (width) x 600px (height)
-- **Format**: PNG, JPG, or WebP (solid opacity preferred)
-- **Safe Zone**: Keep text/logos at least 24px from edges to avoid cropping from zoom/object-cover
-- **Behavior**: Images are rendered with `object-cover` and slight zoom (`scale-110` or `scale-105`) to remove white borders.
-- **Reference**: [AdSidebar.tsx](file:///Users/nineel/Documents/street-politics-feed-main/src/components/AdSidebar.tsx)
-
-## Notes
-
-- Breakpoints: mobile (<768px) shows PNG; desktop (≥768px) shows SVG
-- Primary locations: Navbar logo block; mobile detection via useIsMobile; Tailwind breakpoints in tailwind.config.ts
-- Ad location: [AdSidebar.tsx](file:///Users/nineel/Documents/street-politics-feed-main/src/components/AdSidebar.tsx)
-
-## Validation
-
-- Run `npm run dev`; verify mobile (< md) PNG, desktop (≥ md) SVG, and fallback behavior on mobile
-- Check sidebar ad for full visibility
+- Run `npm run dev` (and `npm run build` if needed) to ensure the public pages and admin dashboard render across breakpoints and the login redirect works.
+- Confirm Supabase migrations and functions deploy without errors, the Stripe webhook is receiving events, and admins can manage submissions/slots via the dashboard.
+- Once everything is wired up, document (or script) the deploy steps so future maintainers can reproduce the environment in Lovable/Vercel/Supabase.
