@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ShoppingBag, Search } from "lucide-react";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/use-cart";
 import { SearchBar } from "@/components/SearchBar";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,10 +24,38 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [mobileLogoErrored, setMobileLogoErrored] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { data: categories } = useCategories();
   const isVisible = useHeaderVisible();
   const location = useLocation();
   const { totalItems, setIsOpen: setCartOpen } = useCart();
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: roles } = await supabase
+          .from("user_roles")
+          .select("roles(name)")
+          .eq("user_id", session.user.id);
+        
+        const hasAccess = roles?.some(r => 
+          r.roles && (r.roles as any).name === "admin" || (r.roles as any).name === "editor"
+        );
+        setIsAdmin(!!hasAccess);
+      } else {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdmin();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      checkAdmin();
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Force header visible when menu is open
   const headerVisible = isOpen || isVisible;
@@ -197,6 +226,17 @@ export function Navbar() {
                           {link.name}
                         </Link>
                       ))}
+                      {isAdmin && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setIsOpen(false)}
+                          className={`font-display text-xl md:text-2xl uppercase tracking-tighter hover:text-rep transition-colors ${
+                            location.pathname.startsWith("/admin") ? "text-blue-50" : "text-blue-400"
+                          }`}
+                        >
+                          Admin Dashboard
+                        </Link>
+                      )}
                     </div>
                   </motion.div>
                 )}

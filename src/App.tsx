@@ -17,6 +17,13 @@ import Contact from "./pages/Contact";
 import Gallery from "./pages/Gallery";
 import Booking from "./pages/Booking";
 import Admin from "./pages/Admin";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import { AdminDashboard } from "@/components/admin/AdminDashboard";
+import { SubmissionQueue } from "@/components/admin/SubmissionQueue";
+import { PlaylistManager } from "@/components/admin/PlaylistManager";
+import { PlacementManager } from "@/components/admin/PlacementManager";
+import { AdminSettings } from "@/components/admin/AdminSettings";
+import { AdminRoute } from "@/components/AdminRoute";
 import Search from "./pages/Search";
 import Category from "./pages/Category";
 import Categories from "./pages/Categories";
@@ -42,9 +49,59 @@ const AnimatedRoutes = () => {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute>
+            <AdminRoute>
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/submissions"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <SubmissionQueue />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/playlists"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <PlaylistManager />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/placements"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <PlacementManager />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/settings"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminSettings />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/legacy"
+          element={
+            <AdminRoute>
               <Admin />
-            </ProtectedRoute>
+            </AdminRoute>
           }
         />
         <Route path="/search" element={<Search />} />
