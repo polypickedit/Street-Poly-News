@@ -48,6 +48,50 @@ export function CategoryNav() {
               {category.name}
             </Link>
           ))}
+          {(!categories || categories.length === 0) && (
+            <>
+              <Link
+                to="/?category=politics"
+                className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
+                  currentCategory === "politics"
+                    ? "bg-dem text-dem-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                Politics
+              </Link>
+              <Link
+                to="/?category=entertainment"
+                className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
+                  currentCategory === "entertainment"
+                    ? "bg-dem text-dem-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                Entertainment
+              </Link>
+              <Link
+                to="/?category=business"
+                className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
+                  currentCategory === "business"
+                    ? "bg-dem text-dem-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                Business
+              </Link>
+              <Link
+                to="/?category=exclusive"
+                className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
+                  currentCategory === "exclusive"
+                    ? "bg-dem text-dem-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                Exclusives
+              </Link>
+            </>
+          )}
           <Link
             to="/?category=health"
             className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${

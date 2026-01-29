@@ -1,10 +1,26 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { createMerchCheckoutSession } from "@/lib/stripe";
+import { toast } from "sonner";
 
 export const CartSidebar = () => {
   const { items, isOpen, setIsOpen, removeItem, updateQuantity, totalPrice, clearCart } = useCart();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  const handleCheckout = async () => {
+    try {
+      setIsCheckingOut(true);
+      await createMerchCheckoutSession(items);
+    } catch (error) {
+      console.error("Checkout error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to start checkout");
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -93,8 +109,17 @@ export const CartSidebar = () => {
               <Button
                 className="w-full bg-dem hover:bg-dem/90 text-dem-foreground font-body uppercase tracking-wider"
                 size="lg"
+                onClick={handleCheckout}
+                disabled={isCheckingOut || items.length === 0}
               >
-                Checkout
+                {isCheckingOut ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  "Checkout"
+                )}
               </Button>
               <Button
                 variant="ghost"

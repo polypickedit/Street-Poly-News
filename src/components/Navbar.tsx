@@ -206,6 +206,34 @@ export function Navbar() {
                       {category.slug === "exclusive" ? "Exclusives" : category.name}
                     </Link>
                   ))}
+                  {(!categories || categories.length === 0) && (
+                    <>
+                      <Link
+                        to="/?category=politics"
+                        className="font-display text-base uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
+                      >
+                        Politics
+                      </Link>
+                      <Link
+                        to="/?category=entertainment"
+                        className="font-display text-base uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
+                      >
+                        Entertainment
+                      </Link>
+                      <Link
+                        to="/?category=business"
+                        className="font-display text-base uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
+                      >
+                        Business
+                      </Link>
+                      <Link
+                        to="/?category=exclusive"
+                        className="font-display text-base uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
+                      >
+                        Exclusives
+                      </Link>
+                    </>
+                  )}
                   <Link
                     to="/?category=fashion"
                     className="font-display text-base uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"

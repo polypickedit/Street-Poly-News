@@ -85,10 +85,25 @@ const Login = () => {
         throw new Error("Supabase auth is not initialized. Check your environment variables.");
       }
 
+      // Detect if we're on localhost or production
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      
+      // Use the correct redirect URL based on environment
+      // Supabase requires the exact URL to be added to the Redirect URLs list in the Auth settings
+      const redirectTo = isLocal 
+        ? `${window.location.origin}/admin`
+        : `https://streetpolynews.com/admin`;
+
+      console.log("Login: Initiating Google OAuth with redirect to:", redirectTo);
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/admin`,
+          redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 

@@ -68,22 +68,30 @@ export const BottomNav = () => {
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
       
-      // Check if user is near the bottom (within 100px)
-      const nearBottom = currentScrollY + windowHeight >= documentHeight - 100;
+      // Check if user is near the bottom (within 150px to ensure we don't cover buttons)
+      const nearBottom = currentScrollY + windowHeight >= documentHeight - 150;
       setIsNearBottom(nearBottom);
 
-      const scrollThreshold = 100;
+      const scrollThreshold = 50;
 
-      if (currentScrollY < scrollThreshold || nearBottom) {
-        setIsVisible(true);
+      // Hide at the top of the page
+      if (currentScrollY < scrollThreshold) {
+        setIsVisible(false);
         setLastScrollY(currentScrollY);
         return;
       }
 
-      if (currentScrollY > lastScrollY + 15) {
+      // Hide at the bottom to avoid covering the tip button
+      if (nearBottom) {
         setIsVisible(false);
-      } else if (currentScrollY < lastScrollY - 15) {
-        setIsVisible(true);
+        return;
+      }
+
+      // Show when scrolling down, hide when scrolling up
+      if (currentScrollY > lastScrollY + 5) {
+        setIsVisible(true); // Pop up on scroll down
+      } else if (currentScrollY < lastScrollY - 5) {
+        setIsVisible(false); // Hide on scroll up
       }
 
       setLastScrollY(currentScrollY);

@@ -61,15 +61,17 @@ export function StockTicker() {
         if (!response.ok) throw new Error("Failed to fetch ticker data");
         const data = (await response.json()) as CoinGeckoResponse;
         
-        const cryptoTickers = Object.entries(data).map(([id, info]) => ({
-          symbol: ID_TO_SYMBOL[id] || id.toUpperCase(),
-          price: info.usd.toLocaleString(undefined, {
-            minimumFractionDigits: info.usd < 1 ? 4 : 2,
-            maximumFractionDigits: info.usd < 1 ? 4 : 2,
-          }),
-          change: `${info.usd_24h_change > 0 ? "+" : ""}${info.usd_24h_change.toFixed(2)}%`,
-          up: info.usd_24h_change > 0,
-        }));
+        const cryptoTickers = Object.entries(data)
+          .filter(([_, info]) => info && typeof info.usd === 'number')
+          .map(([id, info]) => ({
+            symbol: ID_TO_SYMBOL[id] || id.toUpperCase(),
+            price: info.usd.toLocaleString(undefined, {
+              minimumFractionDigits: info.usd < 1 ? 4 : 2,
+              maximumFractionDigits: info.usd < 1 ? 4 : 2,
+            }),
+            change: `${(info.usd_24h_change || 0) > 0 ? "+" : ""}${(info.usd_24h_change || 0).toFixed(2)}%`,
+            up: (info.usd_24h_change || 0) > 0,
+          }));
 
         const mockStocks = [
           { symbol: "AAPL", price: "189.43", change: "+0.8%", up: true },
