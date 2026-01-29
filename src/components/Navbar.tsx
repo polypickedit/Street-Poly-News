@@ -34,15 +34,16 @@ export function Navbar() {
     const checkAdmin = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { data: roles } = await supabase
-          .from("user_roles")
-          .select("roles(name)")
-          .eq("user_id", session.user.id);
-        
-        const hasAccess = roles?.some(r => 
-          r.roles && (r.roles as any).name === "admin" || (r.roles as any).name === "editor"
-        );
-        setIsAdmin(!!hasAccess);
+        try {
+          // @ts-expect-error - RPC is not in the generated types
+          const { data: hasAccess, error } = await supabase.rpc("is_admin_or_editor");
+          
+          if (error) throw error;
+          setIsAdmin(!!hasAccess);
+        } catch (err) {
+          console.error("Error checking admin status:", err);
+          setIsAdmin(false);
+        }
       } else {
         setIsAdmin(false);
       }
@@ -116,6 +117,22 @@ export function Navbar() {
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-2 md:gap-4">
+                  {!isAdmin ? (
+                    <Link
+                      to="/login"
+                      className="text-xs uppercase tracking-[0.3em] text-blue-200/50 hover:text-blue-100 transition-colors hidden md:inline-flex"
+                    >
+                      Login
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/admin"
+                      className="text-xs uppercase tracking-[0.3em] text-rep hover:text-rep/80 transition-colors hidden md:inline-flex"
+                    >
+                      Admin
+                    </Link>
+                  )}
+
                   {/* Search Toggle (Desktop only shows if search hidden, Mobile always shows) */}
                   {(!showSearch || window.innerWidth < 1024) && (
                     <button
@@ -206,11 +223,11 @@ export function Navbar() {
               <AnimatePresence>
                 {isOpen && (
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-full right-4 w-64 mt-2 !bg-dem-dark border border-blue-900/50 shadow-xl py-6 px-4 flex flex-col gap-6 rounded-xl max-h-[80vh] overflow-y-auto"
+                    className="absolute top-full right-4 w-64 mt-2 !bg-dem-dark border border-blue-900/50 shadow-xl py-6 px-4 flex flex-col gap-6 rounded-xl max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-900/50 scrollbar-track-transparent"
                   >
                     {/* Main Nav Links */}
                     <div className="flex flex-col items-center gap-6">
@@ -226,12 +243,20 @@ export function Navbar() {
                           {link.name}
                         </Link>
                       ))}
-                      {isAdmin && (
+                      {!isAdmin ? (
+                        <Link
+                          to="/login"
+                          onClick={() => setIsOpen(false)}
+                          className="font-display text-xl md:text-2xl uppercase tracking-tighter text-blue-200/70 hover:text-rep transition-colors"
+                        >
+                          Login
+                        </Link>
+                      ) : (
                         <Link
                           to="/admin"
                           onClick={() => setIsOpen(false)}
                           className={`font-display text-xl md:text-2xl uppercase tracking-tighter hover:text-rep transition-colors ${
-                            location.pathname.startsWith("/admin") ? "text-blue-50" : "text-blue-400"
+                            location.pathname.startsWith("/admin") ? "text-blue-50" : "text-rep"
                           }`}
                         >
                           Admin Dashboard

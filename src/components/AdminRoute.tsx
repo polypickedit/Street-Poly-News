@@ -11,31 +11,56 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkRole = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log("AdminRoute: Checking authorization...");
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (!session) {
+        if (sessionError) {
+          console.error("AdminRoute: Session error:", sessionError);
           setIsAuthorized(false);
           setLoading(false);
           return;
         }
 
-        // Check if user has admin or editor role in user_roles table
-        const { data: roles, error } = await supabase
-          .from("user_roles")
-          .select("roles(name)")
-          .eq("user_id", session.user.id);
-
-        if (error) {
-          console.error("Error fetching roles:", error);
+        if (!session) {
+          console.log("AdminRoute: No session found");
           setIsAuthorized(false);
+          setLoading(false);
+          return;
+        }
+
+        console.log("AdminRoute: Session found for user:", session.user.email);
+
+        // Check if user has admin or editor role using the RPC function
+        // @ts-expect-error - RPC is not in the generated types
+        const { data: hasAccess, error: rpcError } = await supabase.rpc("is_admin_or_editor");
+
+        if (rpcError) {
+          console.warn("AdminRoute: RPC check failed, falling back to direct query:", rpcError);
+          
+          // Fallback: Direct query to user_roles
+          // @ts-expect-error - user_roles and roles are not in the generated types yet
+          const { data: roles, error: rolesError } = await supabase
+            .from("user_roles")
+            .select("role_id, roles(name)")
+            .eq("user_id", session.user.id);
+
+          if (rolesError) {
+            console.error("AdminRoute: Direct query check failed:", rolesError);
+            setIsAuthorized(false);
+          } else {
+            const roleData = roles as unknown as Array<{ roles: { name: string } }>;
+            const hasDirectAccess = roleData?.some(r => 
+              r.roles?.name === "admin" || r.roles?.name === "editor"
+            );
+            console.log("AdminRoute: Direct access check result:", hasDirectAccess);
+            setIsAuthorized(!!hasDirectAccess);
+          }
         } else {
-          const hasAccess = roles?.some(r => 
-            r.roles && (r.roles as any).name === "admin" || (r.roles as any).name === "editor"
-          );
+          console.log("AdminRoute: RPC access check result:", hasAccess);
           setIsAuthorized(!!hasAccess);
         }
       } catch (err) {
-        console.error("Authorization check failed:", err);
+        console.error("AdminRoute: Authorization check failed with exception:", err);
         setIsAuthorized(false);
       } finally {
         setLoading(false);

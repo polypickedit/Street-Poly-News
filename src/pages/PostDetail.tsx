@@ -296,12 +296,12 @@ const PostDetail = () => {
               <div className="w-16 h-16 bg-dem/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">💡</span>
               </div>
-              <h3 className="font-display text-xl text-foreground mb-2">Got a Tip?</h3>
+              <h3 className="font-display text-xl text-foreground mb-2">Tell us your story</h3>
               <p className="text-muted-foreground text-sm mb-4 font-body">
                 Send us your story tips and exclusive scoops
               </p>
               <Link to="/about">
-                <Button variant="outline" className="w-full border-dem text-dem hover:bg-dem hover:text-dem-foreground">Submit a Tip</Button>
+                <Button variant="outline" className="w-full border-dem text-dem hover:bg-dem hover:text-dem-foreground">Submit Your Story</Button>
               </Link>
             </div>
 

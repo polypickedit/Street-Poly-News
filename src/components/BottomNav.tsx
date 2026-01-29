@@ -1,4 +1,4 @@
-import { Home, Grid3X3, Search, Menu } from "lucide-react";
+import { Home, Grid3X3, Search, Menu, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +11,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useCategories } from "@/hooks/useCategories";
+import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
@@ -23,14 +24,57 @@ export const BottomNav = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [isNearBottom, setIsNearBottom] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { data: categories } = useCategories();
 
   useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        try {
+          // @ts-expect-error - RPC is not in the generated types
+          const { data: hasAccess, error } = await supabase.rpc("is_admin_or_editor");
+          
+          if (error) throw error;
+          setIsAdmin(!!hasAccess);
+        } catch (err) {
+          console.error("Error checking admin status:", err);
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdmin();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      checkAdmin();
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
+      // Only use scroll logic on mobile
+      if (window.innerWidth >= 768) {
+        setIsVisible(true);
+        return;
+      }
+
       const currentScrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      
+      // Check if user is near the bottom (within 100px)
+      const nearBottom = currentScrollY + windowHeight >= documentHeight - 100;
+      setIsNearBottom(nearBottom);
+
       const scrollThreshold = 100;
 
-      if (currentScrollY < scrollThreshold) {
+      if (currentScrollY < scrollThreshold || nearBottom) {
         setIsVisible(true);
         setLastScrollY(currentScrollY);
         return;
@@ -49,6 +93,22 @@ export const BottomNav = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      // If mouse is within 100px of the bottom of the viewport
+      if (window.innerHeight - e.clientY < 100) {
+        setIsVisible(true);
+      } else if (window.innerWidth >= 768 && !menuOpen) {
+        // On desktop (>= md), hide it if mouse is not at the bottom
+        // and menu (sheet) is not open
+        setIsVisible(false);
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [menuOpen]);
+
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
     if (path === "/categories") return location.pathname.startsWith("/category");
@@ -63,7 +123,7 @@ export const BottomNav = () => {
           animate={{ y: 0 }}
           exit={{ y: 100 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-dem-dark border-t border-blue-900/50 text-white safe-area-bottom"
+          className="fixed bottom-0 left-0 right-0 z-50 bg-dem-dark/95 backdrop-blur-sm border-t border-blue-900/50 text-white safe-area-bottom"
         >
           <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-4">
             {navItems.map((item) => (
@@ -90,6 +150,23 @@ export const BottomNav = () => {
                 )}
               </Link>
             ))}
+
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className={cn(
+                  "relative flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-lg transition-colors",
+                  location.pathname.startsWith("/admin")
+                    ? "text-rep"
+                    : "text-blue-200/70 hover:text-rep"
+                )}
+              >
+                <Settings className={cn("h-5 w-5", location.pathname.startsWith("/admin") && "animate-spin-slow")} />
+                <span className="text-[10px] font-medium uppercase tracking-widest font-display">
+                  Admin
+                </span>
+              </Link>
+            )}
 
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>

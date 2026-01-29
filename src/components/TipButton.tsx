@@ -25,7 +25,7 @@ export function TipButton() {
       <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-6 right-6 z-40 bg-dem text-dem-foreground p-4 rounded-full shadow-lg hover:scale-110 transition-transform"
-        title="Got a Tip?"
+        title="Tell us your story"
       >
         <MessageSquare className="w-6 h-6" />
       </button>
@@ -35,7 +35,7 @@ export function TipButton() {
           <div className="bg-card border border-border rounded-lg w-full max-w-md p-6 animate-fade-in">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-2xl text-foreground">
-                Got a <span className="text-dem">Tip?</span>
+                Tell us your <span className="text-dem">story</span>
               </h2>
               <button
                 onClick={() => setIsOpen(false)}

@@ -1,4 +1,16 @@
 project_id = "duldhllwapsjytdzpjfz"
 
+[auth]
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://localhost:5173/admin"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_confirmations = false
+
+[auth.external.google]
+enabled = false
+
 [functions.track-click]
 verify_jwt = false
