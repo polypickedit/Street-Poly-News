@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Navbar } from "@/components/Navbar";
 import { BreakingNewsBanner } from "@/components/BreakingNewsBanner";
+import { StockTicker } from "@/components/StockTicker";
 import { AdSidebar, MobileSquareAd, MobileSkyscraperAd } from "@/components/AdSidebar";
 import { AdBanner } from "@/components/AdBanner";
 import { BottomNav } from "@/components/BottomNav";
@@ -30,7 +31,7 @@ export const PageLayoutWithAds = ({
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-32">
       <BreakingNewsBanner />
       <Navbar />
 
@@ -73,6 +74,7 @@ export const PageLayoutWithAds = ({
       </div>
 
       <BottomNav />
+      <StockTicker />
     </div>
   );
 };

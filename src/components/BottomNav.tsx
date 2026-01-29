@@ -123,7 +123,7 @@ export const BottomNav = () => {
           animate={{ y: 0 }}
           exit={{ y: 100 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed bottom-0 left-0 right-0 z-50 bg-dem-dark/95 backdrop-blur-sm border-t border-blue-900/50 text-white safe-area-bottom"
+          className="fixed bottom-8 left-0 right-0 z-50 bg-dem-dark/95 backdrop-blur-sm border-t border-blue-900/50 text-white safe-area-bottom"
         >
           <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-4">
             {navItems.map((item) => (

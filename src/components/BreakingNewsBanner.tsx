@@ -19,8 +19,6 @@ export function BreakingNewsBanner() {
     },
   });
 
-  const isLoading = !breakingPosts && !error;
-
   // For testing/debugging, we'll render a placeholder if no posts are found
   // This helps confirm the component is actually mounting and visible
   const hasPosts = breakingPosts && breakingPosts.length > 0;
@@ -29,7 +27,13 @@ export function BreakingNewsBanner() {
     ? (breakingPosts!.length < 5 
         ? [...breakingPosts!, ...breakingPosts!, ...breakingPosts!, ...breakingPosts!]
         : [...breakingPosts!, ...breakingPosts!])
-    : [{ id: "placeholder", title: "No active breaking news. Add posts in Admin with 'Breaking' checked." }];
+    : [
+        { id: "mock-1", title: "🚨 BREAKING: New record-breaking heatwave across the coast" },
+        { id: "mock-2", title: "📈 MARKET UPDATE: Tech stocks see unexpected surge in morning trading" },
+        { id: "mock-3", title: "⚽ SPORTS: Local team secures spot in championship finals" },
+        { id: "mock-4", title: "🎭 ENTERTAINMENT: Surprise performance announced for tonight's festival" },
+        { id: "mock-5", title: "🗳️ POLITICS: New bill proposed to address urban infrastructure" }
+      ];
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[60] bg-rep text-white overflow-hidden border-b border-blue-900 md:border-white/10">
@@ -42,7 +46,7 @@ export function BreakingNewsBanner() {
 
         {/* Marquee Content */}
         <div className="flex-1 overflow-hidden relative h-full flex items-center">
-          <div className="animate-marquee whitespace-nowrap flex items-center hover:[animation-play-state:paused] py-2">
+          <div className="animate-marquee whitespace-nowrap flex items-center hover:[animation-play-state:paused] py-2 [animation-duration:15s]">
             {displayPosts.map((post, idx) => (
               <Link
                 key={`${post.id}-${idx}`}
