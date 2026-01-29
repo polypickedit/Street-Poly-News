@@ -14,6 +14,7 @@ const navLinks = [
   { name: "Videos", path: "/#videos" },
   { name: "Gallery", path: "/gallery" },
   { name: "Merch", path: "/merch" },
+  { name: "Booking", path: "/booking" },
   { name: "About", path: "/about" },
   { name: "Contact", path: "/contact" },
 ];
