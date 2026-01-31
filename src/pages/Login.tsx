@@ -19,7 +19,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
 
-  const from = location.state?.from || { pathname: "/admin" };
+  const from = location.state?.from || { pathname: "/dashboard" };
 
   useEffect(() => {
     // Check if user is already logged in
@@ -58,6 +58,68 @@ const Login = () => {
     return error.message;
   };
 
+  const isRecovery = new URLSearchParams(location.search).get("type") === "recovery";
+  const [newPassword, setNewPassword] = useState("");
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading) return;
+
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      if (error) throw error;
+      toast({
+        title: "Password updated",
+        description: "Your password has been reset successfully.",
+      });
+      navigate("/login", { replace: true });
+    } catch (error: unknown) {
+      const err = error as { message: string };
+      toast({
+        title: "Update failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address to reset your password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login?type=recovery`,
+      });
+      if (error) throw error;
+      toast({
+        title: "Reset link sent",
+        description: "Check your email for the password reset link.",
+      });
+    } catch (error: unknown) {
+      const err = error as { message: string };
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
@@ -70,7 +132,10 @@ const Login = () => {
           email,
           password,
           options: {
-            data: { full_name: fullName },
+            data: { 
+              full_name: fullName,
+              role: email.toLowerCase() === 'polypickedit@gmail.com' ? 'admin' : 'user'
+            },
             emailRedirectTo: `${window.location.origin}/login`,
           },
         });
@@ -127,6 +192,51 @@ const Login = () => {
     }
   };
 
+  if (isRecovery) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
+          <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-600/30 rounded-full blur-[120px]" />
+          <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-red-600/20 rounded-full blur-[120px]" />
+        </div>
+
+        <Card className="w-full max-w-md bg-slate-900/50 border-slate-800 backdrop-blur-xl relative z-10">
+          <CardHeader className="text-center space-y-1">
+            <CardTitle className="text-3xl font-display text-white tracking-tight">
+              Reset Password
+            </CardTitle>
+            <CardDescription className="text-slate-400">
+              Enter your new password below
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="newPassword" className="text-slate-300 text-xs font-semibold uppercase tracking-wider">New Password</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  className="bg-slate-950/50 border-slate-800 text-white h-11 focus:ring-blue-500/50 transition-all"
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white h-11 font-semibold uppercase tracking-wider transition-all"
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Update Password"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4 relative overflow-hidden">
       {/* Background Decorative Elements */}
@@ -181,7 +291,11 @@ const Login = () => {
               <div className="flex justify-between items-center">
                 <Label htmlFor="password" className="text-slate-300 text-xs font-semibold uppercase tracking-wider">Password</Label>
                 {!isSignUp && (
-                  <button type="button" className="text-[10px] text-blue-400 hover:text-blue-300 font-medium uppercase tracking-tighter">
+                  <button 
+                    type="button" 
+                    onClick={handleForgotPassword}
+                    className="text-[10px] text-blue-400 hover:text-blue-300 font-medium uppercase tracking-tighter"
+                  >
                     Forgot Password?
                   </button>
                 )}

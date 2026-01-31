@@ -91,7 +91,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{user?.email?.split('@')[0] || "Admin User"}</p>
-              <p className="text-xs text-slate-500 truncate">{user?.email || "admin@taste.com"}</p>
+              <p className="text-xs text-slate-500 truncate">{user?.email || "admin@streetpolynews.com"}</p>
             </div>
           </div>
           <button

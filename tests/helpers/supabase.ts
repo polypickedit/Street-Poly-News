@@ -1,9 +1,9 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const noopStorage = {
-  getItem: () => null,
-  setItem: () => null,
-  removeItem: () => null,
+  getItem: (_key: string) => null,
+  setItem: (_key: string, _value: string) => null,
+  removeItem: (_key: string) => null,
 };
 
 function ensureEnv(key: string): string {

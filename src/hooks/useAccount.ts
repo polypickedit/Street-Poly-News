@@ -32,22 +32,9 @@ export function useAccount() {
 
   const activeAccount = accounts?.[0]; // Default to the first account for now
 
-  const { data: balance, isLoading: isLoadingBalance } = useQuery({
-    queryKey: ["account-balance", activeAccount?.id],
-    enabled: !!activeAccount?.id,
-    queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_account_balance", {
-        target_account_id: activeAccount!.id,
-      });
-
-      if (error) throw error;
-      return data as number;
-    },
-  });
-
   return {
     accounts,
-    activeAccount: activeAccount ? { ...activeAccount, balance } : null,
-    isLoading: isLoadingAccounts || isLoadingBalance,
+    activeAccount,
+    isLoading: isLoadingAccounts,
   };
 }

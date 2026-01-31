@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ShoppingBag, Search, Coins, Loader2 } from "lucide-react";
+import { Menu, X, ShoppingBag, Search, Zap, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/use-cart";
@@ -10,6 +10,8 @@ import { useHeaderVisible } from "@/hooks/useHeaderVisible";
 import { useCategories } from "@/hooks/useCategories";
 import logo from "/logo.svg";
 import mobileSeal from "@/assets/mobile-seal.png";
+
+import { useCapabilities } from "@/hooks/useCapabilities";
 
 const navLinks = [
   { name: "Home", path: "/" },
@@ -27,29 +29,32 @@ export function Navbar() {
   const [mobileLogoErrored, setMobileLogoErrored] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   const { data: categories } = useCategories();
   const isVisible = useHeaderVisible();
   const location = useLocation();
   const { totalItems, setIsOpen: setCartOpen } = useCart();
+  const { capabilities } = useCapabilities();
 
   const { activeAccount, isLoading: isLoadingAccount } = useAccount();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
-      if (session) {
-        try {
-          const { data: hasAccess, error } = await (supabase as any).rpc("is_admin_or_editor");
-          
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsAuthenticated(!!session);
+        if (session) {
+          const { data: hasAccess, error } = await supabase.rpc("is_admin_or_editor");
           if (error) throw error;
           setIsAdmin(!!hasAccess);
-        } catch (err) {
-          console.error("Error checking admin status:", err);
+        } else {
           setIsAdmin(false);
         }
-      } else {
+      } catch (err) {
+        console.error("Error checking auth status:", err);
         setIsAdmin(false);
+      } finally {
+        setIsAuthChecking(false);
       }
     };
 
@@ -63,7 +68,7 @@ export function Navbar() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const currentNavLinks = isAuthenticated ? [{ name: "Dashboard", path: "/dashboard" }] : [];
+  const currentNavLinks = isAuthenticated ? [] : [];
 
   // Force header visible when menu is open
   const headerVisible = isOpen || isVisible;
@@ -112,10 +117,10 @@ export function Navbar() {
                   </Link>
                 </div>
 
-                {/* Desktop Navigation */}
+                    {/* Desktop Navigation */}
                 <div className="hidden lg:flex flex-1 justify-center">
                   <div className="flex items-center gap-1 xl:gap-2">
-                    {currentNavLinks.map((link) => (
+                    {navLinks.map((link) => (
                       <Link
                         key={link.name}
                         to={link.path}
@@ -137,83 +142,45 @@ export function Navbar() {
                   </div>
                 </div>
 
-                {/* Right: Actions */}
-                <div className="flex items-center gap-2 md:gap-4">
-                  {isAuthenticated && (
-                    <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full">
-                      <Coins size={14} className="text-yellow-500" />
-                      <span className="text-xs font-bold text-blue-100">
-                        {isLoadingAccount ? (
-                          <Loader2 size={12} className="animate-spin text-slate-500" />
-                        ) : (
-                          activeAccount?.balance || 0
-                        )}
-                      </span>
-                    </div>
-                  )}
-
-                  {isAuthenticated ? (
-                    isAdmin ? (
-                      <Link
-                        to="/admin"
-                        className="text-xs uppercase tracking-[0.3em] text-rep hover:text-rep/80 transition-colors hidden md:inline-flex"
+                  {/* Actions (Search & Cart) */}
+                  <div className="flex items-center gap-2">
+                    {/* Search Toggle (Desktop only shows if search hidden, Mobile always shows) */}
+                    {(!showSearch || window.innerWidth < 1024) && (
+                      <button
+                        type="button"
+                        onClick={() => setShowSearch(!showSearch)}
+                        aria-label="Search"
+                        className="p-2 text-blue-200/70 hover:text-rep transition-colors"
                       >
-                        Admin
-                      </Link>
-                    ) : (
-                      <Link
-                        to="/dashboard"
-                        className="text-xs uppercase tracking-[0.3em] text-blue-400 hover:text-blue-300 transition-colors hidden md:inline-flex"
-                      >
-                        Dashboard
-                      </Link>
-                    )
-                  ) : (
-                    <Link
-                      to="/login"
-                      className="text-xs uppercase tracking-[0.3em] text-blue-200/50 hover:text-blue-100 transition-colors hidden md:inline-flex"
-                    >
-                      Login
-                    </Link>
-                  )}
+                        <Search size={24} />
+                      </button>
+                    )}
 
-                  {/* Search Toggle (Desktop only shows if search hidden, Mobile always shows) */}
-                  {(!showSearch || window.innerWidth < 1024) && (
+                    {/* Shopping Bag */}
                     <button
                       type="button"
-                      onClick={() => setShowSearch(!showSearch)}
-                      aria-label="Search"
-                      className="p-2 text-blue-200/70 hover:text-rep transition-colors"
+                      onClick={() => setCartOpen(true)}
+                      className="p-2 text-blue-200/70 hover:text-rep transition-colors relative"
+                      aria-label="Shopping bag"
                     >
-                      <Search size={24} />
+                      <ShoppingBag size={24} />
+                      {totalItems > 0 && (
+                        <span className="absolute top-0 right-0 h-4 w-4 bg-rep text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                          {totalItems}
+                        </span>
+                      )}
                     </button>
-                  )}
 
-                  {/* Shopping Bag */}
-                  <button
-                    type="button"
-                    onClick={() => setCartOpen(true)}
-                    className="p-2 text-blue-200/70 hover:text-rep transition-colors relative"
-                    aria-label="Shopping bag"
-                  >
-                    <ShoppingBag size={24} />
-                    {totalItems > 0 && (
-                      <span className="absolute top-0 right-0 h-4 w-4 bg-rep text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                        {totalItems}
-                      </span>
-                    )}
-                  </button>
-
-                  {/* Menu Toggle */}
-                  <button
-                    type="button"
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="p-2 text-blue-200/70 hover:text-rep transition-colors"
-                    aria-label="Toggle menu"
-                  >
-                    {isOpen ? <X size={24} /> : <Menu size={24} />}
-                  </button>
-                </div>
+                    {/* Menu Toggle */}
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(!isOpen)}
+                      className="p-2 text-blue-200/70 hover:text-rep transition-colors"
+                      aria-label="Toggle menu"
+                    >
+                      {isOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+                  </div>
               </div>
 
               {/* Search Bar Overlay */}
@@ -319,7 +286,9 @@ export function Navbar() {
                       ))}
                       {/* Mobile Actions */}
                       <div className="flex flex-col items-center gap-4 mt-8 pt-8 border-t border-blue-900/30 w-full max-w-[200px]">
-                        {isAuthenticated ? (
+                        {isAuthChecking ? (
+                          <div className="h-4 w-24 bg-blue-200/10 animate-pulse rounded" />
+                        ) : isAuthenticated ? (
                           <>
                             <Link
                               to="/dashboard"
@@ -328,14 +297,40 @@ export function Navbar() {
                             >
                               My Dashboard
                             </Link>
+                            
                             {isAdmin && (
-                              <Link
-                                to="/admin"
-                                onClick={() => setIsOpen(false)}
-                                className="text-xs uppercase tracking-[0.3em] text-rep font-bold"
-                              >
-                                Admin Panel
-                              </Link>
+                              <>
+                                <Link
+                                  to="/admin/queue"
+                                  onClick={() => setIsOpen(false)}
+                                  className="text-xs uppercase tracking-[0.3em] text-slate-400 hover:text-white font-bold"
+                                >
+                                  Orders
+                                </Link>
+                                <Link
+                                  to="/admin/submissions"
+                                  onClick={() => setIsOpen(false)}
+                                  className="text-xs uppercase tracking-[0.3em] text-slate-400 hover:text-white font-bold"
+                                >
+                                  Requests
+                                </Link>
+                                <Link
+                                  to="/admin"
+                                  onClick={() => setIsOpen(false)}
+                                  className="text-xs uppercase tracking-[0.3em] text-rep font-bold"
+                                >
+                                  Admin Panel
+                                </Link>
+                              </>
+                            )}
+
+                            {capabilities.length > 0 && (
+                              <div className="flex items-center gap-2 px-3 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded-full mt-2">
+                                <Zap className="w-3 h-3 text-yellow-500" />
+                                <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-wider">
+                                  {capabilities.length} Active
+                                </span>
+                              </div>
                             )}
                           </>
                         ) : (

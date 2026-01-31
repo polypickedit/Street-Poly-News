@@ -1,3 +1,5 @@
+import { PRODUCTS, getProductByPriceId } from "./pricing.ts";
+
 export type StripeEventLike = {
   type: string;
   data: {
@@ -53,50 +55,35 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
 
     const userId = metadata?.["userId"] as string | undefined;
     const slotId = metadata?.["slotId"] as string | undefined;
-    const slotSlug = metadata?.["slotSlug"] as string | undefined;
     const submissionId = metadata?.["submissionId"] as string | undefined;
     const selectedOutlets = parseSelectedOutlets(metadata?.["selectedOutlets"]);
-    const packId = metadata?.["packId"] as string | undefined;
-    const creditAmount = metadata?.["creditAmount"] as string | undefined;
-    const type = metadata?.["type"] as string | undefined;
+    const priceId = (session?.["amount_total"] ? (session as any).line_items?.data?.[0]?.price?.id : null) 
+      || (event.data.object as any).price?.id 
+      || (event.data.object as any).items?.data?.[0]?.price?.id;
 
-    if (type === "credits") {
-      if (!userId || !packId || !creditAmount) {
-        console.warn("⚠️ Missing credit pack metadata in webhook event, skipping...");
-        return;
-      }
-
-      console.log(`💳 Credit pack purchase detected for user ${userId}: ${creditAmount} credits`);
-
-      const { data: account, error: accountError } = await supabase
-        .from("accounts")
-        .select("id")
-        .eq("owner_user_id", userId)
-        .single();
-
-      if (accountError || !account) {
-        console.error("❌ Error finding account for user:", accountError);
-        return;
-      }
-
-      await supabase.from("account_ledger").insert({
-        account_id: (account as Record<string, unknown>).id,
-        amount: parseInt(creditAmount, 10),
-        description: `Credit Pack Purchase: ${packId}`,
-        transaction_type: "purchase",
-        reference_id: session?.["id"] ?? (event.data.object as Record<string, unknown>)["id"],
-      }).catch((err) => {
-        console.error("❌ Error recording credit purchase in ledger:", err);
-      });
-
+    if (!userId) {
+      console.warn("⚠️ Missing userId in webhook event, skipping...");
       return;
     }
 
-    if (!userId || !slotId) {
-      console.warn("⚠️ Missing metadata in webhook event, skipping...");
-      return;
+    // 1. Grant Capabilities based on Product/Price ID
+    if (priceId) {
+      const product = getProductByPriceId(priceId);
+      if (product) {
+        console.log(`🔓 Granting capabilities for user ${userId}: ${product.grants.join(", ")}`);
+        const capabilityRows = product.grants.map(cap => ({
+          user_id: userId,
+          capability: cap,
+          granted_at: new Date().toISOString()
+        }));
+
+        await supabase.from("user_capabilities").insert(capabilityRows).catch((err) => {
+          console.error("❌ Error granting capabilities:", err);
+        });
+      }
     }
 
+    // 2. Legacy/Specific logic for submissions and slots
     const piId = typeof paymentIntent === "string" ? paymentIntent : Array.isArray(paymentIntent) ? String(paymentIntent[0]) : paymentIntent?.["id"];
     const amount = typeof session?.["amount_total"] === "number"
       ? session.amount_total
@@ -105,16 +92,18 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
       ? session.currency
       : (event.data.object as Record<string, unknown>)["currency"];
 
-    await supabase.from("payments").upsert({
-      user_id: userId,
-      submission_id: submissionId ?? null,
-      stripe_payment_intent_id: piId,
-      amount_cents: amount,
-      currency: currency ?? "usd",
-      status: "succeeded",
-    }, { onConflict: "stripe_payment_intent_id" }).catch((err) => {
-      console.error("❌ Error recording payment:", err);
-    });
+    if (piId) {
+      await supabase.from("payments").upsert({
+        user_id: userId,
+        submission_id: submissionId ?? null,
+        stripe_payment_intent_id: piId,
+        amount_cents: amount,
+        currency: currency ?? "usd",
+        status: "succeeded",
+      }, { onConflict: "stripe_payment_intent_id" }).catch((err) => {
+        console.error("❌ Error recording payment:", err);
+      });
+    }
 
     if (submissionId) {
       await supabase.from("submissions").update({
@@ -138,16 +127,18 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
       }
     }
 
-    await supabase.from("slot_entitlements").insert({
-      user_id: userId,
-      slot_id: slotId,
-      source: session?.["mode"] === "subscription" ? "subscription" : "purchase",
-      is_active: true,
-      granted_at: new Date().toISOString(),
-      expires_at: null,
-    }).catch((err) => {
-      console.error("❌ Error granting entitlement:", err);
-    });
+    if (slotId) {
+      await supabase.from("slot_entitlements").insert({
+        user_id: userId,
+        slot_id: slotId,
+        source: session?.["mode"] === "subscription" ? "subscription" : "purchase",
+        is_active: true,
+        granted_at: new Date().toISOString(),
+        expires_at: null,
+      }).catch((err) => {
+        console.error("❌ Error granting entitlement:", err);
+      });
+    }
   }
 
   if (event.type === "customer.subscription.deleted") {
@@ -162,3 +153,4 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
     }
   }
 }
+

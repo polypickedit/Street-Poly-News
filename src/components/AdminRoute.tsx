@@ -31,14 +31,13 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
         console.log("AdminRoute: Session found for user:", session.user.email);
 
         // Check if user has admin or editor role using the RPC function
-        const { data: hasAccess, error: rpcError } = await (supabase as any).rpc("is_admin_or_editor");
+        const { data: hasAccess, error: rpcError } = await supabase.rpc("is_admin_or_editor");
 
         if (rpcError) {
           console.warn("AdminRoute: RPC check failed, falling back to direct query:", rpcError);
           
           // Fallback: Direct query to user_roles
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { data: roles, error: rolesError } = await (supabase as any)
+          const { data: roles, error: rolesError } = await supabase
             .from("user_roles")
             .select("role_id, roles(name)")
             .eq("user_id", session.user.id);
@@ -47,7 +46,7 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
             console.error("AdminRoute: Direct query check failed:", rolesError);
             setIsAuthorized(false);
           } else {
-            const roleData = roles as unknown as Array<{ roles: { name: string } }>;
+            const roleData = roles as unknown as Array<{ roles: { name: string } | null }>;
             const hasDirectAccess = roleData?.some(r => 
               r.roles?.name === "admin" || r.roles?.name === "editor"
             );

@@ -28,6 +28,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createSlotCheckoutSession } from "@/lib/stripe";
 import { useAccount } from "@/hooks/useAccount";
+import { useCapabilities } from "@/hooks/useCapabilities";
+import { getProductBySlotSlug } from "@/config/pricing";
 
 interface BookingFormProps {
   type: "music" | "interview";
@@ -72,7 +74,19 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null);
   const { activeAccount, isLoading: isLoadingAccount } = useAccount();
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'credits'>('stripe');
+  const { hasCapability, capabilities, isLoading: isLoadingCapabilities } = useCapabilities();
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'capability'>('stripe');
+
+  const requiredCapability = selectedSlot ? getProductBySlotSlug(selectedSlot.slug).grants[0] : 'post.submit';
+  const canUseCapability = hasCapability(requiredCapability as any);
+
+  useEffect(() => {
+    if (canUseCapability) {
+      setPaymentMethod('capability');
+    } else {
+      setPaymentMethod('stripe');
+    }
+  }, [canUseCapability]);
 
   const checkPaymentStatus = useCallback(async (sessionId: string) => {
     setPaymentStatus('confirming');
@@ -248,17 +262,28 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
 
       let submissionId: string;
 
-      if (paymentMethod === 'credits' && activeAccount) {
-        // Use Credit System
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: resultId, error: creditError } = await (supabase as any).rpc("submit_with_credits", {
-          p_account_id: activeAccount.id,
-          p_submission_data: submissionPayload,
-          p_credits_to_consume: 1 // For now, everything costs 1 credit
+      if (paymentMethod === 'capability') {
+        // 1. Consume the capability
+        const { data: consumed, error: consumeError } = await (supabase as any).rpc("consume_capability", {
+          p_user_id: user?.id,
+          p_capability: requiredCapability
         });
 
-        if (creditError) throw creditError;
-        submissionId = resultId;
+        if (consumeError) throw consumeError;
+        if (!consumed) throw new Error(`You don't have an available ${requiredCapability} capability.`);
+
+        // 2. Create the submission
+        const { data: submission, error: submissionError } = await (supabase as any).from("submissions").insert({
+          ...submissionPayload,
+          account_id: activeAccount?.id,
+          user_id: user?.id,
+          status: "pending",
+          payment_status: "paid", // Already paid via capability
+          payment_type: "credits" // Keep this for DB compatibility or update migration later
+        }).select("id").single();
+
+        if (submissionError) throw submissionError;
+        submissionId = submission.id;
       } else {
         // Traditional Stripe Flow
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -275,8 +300,8 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
         submissionId = submission.id;
       }
 
-      // 2b. Create distribution records (already handled in RPC for credits)
-      if (paymentMethod !== 'credits' && data.selectedOutlets.length > 0) {
+      // 2b. Create distribution records
+      if (data.selectedOutlets.length > 0) {
         const distributionRecords = data.selectedOutlets.map(outletId => ({
           submission_id: submissionId,
           outlet_id: outletId,
@@ -297,7 +322,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
           data.selectedOutlets
         );
       } else {
-        toast.success(paymentMethod === 'credits' ? "Credits used! Submission successful." : "Submission successful!");
+        toast.success(paymentMethod === 'capability' ? "Capability used! Submission successful." : "Submission successful!");
         form.reset(defaultValues);
         onSuccess?.();
       }
@@ -318,9 +343,9 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
               <CreditCard className="w-4 h-4" />
               <span className="text-sm font-semibold uppercase tracking-wider">Estimated Total</span>
             </div>
-            {activeAccount && (
-              <div className="text-[10px] font-bold px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30">
-                {activeAccount.balance || 0} CREDITS AVAILABLE
+            {canUseCapability && (
+              <div className="text-[10px] font-bold px-2 py-1 bg-green-500/20 text-green-400 rounded-full border border-green-500/30 uppercase tracking-widest">
+                Capability Available
               </div>
             )}
           </div>
@@ -337,11 +362,11 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
               )}
             </div>
             <p className="text-2xl font-bold text-white">
-              ${totalPrice.toFixed(2)}
+              {paymentMethod === 'capability' ? "FREE" : `$${totalPrice.toFixed(2)}`}
             </p>
           </div>
 
-          {activeAccount && (activeAccount.balance || 0) > 0 && (
+          {canUseCapability && (
             <div className="pt-4 border-t border-blue-500/10 flex gap-2">
               <Button
                 type="button"
@@ -349,15 +374,15 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
                 className="flex-1 h-9 text-xs"
                 onClick={() => setPaymentMethod('stripe')}
               >
-                Stripe
+                Pay with Card
               </Button>
               <Button
                 type="button"
-                variant={paymentMethod === 'credits' ? 'default' : 'outline'}
-                className="flex-1 h-9 text-xs"
-                onClick={() => setPaymentMethod('credits')}
+                variant={paymentMethod === 'capability' ? 'default' : 'outline'}
+                className="flex-1 h-9 text-xs bg-green-600 hover:bg-green-700 border-green-500/50"
+                onClick={() => setPaymentMethod('capability')}
               >
-                Use 1 Credit
+                Use Capability
               </Button>
             </div>
           )}

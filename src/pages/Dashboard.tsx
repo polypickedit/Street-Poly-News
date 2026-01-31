@@ -23,8 +23,10 @@ import {
   Coins
 } from "lucide-react";
 import { useAccount } from "@/hooks/useAccount";
+import { useCapabilities } from "@/hooks/useCapabilities";
 import { createCreditPackCheckoutSession } from "@/lib/stripe";
 import { useToast } from "@/hooks/use-toast";
+import { AdminDashboard } from "@/components/admin/AdminDashboard";
 
 interface CreditPack {
   id: string;
@@ -90,7 +92,17 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const { activeAccount, isLoading: isLoadingAccount } = useAccount();
+  const { capabilities, isLoading: isLoadingCapabilities } = useCapabilities();
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: hasAccess } = await supabase.rpc("is_admin_or_editor");
+      setIsAdmin(!!hasAccess);
+    };
+    checkAdmin();
+  }, []);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -263,22 +275,63 @@ export default function Dashboard() {
           </motion.div>
         </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+        >
           <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
-            <CardHeader className="pb-2">
-              <CardDescription className="text-slate-400 uppercase tracking-wider text-xs">Account Balance</CardDescription>
-              <CardTitle className="text-3xl font-bold flex items-center gap-2">
-                <Coins className="w-6 h-6 text-yellow-500" />
-                {isLoadingAccount ? <Loader2 className="w-6 h-6 animate-spin text-slate-500" /> : activeAccount?.balance || 0}
-              </CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium text-slate-400">Account Access</CardTitle>
+              <Zap className="w-4 h-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <Zap className="w-3 h-3 text-yellow-500/50" />
-                <span>Available distribution credits</span>
+              <div className="text-2xl font-bold text-white">
+                {isLoadingCapabilities ? (
+                  <Loader2 className="w-6 h-6 animate-spin text-slate-600" />
+                ) : (
+                  capabilities.length
+                )}
               </div>
+              <p className="text-xs text-slate-500 mt-1">Active features</p>
             </CardContent>
           </Card>
+          
+          <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium text-slate-400">Active Account</CardTitle>
+              <UserIcon className="w-4 h-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-bold text-white truncate">
+                {isLoadingAccount ? "Loading..." : activeAccount?.name || "No Account"}
+              </div>
+              <Badge variant="outline" className="mt-1 text-[10px] uppercase tracking-wider border-slate-700 text-slate-400">
+                {activeAccount?.type || "Individual"}
+              </Badge>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium text-slate-400">Quick Actions</CardTitle>
+              <Plus className="w-4 h-4 text-blue-500" />
+            </CardHeader>
+            <CardContent className="flex gap-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full text-xs h-8 border-slate-700 hover:bg-slate-800"
+                onClick={() => navigate("/booking")}
+              >
+                New Submission
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
             <CardHeader className="pb-2">
               <CardDescription className="text-slate-400 uppercase tracking-wider text-xs">Total Submissions</CardDescription>
@@ -324,9 +377,18 @@ export default function Dashboard() {
           <TabsList className="bg-slate-900/80 border border-slate-800 p-1">
             <TabsTrigger value="submissions" className="data-[state=active]:bg-slate-800">Submissions</TabsTrigger>
             <TabsTrigger value="placements" className="data-[state=active]:bg-slate-800">Placements</TabsTrigger>
-            <TabsTrigger value="credits" className="data-[state=active]:bg-slate-800">Credits</TabsTrigger>
+            <TabsTrigger value="capabilities" className="data-[state=active]:bg-slate-800">Features</TabsTrigger>
             <TabsTrigger value="payments" className="data-[state=active]:bg-slate-800">Payments</TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="management" className="data-[state=active]:bg-rep/20 text-rep">Management</TabsTrigger>
+            )}
           </TabsList>
+
+          {isAdmin && (
+            <TabsContent value="management" className="space-y-4">
+              <AdminDashboard />
+            </TabsContent>
+          )}
 
           <TabsContent value="submissions" className="space-y-4">
             {loadingSubmissions ? (
@@ -453,86 +515,58 @@ export default function Dashboard() {
             )}
           </TabsContent>
 
-          <TabsContent value="credits" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {creditPacks?.map((pack) => (
-                <Card key={pack.id} className="bg-slate-900/30 border-slate-800 hover:border-blue-500/30 transition-all group">
-                  <CardHeader>
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
-                        <Coins className="w-6 h-6 text-blue-400" />
-                      </div>
-                      <Badge variant="outline" className="bg-blue-500/5 text-blue-400 border-blue-500/20">
-                        BEST VALUE
-                      </Badge>
+          <TabsContent value="capabilities" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="bg-slate-900/30 border-slate-800">
+                <CardHeader>
+                  <CardTitle className="text-lg">Account Access</CardTitle>
+                  <CardDescription>Your active features and services</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {isLoadingCapabilities ? (
+                    <div className="py-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-700" /></div>
+                  ) : capabilities.length === 0 ? (
+                    <div className="py-8 text-center text-slate-500 bg-slate-950/50 rounded-lg border border-slate-800/50">
+                      No active features found.
                     </div>
-                    <CardTitle className="text-xl">{pack.name}</CardTitle>
-                    <CardDescription>{pack.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold">${(pack.price_cents / 100).toFixed(2)}</span>
-                      <span className="text-slate-500 text-sm">one-time</span>
+                  ) : (
+                    <div className="space-y-2">
+                      {capabilities.map((cap, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 bg-slate-800/30 rounded-lg border border-slate-700/30">
+                          <div className="flex items-center gap-3">
+                            <Zap className="w-4 h-4 text-yellow-500" />
+                            <span className="text-sm font-medium text-slate-200 uppercase tracking-wider">{cap.replace('.', ' ')}</span>
+                          </div>
+                          <Badge variant="outline" className="text-[10px] border-green-500/30 text-green-400 bg-green-500/5">ACTIVE</Badge>
+                        </div>
+                      ))}
                     </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm text-slate-300">
-                        <CheckCircle2 className="w-4 h-4 text-blue-400" />
-                        <span>{pack.credit_amount} Distribution Credits</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-300">
-                        <CheckCircle2 className="w-4 h-4 text-blue-400" />
-                        <span>No expiration date</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-300">
-                        <CheckCircle2 className="w-4 h-4 text-blue-400" />
-                        <span>Instant delivery</span>
-                      </div>
-                    </div>
-
-                    <Button 
-                      className="w-full bg-blue-600 hover:bg-blue-500" 
-                      onClick={() => handlePurchaseCredits(pack.id)}
-                      disabled={isPurchasing === pack.id}
-                    >
-                      {isPurchasing === pack.id ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-4 h-4 mr-2" />
-                          Buy Credits
-                        </>
-                      )}
+                  )}
+                  
+                  <div className="pt-4">
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-sm h-10" onClick={() => navigate("/booking")}>
+                      Get Featured
                     </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            <Card className="bg-slate-900/50 border-slate-800 border-dashed">
-              <CardContent className="p-8 text-center">
-                <div className="max-w-md mx-auto">
-                  <Zap className="w-12 h-12 text-yellow-500/50 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Why use credits?</h3>
-                  <p className="text-sm text-slate-400 mb-6">
-                    Credits simplify your workflow. Buy in bulk to reduce Stripe fees, skip payment steps on every submission, and manage budgets for your whole team or label.
-                  </p>
-                  <div className="grid grid-cols-2 gap-4 text-left">
-                    <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                      <p className="text-xs font-bold text-slate-500 uppercase mb-1">Artists</p>
-                      <p className="text-xs text-slate-400 text-balance">Submit music instantly without re-entering cards.</p>
-                    </div>
-                    <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                      <p className="text-xs font-bold text-slate-500 uppercase mb-1">Labels</p>
-                      <p className="text-xs text-slate-400 text-balance">Pre-pay for distribution slots and track team usage.</p>
-                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-slate-900/30 border-slate-800">
+                <CardHeader>
+                  <CardTitle className="text-lg">How it works</CardTitle>
+                  <CardDescription>Access to site features</CardDescription>
+                </CardHeader>
+                <CardContent className="text-sm text-slate-400 space-y-4">
+                  <p>When you purchase a service or get featured, you unlock specific site features.</p>
+                  <ul className="space-y-2 list-disc pl-4">
+                    <li>Each submission uses one active feature slot.</li>
+                    <li>Features remain active as long as your service is running.</li>
+                    <li>One payment can unlock multiple features.</li>
+                  </ul>
+                  <p className="pt-2 italic text-xs">Everything you need to manage your presence.</p>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="payments" className="space-y-4">
