@@ -54,8 +54,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
       {/* Sidebar */}
       <aside className="w-64 border-r border-slate-800 bg-slate-900/50 flex flex-col">
         <div className="p-6">
-          <h1 className="text-xl font-bold tracking-tight text-blue-400">Taste Admin</h1>
-          <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-semibold">Curation Portal</p>
+          <h1 className="text-xl font-bold tracking-tight text-blue-400">Streetpoly Admin</h1>
+          <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-semibold">Media Portal</p>
         </div>
 
         <nav className="flex-1 px-4 space-y-1">

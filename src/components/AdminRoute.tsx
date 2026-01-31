@@ -31,8 +31,7 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
         console.log("AdminRoute: Session found for user:", session.user.email);
 
         // Check if user has admin or editor role using the RPC function
-        // @ts-expect-error - RPC is not in the generated types
-        const { data: hasAccess, error: rpcError } = await supabase.rpc("is_admin_or_editor");
+        const { data: hasAccess, error: rpcError } = await (supabase as any).rpc("is_admin_or_editor");
 
         if (rpcError) {
           console.warn("AdminRoute: RPC check failed, falling back to direct query:", rpcError);
@@ -86,7 +85,7 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!isAuthorized) {
     // If they are not authorized, redirect to login and preserve their intent
-    return <Navigate to="/login" state={{ from: `${location.pathname}${location.search}` }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

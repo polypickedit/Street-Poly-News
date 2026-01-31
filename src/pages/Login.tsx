@@ -19,20 +19,22 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
 
-  const from = location.state?.from?.pathname || "/admin";
+  const from = location.state?.from || { pathname: "/admin" };
 
   useEffect(() => {
     // Check if user is already logged in
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         if (session) {
-          navigate(from, { replace: true });
+          const redirectPath = typeof from === 'string' ? from : from.pathname;
+          navigate(redirectPath, { replace: true });
         }
       });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && event === "SIGNED_IN") {
-        navigate(from, { replace: true });
+        const redirectPath = typeof from === 'string' ? from : from.pathname;
+        navigate(redirectPath, { replace: true });
       }
     });
 

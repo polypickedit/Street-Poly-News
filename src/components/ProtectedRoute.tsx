@@ -9,13 +9,12 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
 
   useEffect(() => {
-    // TEMPORARY BYPASS: Access granted for all users
-    setSession(true);
-    return;
-    
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       setSession(!!session);
-    });
+    };
+
+    checkAuth();
 
     const {
       data: { subscription },

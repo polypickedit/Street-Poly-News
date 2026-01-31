@@ -35,18 +35,12 @@ export function Navbar() {
   const { activeAccount, isLoading: isLoadingAccount } = useAccount();
 
   useEffect(() => {
-    // TEMPORARY BYPASS: Force admin and auth to true
-    setIsAdmin(true);
-    setIsAuthenticated(true);
-    return;
-    
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsAuthenticated(!!session);
       if (session) {
         try {
-          // @ts-expect-error - RPC is not in the generated types
-          const { data: hasAccess, error } = await supabase.rpc("is_admin_or_editor");
+          const { data: hasAccess, error } = await (supabase as any).rpc("is_admin_or_editor");
           
           if (error) throw error;
           setIsAdmin(!!hasAccess);
