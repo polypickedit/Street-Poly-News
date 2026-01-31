@@ -13,16 +13,34 @@ const tableResponses = {
 };
 
 function buildChain(table: string) {
-  return {
+  const chain = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     match: vi.fn().mockReturnThis(),
     single: vi.fn().mockResolvedValue(tableResponses[table]?.single ?? { data: null, error: null }),
     insert: vi.fn().mockResolvedValue(tableResponses[table]?.insert ?? { error: null }),
-    update: vi.fn().mockResolvedValue(tableResponses[table]?.update ?? { error: null }),
+    update: vi.fn().mockReturnThis(),
     upsert: vi.fn().mockResolvedValue(tableResponses[table]?.upsert ?? { error: null }),
   };
+  // Ensure .update().eq() works
+  chain.update.mockReturnValue(chain);
+  // Also ensure it resolves correctly if called as a promise
+  Object.defineProperty(chain.eq, 'then', {
+    value: (resolve: any) => resolve(tableResponses[table]?.update ?? { error: null })
+  });
+  Object.defineProperty(chain.match, 'then', {
+    value: (resolve: any) => resolve(tableResponses[table]?.update ?? { error: null })
+  });
+  chain.eq.mockReturnValue({
+    ...chain,
+    catch: vi.fn().mockResolvedValue({ error: null })
+  });
+  chain.match.mockReturnValue({
+    ...chain,
+    catch: vi.fn().mockResolvedValue({ error: null })
+  });
+  return chain;
 }
 
 function createMockSupabase() {
@@ -49,7 +67,7 @@ describe("Stripe webhook handler", () => {
 
     await processStripeWebhookEvent(checkoutSessionCompleted, mockSupabase as any);
 
-    expect(mockSupabase.from).toHaveBeenCalledWith("accounts");
+    expect(mockSupabase.from).toHaveBeenCalledWith("payments");
     expect(mockSupabase.tableChains.payments.upsert).toHaveBeenCalled();
     expect(mockSupabase.tableChains.submissions.update).toHaveBeenCalled();
     expect(mockSupabase.tableChains.submission_distribution.upsert).toHaveBeenCalled();

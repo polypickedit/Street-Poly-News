@@ -13,8 +13,8 @@ BEGIN
     s.id,
     s.payment_status,
     s.paid_at,
-    COUNT(sd.id) AS distribution_rows,
-    COUNT(p.id) FILTER (WHERE p.status = 'succeeded') AS paid_payments
+    COALESCE(CAST(COUNT(DISTINCT sd.id) AS INTEGER), 0) AS distribution_rows,
+    COALESCE(CAST(COUNT(DISTINCT p.id) FILTER (WHERE p.status = 'succeeded') AS INTEGER), 0) AS paid_payments
   FROM public.submissions s
   LEFT JOIN public.submission_distribution sd ON sd.submission_id = s.id
   LEFT JOIN public.payments p ON p.submission_id = s.id

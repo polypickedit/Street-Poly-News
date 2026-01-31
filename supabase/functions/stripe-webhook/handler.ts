@@ -7,18 +7,21 @@ export type StripeEventLike = {
 
 export type SupabaseLikeClient = {
   from: (table: string) => {
-    select: (...args: unknown[]) => any;
-    eq: (...args: unknown[]) => any;
-    order: (...args: unknown[]) => any;
-    single: () => Promise<{ data: unknown; error: unknown }>;
-    update: (...args: unknown[]) => Promise<{ error: unknown }>;
-    insert: (...args: unknown[]) => Promise<{ error: unknown }>;
-    upsert: (...args: unknown[]) => Promise<{ error: unknown }>;
-    match: (...args: unknown[]) => any;
-    onConflict: (...args: unknown[]) => any;
+    select: (...args: any[]) => any;
+    eq: (...args: any[]) => any;
+    order: (...args: any[]) => any;
+    single: () => Promise<{ data: any; error: any }>;
+    update: (...args: any[]) => { 
+      eq: (...args: any[]) => Promise<{ error: any }>;
+      match: (...args: any[]) => Promise<{ error: any }>;
+    };
+    insert: (...args: any[]) => Promise<{ error: any }>;
+    upsert: (...args: any[]) => Promise<{ error: any }>;
+    match: (...args: any[]) => any;
+    onConflict: (...args: any[]) => any;
   };
   auth: {
-    getUser: () => Promise<{ data: { user: { id: string } | null }; error: unknown }>;
+    getUser: () => Promise<{ data: { user: { id: string } | null }; error: any }>;
   };
 };
 
@@ -148,7 +151,7 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
   }
 
   if (event.type === "customer.subscription.deleted") {
-    const subscription = event.data.object as Record<string, unknown>;
+    const subscription = event.data.object as any;
     const userId = subscription.metadata?.userId as string | undefined;
     const slotId = subscription.metadata?.slotId as string | undefined;
 
