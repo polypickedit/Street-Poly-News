@@ -33,8 +33,22 @@
     <script>
       // Defensive guard against brittle third-party scripts (e.g. h1-check.js)
       if (typeof window !== 'undefined') {
-        window.detectStore = window.detectStore || function() { 
-          return Promise.resolve({}); 
+        // Ensure detectStore exists and always returns a promise to avoid ".then is undefined" errors
+        const originalDetectStore = window.detectStore;
+        window.detectStore = function() {
+          try {
+            const result = typeof originalDetectStore === 'function' 
+              ? originalDetectStore.apply(this, arguments) 
+              : undefined;
+            
+            if (result && typeof result.then === 'function') {
+              return result;
+            }
+            return Promise.resolve(result || {});
+          } catch (e) {
+            console.warn('[Guard] detectStore failed, returning fallback promise', e);
+            return Promise.resolve({});
+          }
         };
       }
     </script>
