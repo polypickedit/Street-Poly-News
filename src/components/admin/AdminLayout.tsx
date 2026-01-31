@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -7,7 +7,9 @@ import {
   History, 
   Settings, 
   ChevronRight,
-  LogOut
+  LogOut,
+  Inbox,
+  Share2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,8 +21,10 @@ interface AdminLayoutProps {
 
 const navItems = [
   { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
+  { name: "Queue", path: "/admin/queue", icon: Inbox },
   { name: "Submissions", path: "/admin/submissions", icon: ListMusic },
   { name: "Playlists", path: "/admin/playlists", icon: Library },
+  { name: "Outlets", path: "/admin/outlets", icon: Share2 },
   { name: "Placements", path: "/admin/placements", icon: History },
   { name: "Settings", path: "/admin/settings", icon: Settings },
 ];
@@ -28,6 +32,17 @@ const navItems = [
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [user, setUser] = useState<{ email?: string } | null>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setUser(session.user);
+      }
+    };
+    getUser();
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -71,12 +86,12 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
 
         <div className="p-4 border-t border-slate-800 space-y-4">
           <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold">
-              AD
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold uppercase">
+              {user?.email?.substring(0, 2) || "AD"}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">Admin User</p>
-              <p className="text-xs text-slate-500 truncate">admin@taste.com</p>
+              <p className="text-sm font-medium truncate">{user?.email?.split('@')[0] || "Admin User"}</p>
+              <p className="text-xs text-slate-500 truncate">{user?.email || "admin@taste.com"}</p>
             </div>
           </div>
           <button

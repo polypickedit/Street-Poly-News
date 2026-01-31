@@ -1,6 +1,5 @@
 import { PageLayoutWithAds } from "@/components/PageLayoutWithAds";
 import { FeaturedSection } from "@/components/FeaturedSection";
-import { AdBanner } from "@/components/AdBanner";
 import { InfinitePostFeed } from "@/components/InfinitePostFeed";
 import { SuggestionsCarousel } from "@/components/SuggestionsCarousel";
 import { Separator } from "@/components/ui/separator";
@@ -13,18 +12,6 @@ import { supabase } from "@/integrations/supabase/client";
 import streetPolyMerchAd from "@/assets/StreetPolyMerch_Ad.jpeg";
 
 const Index = () => {
-  const { data: posts = [] } = useQuery({
-    queryKey: ["posts", "latest"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("posts")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(18);
-      if (error) throw error;
-      return data;
-    },
-  });
   const videoLinks = [
     {
       id: "3PXQSs-FsK4",
@@ -96,6 +83,23 @@ const Index = () => {
   return (
     <PageLayoutWithAds mainClassName="w-full">
       <PageTransition>
+        {/* Brand Headline */}
+        <div className="py-8 md:py-16 px-4 text-center">
+          <p className="text-xs md:text-sm uppercase tracking-[0.3em] mb-3 font-body font-bold">
+            <span className="text-dem">Street</span>
+            <span className="text-rep mx-2">Politics</span>
+            <span className="text-dem">Feed</span>
+          </p>
+          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold tracking-[0.3em] uppercase leading-none">
+            <span className="text-dem">Street</span>
+            <span className="text-rep">Poly</span>
+            <span className="text-foreground ml-2">News</span>
+          </h1>
+          <p className="mt-6 text-muted-foreground/80 text-sm md:text-lg max-w-2xl mx-auto font-body leading-relaxed">
+            Unfiltered stories from the heart of the movement. <br className="hidden md:block" /> Real voices, real impact, real news.
+          </p>
+        </div>
+
         {/* Divider */}
         <div className="flex items-center gap-3 md:gap-4 py-3 md:py-4 px-4">
           <Separator className="flex-1" />
@@ -105,11 +109,6 @@ const Index = () => {
 
         {/* Featured Section */}
         <FeaturedSection />
-
-        {/* Ad Banner */}
-        <div className="my-8 md:my-12 px-4">
-          <AdBanner />
-        </div>
 
         {/* Video Links */}
         <section className="mb-6 md:mb-10 px-4">
@@ -162,33 +161,6 @@ const Index = () => {
                 </div>
               </a>
             ))}
-          </div>
-        </section>
-
-        {/* Official Store Promo */}
-        <section className="bg-card border border-border rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-8 mb-6 md:mb-10 px-4">
-          <div className="flex-1">
-            <h2 className="font-display text-3xl md:text-4xl text-foreground">
-              Rep the Movement
-            </h2>
-            <p className="text-muted-foreground mt-2 text-base md:text-lg">
-              Get the official Street Politics gear. Hoodies, tees, and more
-              available now.
-            </p>
-            <Link
-              to="/merch"
-              className="mt-4 inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-full font-semibold w-fit hover:bg-primary/90 transition-colors"
-            >
-              Shop the Store
-              <ExternalLink className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="w-48 h-48 md:w-56 md:h-56 flex-shrink-0">
-            <img
-              src={streetPolyMerchAd}
-              alt="Street Politics merchandise"
-              className="w-full h-full object-contain"
-            />
           </div>
         </section>
 

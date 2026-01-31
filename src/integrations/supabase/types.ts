@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_actions: {
+        Row: {
+          action_type: string
+          admin_user_id: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          action_type: string
+          admin_user_id: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          action_type?: string
+          admin_user_id?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
       affiliate_clicks: {
         Row: {
           affiliate_link_id: string
@@ -82,6 +112,30 @@ export type Database = {
         }
         Relationships: []
       }
+      artists: {
+        Row: {
+          country: string | null
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string | null
@@ -136,6 +190,44 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount_cents: number
+          created_at: string | null
+          currency: string
+          id: string
+          status: string
+          stripe_payment_intent_id: string
+          submission_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string | null
+          currency?: string
+          id?: string
+          status: string
+          stripe_payment_intent_id: string
+          submission_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string | null
+          currency?: string
+          id?: string
+          status?: string
+          stripe_payment_intent_id?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       people: {
         Row: {
           bio: string | null
@@ -160,6 +252,93 @@ export type Database = {
           image_url?: string | null
           name?: string
           slug?: string
+        }
+        Relationships: []
+      }
+      placements: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          end_date: string
+          id: string
+          playlist_id: string
+          start_date: string
+          submission_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          end_date: string
+          id?: string
+          playlist_id: string
+          start_date: string
+          submission_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          end_date?: string
+          id?: string
+          playlist_id?: string
+          start_date?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "placements_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "placements_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playlists: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          follower_count_snapshot: number | null
+          id: string
+          ideal_bpm_max: number | null
+          ideal_bpm_min: number | null
+          max_tracks: number | null
+          name: string
+          primary_genre: string
+          primary_mood: string
+          spotify_playlist_url: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          follower_count_snapshot?: number | null
+          id?: string
+          ideal_bpm_max?: number | null
+          ideal_bpm_min?: number | null
+          max_tracks?: number | null
+          name: string
+          primary_genre: string
+          primary_mood: string
+          spotify_playlist_url: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          follower_count_snapshot?: number | null
+          id?: string
+          ideal_bpm_max?: number | null
+          ideal_bpm_min?: number | null
+          max_tracks?: number | null
+          name?: string
+          primary_genre?: string
+          primary_mood?: string
+          spotify_playlist_url?: string
         }
         Relationships: []
       }
@@ -277,15 +456,215 @@ export type Database = {
         }
         Relationships: []
       }
+      roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      slot_entitlements: {
+        Row: {
+          expires_at: string | null
+          granted_at: string
+          id: string
+          is_active: boolean
+          slot_id: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string | null
+          granted_at?: string
+          id?: string
+          is_active?: boolean
+          slot_id: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string | null
+          granted_at?: string
+          id?: string
+          is_active?: boolean
+          slot_id?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slot_entitlements_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      slots: {
+        Row: {
+          billing_interval: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          monetization_model: Database["public"]["Enums"]["monetization_model"]
+          name: string
+          price: number | null
+          slot_type: Database["public"]["Enums"]["slot_type"]
+          slug: string
+          updated_at: string
+          visibility: Database["public"]["Enums"]["visibility_type"]
+        }
+        Insert: {
+          billing_interval?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          monetization_model?: Database["public"]["Enums"]["monetization_model"]
+          name: string
+          price?: number | null
+          slot_type?: Database["public"]["Enums"]["slot_type"]
+          slug: string
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["visibility_type"]
+        }
+        Update: {
+          billing_interval?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          monetization_model?: Database["public"]["Enums"]["monetization_model"]
+          name?: string
+          price?: number | null
+          slot_type?: Database["public"]["Enums"]["slot_type"]
+          slug?: string
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["visibility_type"]
+        }
+        Relationships: []
+      }
+      submissions: {
+        Row: {
+          artist_id: string
+          artist_name: string
+          bpm: number | null
+          created_at: string | null
+          feedback_artist: string | null
+          genre: string
+          id: string
+          mood: string
+          notes_internal: string | null
+          payment_status: string
+          release_date: string
+          reviewed_at: string | null
+          spotify_track_url: string
+          status: string
+          track_title: string
+        }
+        Insert: {
+          artist_id: string
+          artist_name: string
+          bpm?: number | null
+          created_at?: string | null
+          feedback_artist?: string | null
+          genre: string
+          id?: string
+          mood: string
+          notes_internal?: string | null
+          payment_status?: string
+          release_date: string
+          reviewed_at?: string | null
+          spotify_track_url: string
+          status?: string
+          track_title: string
+        }
+        Update: {
+          artist_id?: string
+          artist_name?: string
+          bpm?: number | null
+          created_at?: string | null
+          feedback_artist?: string | null
+          genre?: string
+          id?: string
+          mood?: string
+          notes_internal?: string | null
+          payment_status?: string
+          release_date?: string
+          reviewed_at?: string | null
+          spotify_track_url?: string
+          status?: string
+          track_title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin_or_editor: { Args: never; Returns: boolean }
     }
     Enums: {
       content_type: "video" | "article" | "gallery"
+      monetization_model:
+        | "free"
+        | "subscription"
+        | "one_time"
+        | "per_item"
+        | "invite_only"
+      slot_type: "content" | "event" | "service" | "hybrid"
+      visibility_type: "public" | "account" | "paid"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -414,6 +793,15 @@ export const Constants = {
   public: {
     Enums: {
       content_type: ["video", "article", "gallery"],
+      monetization_model: [
+        "free",
+        "subscription",
+        "one_time",
+        "per_item",
+        "invite_only",
+      ],
+      slot_type: ["content", "event", "service", "hybrid"],
+      visibility_type: ["public", "account", "paid"],
     },
   },
 } as const

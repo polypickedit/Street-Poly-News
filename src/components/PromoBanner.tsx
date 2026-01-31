@@ -5,7 +5,7 @@ import donTripAd from "@/assets/Don Trip ad.jpeg";
 
 const SUPABASE_URL = "https://duldhllwapsjytdzpjfz.supabase.co";
 
-interface Ad {
+interface Promo {
   title: string;
   subtitle: string;
   bg: string;
@@ -17,7 +17,7 @@ interface Ad {
   affiliateName?: string | null;
 }
 
-const ads: Record<string, Ad> = {
+const promos: Record<string, Promo> = {
   donTrip: {
     title: "DON TRIP - TRAUMA BOND",
     subtitle: "Listen now on all platforms",
@@ -30,79 +30,79 @@ const ads: Record<string, Ad> = {
   }
 };
 
-interface AdBannerProps {
+interface PromoBannerProps {
   className?: string;
   showLabel?: boolean;
   type?: "donTrip";
 }
 
-export const AdBanner = ({ className = "", showLabel = true, type = "donTrip" }: AdBannerProps) => {
-  const currentAd = ads[type];
-  console.log(`[AdBanner] Rendering ${type} ad`);
+export const PromoBanner = ({ className = "", showLabel = true, type = "donTrip" }: PromoBannerProps) => {
+  const currentPromo = promos[type];
+  console.log(`[PromoBanner] Rendering ${type} promo`);
 
   const { data: affiliateLink } = useQuery({
-    queryKey: ["affiliate-link", currentAd.affiliateName],
+    queryKey: ["affiliate-link", currentPromo.affiliateName],
     queryFn: async () => {
-      if (!currentAd.affiliateName) return null;
+      if (!currentPromo.affiliateName) return null;
       
       const { data, error } = await supabase
         .from("affiliate_links")
         .select("id, click_count")
-        .eq("name", currentAd.affiliateName)
+        .eq("name", currentPromo.affiliateName)
         .maybeSingle();
 
       if (error) return null;
       return data;
     },
-    enabled: !!currentAd.affiliateName,
+    enabled: !!currentPromo.affiliateName,
   });
 
   const getTrackedUrl = () => {
     if (affiliateLink?.id) {
       return `${SUPABASE_URL}/functions/v1/track-click?id=${affiliateLink.id}`;
     }
-    return currentAd.link || "#";
+    return currentPromo.link || "#";
   };
 
-  const isInternal = currentAd.link?.startsWith("/");
+  const isInternal = currentPromo.link?.startsWith("/");
 
-  const AdContent = () => (
+  const PromoContent = () => (
     <>
-      {currentAd.image ? (
+      {currentPromo.image ? (
         <img 
-          src={currentAd.image} 
-          alt={currentAd.title} 
+          src={currentPromo.image} 
+          alt={currentPromo.title} 
           className="w-full h-auto block rounded-lg"
         />
       ) : (
         <>
           <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="flex items-center gap-6 md:gap-8 relative z-10">
-            {currentAd.isAlbum && (
+            {currentPromo.isAlbum && (
               <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden shadow-2xl border-2 border-white/20 flex-shrink-0 transform -rotate-3 group-hover:rotate-0 transition-transform duration-500">
                 <img 
-                  src={currentAd.albumArt} 
-                  alt={currentAd.title}
+                  src={currentPromo.albumArt} 
+                  alt={currentPromo.title}
                   className="w-full h-full object-cover"
                 />
               </div>
             )}
             <div>
-              {currentAd.isAlbum && (
+              {currentPromo.isAlbum && (
                 <div className="text-foreground/60 font-body text-xs uppercase tracking-[0.2em] mb-2">
                   New Album
                 </div>
               )}
               <div className="text-foreground font-display text-2xl md:text-4xl leading-tight mb-2">
-                {currentAd.title}
+                {currentPromo.title}
               </div>
               <div className="text-foreground/70 font-body text-base md:text-lg">
-                {currentAd.subtitle}
+                {currentPromo.subtitle}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-3 bg-foreground text-background font-display text-sm md:text-base px-8 py-4 rounded-full flex-shrink-0 shadow-lg group-hover:bg-dem group-hover:text-dem-foreground transition-colors relative z-10">
-            {currentAd.text}
+            {currentPromo.text}
           </div>
         </>
       )}
@@ -113,26 +113,26 @@ export const AdBanner = ({ className = "", showLabel = true, type = "donTrip" }:
     <div className={`relative ${className}`}>
       {showLabel && (
         <span className="absolute -top-5 left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
-          Advertisement
+          Promotion
         </span>
       )}
       {isInternal ? (
         <Link
-          to={currentAd.link || "#"}
-          title={currentAd.title}
-          className={`w-full ${currentAd.image ? "h-auto bg-transparent p-0 border-0 shadow-none" : `h-32 md:h-40 bg-gradient-to-r ${currentAd.bg} px-6 md:px-10 border-2 border-muted-foreground/30 shadow-2xl`} rounded-2xl flex items-start justify-center cursor-pointer hover:scale-[1.02] transition-all duration-300 hover:shadow-dem/20 relative overflow-hidden group`}
+          to={currentPromo.link || "#"}
+          title={currentPromo.title}
+          className={`w-full ${currentPromo.image ? "h-auto bg-transparent p-0 border-0 shadow-none" : `h-32 md:h-40 bg-gradient-to-r ${currentPromo.bg} px-6 md:px-10 border-2 border-muted-foreground/30 shadow-2xl`} rounded-2xl flex items-start justify-center cursor-pointer hover:scale-[1.02] transition-all duration-300 hover:shadow-dem/20 relative overflow-hidden group`}
         >
-          <AdContent />
+          <PromoContent />
         </Link>
       ) : (
         <a
           href={getTrackedUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          title={currentAd.title}
-          className={`w-full ${currentAd.image ? "h-auto bg-transparent p-0 border-0 shadow-none" : `h-32 md:h-40 bg-gradient-to-r ${currentAd.bg} px-6 md:px-10 border-2 border-muted-foreground/30 shadow-2xl`} rounded-2xl flex items-start justify-center cursor-pointer hover:scale-[1.02] transition-all duration-300 hover:shadow-dem/20 relative overflow-hidden group`}
+          title={currentPromo.title}
+          className={`w-full ${currentPromo.image ? "h-auto bg-transparent p-0 border-0 shadow-none" : `h-32 md:h-40 bg-gradient-to-r ${currentPromo.bg} px-6 md:px-10 border-2 border-muted-foreground/30 shadow-2xl`} rounded-2xl flex items-start justify-center cursor-pointer hover:scale-[1.02] transition-all duration-300 hover:shadow-dem/20 relative overflow-hidden group`}
         >
-          <AdContent />
+          <PromoContent />
         </a>
       )}
     </div>

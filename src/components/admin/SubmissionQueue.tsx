@@ -5,9 +5,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ExternalLink, Check, X, Clock, Loader2 } from "lucide-react";
+import { ExternalLink, Check, X, Clock, Loader2, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { SubmissionDistributionDialog } from "./SubmissionDistributionDialog";
 
 type SubmissionStatus = "pending" | "approved" | "declined" | "archived";
 type PaymentStatus = "paid" | "unpaid" | "refunded";
@@ -15,6 +16,7 @@ type PaymentStatus = "paid" | "unpaid" | "refunded";
 type SubmissionRow = {
   id: string;
   artist_id: string;
+  slot_id: string | null;
   track_title: string;
   artist_name: string;
   spotify_track_url: string;
@@ -31,6 +33,10 @@ type SubmissionRow = {
   artists: {
     name: string;
     email: string;
+  } | null;
+  slots: {
+    name: string;
+    price: number;
   } | null;
 };
 
@@ -52,15 +58,21 @@ const paymentBadgeColor: Record<PaymentStatus, string> = {
 export const SubmissionQueue = () => {
   const [filter, setFilter] = useState<SubmissionFilter>("all");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [distributionDialog, setDistributionDialog] = useState<{ isOpen: boolean; submissionId: string | null; title: string }>({
+    isOpen: false,
+    submissionId: null,
+    title: "",
+  });
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const { data: submissions = [], isLoading } = useQuery<SubmissionRow[]>({
     queryKey: ["submissions", filter],
     queryFn: async () => {
-      let query = supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query = (supabase as any)
         .from("submissions")
-        .select("*, artists ( name, email )")
+        .select("*, artists ( name, email ), slots ( name, price )")
         .order("created_at", { ascending: false });
 
       if (filter !== "all") {
@@ -71,24 +83,35 @@ export const SubmissionQueue = () => {
       if (error) throw error;
       return data as SubmissionRow[];
     },
-    onError: (error) => {
-      toast({
-        title: "Unable to load submissions",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive",
-      });
-    },
-  });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any);
 
   const updateStatus = async (id: string, newStatus: Exclude<SubmissionFilter, "all">) => {
     setBusyId(id);
     try {
-      const { error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
         .from("submissions")
-        .update({ status: newStatus })
+        .update({ 
+          status: newStatus,
+          reviewed_at: new Date().toISOString()
+        })
         .eq("id", id);
 
       if (error) throw error;
+
+      // Log the admin action
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any).from("admin_actions").insert({
+          admin_user_id: user.id,
+          action_type: newStatus === "approved" ? "approve_submission" : "decline_submission",
+          target_type: "submission",
+          target_id: id,
+          metadata: { status: newStatus }
+        });
+      }
 
       toast({
         title: "Status updated",
@@ -188,9 +211,9 @@ export const SubmissionQueue = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1">
-                      <span className="text-sm font-semibold">{submission.genre}</span>
-                      <span className="text-xs text-slate-500 italic line-clamp-2 max-w-[200px]">
-                        {submission.mood}
+                      <span className="text-sm font-semibold">{submission.slots?.name || submission.genre}</span>
+                      <span className="text-xs text-blue-400 font-mono">
+                        ${submission.slots?.price ? submission.slots.price.toFixed(2) : "0.00"}
                       </span>
                     </div>
                   </TableCell>
@@ -205,11 +228,36 @@ export const SubmissionQueue = () => {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
+                        onClick={() =>
+                          setDistributionDialog({
+                            isOpen: true,
+                            submissionId: submission.id,
+                            title: submission.track_title,
+                          })
+                        }
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </Button>
+                      <Button
                         size="icon"
                         variant="ghost"
                         className="h-8 w-8 text-green-400 hover:text-green-300 hover:bg-green-400/10"
-                        onClick={() => updateStatus(submission.id, "approved")}
-                        disabled={busyId === submission.id || submission.status === "approved"}
+                        onClick={() => {
+                          if (submission.payment_status !== "paid") {
+                            toast({
+                              title: "Payment required",
+                              description: "Cannot approve an unpaid submission.",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          updateStatus(submission.id, "approved");
+                        }}
+                        disabled={busyId === submission.id || submission.status === "approved" || submission.payment_status !== "paid"}
+                        title={submission.payment_status !== "paid" ? "Payment required" : "Approve submission"}
                       >
                         <Check className="w-4 h-4" />
                       </Button>
@@ -255,6 +303,14 @@ export const SubmissionQueue = () => {
           </TableBody>
         </Table>
       </div>
+      <SubmissionDistributionDialog
+        isOpen={distributionDialog.isOpen}
+        onClose={() =>
+          setDistributionDialog((prev) => ({ ...prev, isOpen: false }))
+        }
+        submissionId={distributionDialog.submissionId}
+        submissionTitle={distributionDialog.title}
+      />
     </div>
   );
 };

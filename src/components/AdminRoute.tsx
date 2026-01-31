@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const location = useLocation();
   
   useEffect(() => {
     const checkRole = async () => {
@@ -84,9 +85,8 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!isAuthorized) {
-    // If they are logged in but not authorized, redirect to home or a forbidden page
-    // For now, redirecting to login if no session, or home if unauthorized session
-    return <Navigate to="/" replace />;
+    // If they are not authorized, redirect to login and preserve their intent
+    return <Navigate to="/login" state={{ from: `${location.pathname}${location.search}` }} replace />;
   }
 
   return <>{children}</>;

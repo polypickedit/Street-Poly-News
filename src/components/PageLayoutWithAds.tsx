@@ -2,8 +2,8 @@ import { ReactNode } from "react";
 import { Navbar } from "@/components/Navbar";
 import { BreakingNewsBanner } from "@/components/BreakingNewsBanner";
 import { StockTicker } from "@/components/StockTicker";
-import { AdSidebar, MobileSquareAd, MobileSkyscraperAd } from "@/components/AdSidebar";
-import { AdBanner } from "@/components/AdBanner";
+import { PromoSidebar, MobileSquarePromo, MobileSkyscraperPromo } from "@/components/PromoSidebar";
+import { PromoBanner } from "@/components/PromoBanner";
 import { BottomNav } from "@/components/BottomNav";
 import { useHeaderVisible } from "@/hooks/useHeaderVisible";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -41,35 +41,35 @@ export const PageLayoutWithAds = ({
         className={`grid grid-cols-1 lg:grid-cols-[260px_minmax(0,56rem)_260px] justify-center gap-4 lg:gap-8 px-4 sm:px-6 md:px-8 transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}
       >
         <div className="hidden lg:block">
-          <AdSidebar position="left" />
+          <PromoSidebar position="left" />
         </div>
 
         <main className={`min-w-0 w-full flex flex-col items-center`}>
           <div className="w-full flex flex-col items-center">
-            {/* Header Ad Space */}
+            {/* Header Promo Space */}
             {showAds && (
               <div className="mb-12 mt-4 w-full">
-                <AdBanner />
+                <PromoBanner />
               </div>
             )}
             
-            {showAds && <MobileSquareAd />}
+            {showAds && <MobileSquarePromo />}
             
             <div className="w-full">
               {children}
             </div>
 
-            {/* Footer Ad Space */}
+            {/* Footer Promo Space */}
             {showAds && (
               <div className="mt-16 mb-8 w-full">
-                <AdBanner />
+                <PromoBanner />
               </div>
             )}
           </div>
         </main>
 
         <div className="hidden lg:block">
-          <AdSidebar position="right" />
+          <PromoSidebar position="right" />
         </div>
       </div>
 

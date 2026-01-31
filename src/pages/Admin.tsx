@@ -24,6 +24,24 @@ const Admin = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [userProfile, setUserProfile] = useState<{ full_name: string | null } | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data } = await (supabase as any)
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .single();
+        setUserProfile(data);
+      }
+    };
+    fetchProfile();
+  }, []);
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/login");
@@ -221,11 +239,18 @@ const Admin = () => {
 
       <main className={`container mx-auto px-4 pb-20 transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}>
         <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="font-display text-4xl md:text-5xl text-foreground">
-              Admin <span className="text-primary">Dashboard</span>
-            </h1>
-            <Button variant="outline" onClick={handleSignOut}>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+              <h1 className="font-display text-4xl md:text-5xl text-foreground">
+                {userProfile?.full_name ? `Welcome, ${userProfile.full_name}` : <>Admin <span className="text-primary">Dashboard</span></>}
+              </h1>
+              <p className="text-muted-foreground mt-1">Manage your content and platform settings</p>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={handleSignOut}
+              className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive transition-all self-start md:self-center"
+            >
               Sign Out
             </Button>
           </div>

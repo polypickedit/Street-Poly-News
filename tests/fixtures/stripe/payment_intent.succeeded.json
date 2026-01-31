@@ -1,0 +1,19 @@
+{
+  "id": "evt_test_pi",
+  "type": "payment_intent.succeeded",
+  "data": {
+    "object": {
+      "id": "pi_test",
+      "amount": 5500,
+      "currency": "usd",
+      "metadata": {
+        "userId": "test-user-123",
+        "slotId": "slot-test",
+        "slotSlug": "new-music-monday",
+        "submissionId": "submission-test",
+        "selectedOutlets": "[\"outlet-1\", \"outlet-2\"]",
+        "type": "booking"
+      }
+    }
+  }
+}

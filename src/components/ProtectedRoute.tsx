@@ -5,10 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<boolean | null>(null);
+  const [session, setSession] = useState<boolean | null>(true);
   const location = useLocation();
 
   useEffect(() => {
+    // TEMPORARY BYPASS: Access granted for all users
+    setSession(true);
+    return;
+    
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(!!session);
     });

@@ -27,7 +27,7 @@ export function CategoryNav() {
         <div className="flex items-center gap-1 overflow-x-auto py-2 px-4 scrollbar-hide">
           <Link
             to="/"
-            className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
+            className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
               location.pathname === "/" && !location.search
                 ? "bg-dem text-dem-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -39,7 +39,7 @@ export function CategoryNav() {
             <Link
               key={category.id}
               to={`/?category=${category.slug}`}
-              className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
+              className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
                 currentCategory === category.slug
                   ? "bg-dem text-dem-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -52,7 +52,7 @@ export function CategoryNav() {
             <>
               <Link
                 to="/?category=politics"
-                className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
+                className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
                   currentCategory === "politics"
                     ? "bg-dem text-dem-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -62,7 +62,7 @@ export function CategoryNav() {
               </Link>
               <Link
                 to="/?category=entertainment"
-                className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
+                className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
                   currentCategory === "entertainment"
                     ? "bg-dem text-dem-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -72,7 +72,7 @@ export function CategoryNav() {
               </Link>
               <Link
                 to="/?category=business"
-                className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
+                className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
                   currentCategory === "business"
                     ? "bg-dem text-dem-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -82,7 +82,7 @@ export function CategoryNav() {
               </Link>
               <Link
                 to="/?category=exclusive"
-                className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
+                className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
                   currentCategory === "exclusive"
                     ? "bg-dem text-dem-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -94,7 +94,7 @@ export function CategoryNav() {
           )}
           <Link
             to="/?category=health"
-            className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
+            className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
               currentCategory === "health"
                 ? "bg-dem text-dem-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -104,7 +104,7 @@ export function CategoryNav() {
           </Link>
           <Link
             to="/?category=fashion"
-            className={`px-4 py-2 font-body text-xs uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
+            className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
               currentCategory === "fashion"
                 ? "bg-dem text-dem-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"

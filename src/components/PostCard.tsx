@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Play, Video, FileText, Images, Clock, Eye, TrendingUp } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import { getYouTubeId } from "@/lib/utils";
 
 interface PostCardProps {
   id: number;
@@ -30,9 +31,9 @@ export function PostCard({
   variant = "default",
 }: PostCardProps) {
   const getYouTubeThumbnail = (id: string) => {
-    if (!id) return null;
-    // For mock videos, we'll try to use the high quality one, but fallback to mq if needed
-    return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+    const videoId = getYouTubeId(id);
+    if (!videoId) return null;
+    return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
   };
 
   const thumbnail =

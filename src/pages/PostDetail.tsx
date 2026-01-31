@@ -11,6 +11,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
+import { getYouTubeId } from "@/lib/utils";
 
 interface PostCategory {
   id: string;
@@ -95,7 +96,8 @@ const PostDetail = () => {
     }
   };
 
-  const thumbnail = post?.thumbnail_url || `https://img.youtube.com/vi/${post?.youtube_id}/maxresdefault.jpg`;
+  const videoId = getYouTubeId(post?.youtube_id);
+  const thumbnail = post?.thumbnail_url || (videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '');
   const timeAgo = post ? formatDistanceToNow(new Date(post.created_at), { addSuffix: true }) : '';
 
   if (isLoading) {
@@ -237,10 +239,10 @@ const PostDetail = () => {
               </div>
 
               {/* YouTube Embed */}
-              {isPlaying && (
+              {isPlaying && videoId && (
                 <div className="aspect-video rounded-xl overflow-hidden bg-background border border-border mb-8 shadow-lg">
                   <iframe
-                    src={`https://www.youtube.com/embed/${post.youtube_id}?autoplay=1`}
+                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
                     title={post.title}
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

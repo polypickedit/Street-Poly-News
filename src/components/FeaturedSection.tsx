@@ -5,6 +5,7 @@ import { Play, Flame } from "lucide-react";
 import { format } from "date-fns";
 import { Post } from "@/hooks/usePosts";
 import { PostCard } from "./PostCard";
+import { getYouTubeId } from "@/lib/utils";
 
 export function FeaturedSection() {
   const location = useLocation();
@@ -45,8 +46,16 @@ export function FeaturedSection() {
   const mainFeatured = featuredPosts[0];
   const sideFeatured = featuredPosts.slice(1, 7); // Get 6 side videos for 2x3 grid
 
-  const getThumbnail = (post: Post) =>
-    post.thumbnail_url || `https://img.youtube.com/vi/${post.youtube_id}/hqdefault.jpg`;
+  const getThumbnail = (post: Post) => {
+    if (post.thumbnail_url) {
+      return post.thumbnail_url;
+    }
+    const videoId = getYouTubeId(post.youtube_id);
+    if (videoId) {
+      return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    }
+    return "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1200&auto=format&fit=crop&q=80";
+  };
 
   return (
     <section className="py-4 md:py-6">

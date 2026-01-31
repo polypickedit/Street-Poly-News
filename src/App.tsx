@@ -16,13 +16,16 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Gallery from "./pages/Gallery";
 import Booking from "./pages/Booking";
+import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { SubmissionQueue } from "@/components/admin/SubmissionQueue";
 import { PlaylistManager } from "@/components/admin/PlaylistManager";
 import { PlacementManager } from "@/components/admin/PlacementManager";
+import { OutletManager } from "@/components/admin/OutletManager";
 import { AdminSettings } from "@/components/admin/AdminSettings";
+import { UnifiedQueue } from "@/components/admin/UnifiedQueue";
 import { AdminRoute } from "@/components/AdminRoute";
 import Search from "./pages/Search";
 import Category from "./pages/Category";
@@ -43,6 +46,14 @@ const AnimatedRoutes = () => {
         <Route path="/merch" element={<Merch />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/booking" element={<Booking />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
@@ -52,6 +63,16 @@ const AnimatedRoutes = () => {
             <AdminRoute>
               <AdminLayout>
                 <AdminDashboard />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/queue"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <UnifiedQueue />
               </AdminLayout>
             </AdminRoute>
           }
@@ -72,6 +93,16 @@ const AnimatedRoutes = () => {
             <AdminRoute>
               <AdminLayout>
                 <PlaylistManager />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/outlets"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <OutletManager />
               </AdminLayout>
             </AdminRoute>
           }

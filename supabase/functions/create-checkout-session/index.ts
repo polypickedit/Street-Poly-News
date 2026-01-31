@@ -18,26 +18,72 @@ serve(async (req) => {
   }
 
   try {
-    const { slotId, slotSlug, userId, userEmail, returnUrl } = await req.json();
+    const { 
+      slotId, 
+      slotSlug, 
+      userId, 
+      userEmail, 
+      returnUrl, 
+      submissionId, 
+      selectedOutlets,
+      type = 'slot', // default type
+      packId, // for credits
+    } = await req.json();
 
-    // 1. Fetch slot details from Supabase
+    // 1. Initialize Supabase Client
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { data: slot, error: slotError } = await supabaseClient
-      .from("slots")
-      .select("*")
-      .eq("id", slotId)
-      .single();
+    let lineItems = [];
+    let mode = "payment";
+    let metadata = {
+      userId,
+      type,
+    };
 
-    if (slotError || !slot) throw new Error("Slot not found");
+    if (type === 'credits') {
+      // Fetch credit pack details
+      const { data: pack, error: packError } = await supabaseClient
+        .from("credit_packs")
+        .select("*")
+        .eq("id", packId)
+        .single();
 
-    // 2. Create Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      customer_email: userEmail,
-      line_items: [
+      if (packError || !pack) throw new Error("Credit pack not found");
+
+      lineItems = [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: pack.name,
+              description: pack.description || `${pack.credit_amount} Distribution Credits`,
+            },
+            unit_amount: pack.price_cents,
+          },
+          quantity: 1,
+        },
+      ];
+      
+      metadata = {
+        ...metadata,
+        packId,
+        creditAmount: pack.credit_amount.toString(),
+      };
+
+    } else {
+      // Fetch slot details
+      const { data: slot, error: slotError } = await supabaseClient
+        .from("slots")
+        .select("*")
+        .eq("id", slotId)
+        .single();
+
+      if (slotError || !slot) throw new Error("Slot not found");
+
+      lineItems = [
         {
           price_data: {
             currency: "usd",
@@ -52,15 +98,55 @@ serve(async (req) => {
           },
           quantity: 1,
         },
-      ],
-      mode: slot.monetization_model === "subscription" ? "subscription" : "payment",
+      ];
+
+      mode = slot.monetization_model === "subscription" ? "subscription" : "payment";
+      
+      metadata = {
+        ...metadata,
+        slotId,
+        slotSlug: slotSlug || "",
+        submissionId: submissionId || "",
+        selectedOutlets: selectedOutlets ? selectedOutlets.join(",") : "",
+      };
+
+      if (selectedOutlets && selectedOutlets.length > 0) {
+        const { data: outlets, error: outletsError } = await supabaseClient
+          .from("media_outlets")
+          .select("*")
+          .in("id", selectedOutlets);
+
+        if (outletsError) throw outletsError;
+
+        for (const outlet of (outlets || [])) {
+          if (outlet.price_cents > 0) {
+            lineItems.push({
+              price_data: {
+                currency: "usd",
+                product_data: {
+                  name: `Syndication: ${outlet.name}`,
+                  description: outlet.description || undefined,
+                },
+                unit_amount: outlet.price_cents,
+              },
+              quantity: 1,
+            } as any);
+          }
+        }
+      }
+    }
+
+    // 4. Create Stripe Checkout Session
+    const session = await stripe.checkout.sessions.create({
+      customer_email: userEmail,
+      line_items: lineItems,
+      mode: mode as any,
       success_url: returnUrl,
       cancel_url: returnUrl,
-      metadata: {
-        userId,
-        slotId,
-        slotSlug,
-      },
+      payment_intent_data: mode === "payment" ? {
+        metadata: metadata as any,
+      } : undefined,
+      metadata: metadata as any,
     });
 
     return new Response(JSON.stringify({ sessionId: session.id }), {

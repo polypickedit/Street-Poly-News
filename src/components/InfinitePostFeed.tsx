@@ -1,7 +1,6 @@
-import { useEffect, useRef, Fragment } from "react";
+import { useEffect, useRef } from "react";
 import { usePosts } from "@/hooks/usePosts";
 import { PostCard } from "./PostCard";
-import { AdBanner } from "./AdBanner";
 import { Loader2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
@@ -56,42 +55,25 @@ export function InfinitePostFeed() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
         {posts.map((post, index) => {
           const delayClass = `delay-${Math.min(index, 10)}`;
-          const showAd = (index + 1) % 6 === 0;
-          const adType = "donTrip";
-          
-          if (showAd) {
-            console.log(`[InfinitePostFeed] Rendering ad slot at index ${index} with type: ${adType}`);
-          }
           
           return (
-            <Fragment key={post.id}>
-              <div 
-                className={`animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both ${delayClass}`}
-              >
-                <PostCard
-                  id={post.id}
-                  title={post.title}
-                  subtitle={post.subtitle}
-                  youtube_id={post.youtube_id}
-                  thumbnail_url={post.thumbnail_url}
-                  created_at={post.created_at}
-                  content_type={post.content_type}
-                  is_breaking={post.is_breaking ?? false}
-                  is_featured={post.is_featured ?? false}
-                  view_count={post.view_count}
-                />
-              </div>
-              {showAd && (
-                <div className="col-span-1 sm:col-span-2 lg:col-span-3 my-8 animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="h-px flex-1 bg-border" />
-                    <span className="text-[10px] font-body text-muted-foreground uppercase tracking-[0.2em]">Advertisement</span>
-                    <div className="h-px flex-1 bg-border" />
-                  </div>
-                  <AdBanner showLabel={false} type={adType} />
-                </div>
-              )}
-            </Fragment>
+            <div 
+              key={post.id}
+              className={`animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both ${delayClass}`}
+            >
+              <PostCard
+                id={post.id}
+                title={post.title}
+                subtitle={post.subtitle}
+                youtube_id={post.youtube_id}
+                thumbnail_url={post.thumbnail_url}
+                created_at={post.created_at}
+                content_type={post.content_type}
+                is_breaking={post.is_breaking ?? false}
+                is_featured={post.is_featured ?? false}
+                view_count={post.view_count}
+              />
+            </div>
           );
         })}
       </div>

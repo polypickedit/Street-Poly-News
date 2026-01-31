@@ -1,7 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { Upload, Music, Mic2, Calendar as CalendarIcon, User, Mail, MessageSquare } from "lucide-react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { 
+  Upload, Music, Mic2, Calendar as CalendarIcon, User, Mail, 
+  MessageSquare, CreditCard, Share2, Globe, CheckCircle2, Loader2 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -21,6 +26,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { createSlotCheckoutSession } from "@/lib/stripe";
+import { useAccount } from "@/hooks/useAccount";
 
 interface BookingFormProps {
   type: "music" | "interview";
@@ -31,13 +38,127 @@ interface BookingFormData {
   name: string;
   email: string;
   artistName: string;
-  slotType: "new-music-monday" | "interview" | "showcase";
+  slotType: string;
   preferredDate: string;
   description: string;
   links: string;
+  selectedOutlets: string[];
+  submissionType: "music" | "story" | "announcement";
+}
+
+interface Outlet {
+  id: string;
+  name: string;
+  price_cents: number;
+  outlet_type: string;
+}
+
+interface Slot {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
 }
 
 export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'confirming' | 'paid' | 'failed'>('idle');
+  const [confirmedSubmissionId, setConfirmedSubmissionId] = useState<string | null>(null);
+  
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [outlets, setOutlets] = useState<Outlet[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [user, setUser] = useState<any>(null);
+  const { activeAccount, isLoading: isLoadingAccount } = useAccount();
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'credits'>('stripe');
+
+  const checkPaymentStatus = useCallback(async (sessionId: string) => {
+    setPaymentStatus('confirming');
+    
+    // Poll for up to 15 seconds
+    let attempts = 0;
+    const maxAttempts = 15;
+    
+    const poll = async () => {
+      try {
+        // We look for a payment record associated with this session or user
+        // But the easiest way is to check the most recent submission for the user that is marked as paid
+        const { data: { session: authSession } } = await supabase.auth.getSession();
+        if (!authSession) return;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: submissions, error } = await (supabase as any)
+          .from("submissions")
+          .select("id, payment_status")
+          .eq("user_id", authSession.user.id)
+          .eq("payment_status", "paid")
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (error) throw error;
+
+        if (submissions && submissions.length > 0) {
+          setPaymentStatus('paid');
+          setConfirmedSubmissionId(submissions[0].id);
+          toast.success("Payment confirmed!");
+          // Clear search params so the user doesn't re-trigger confirmation on refresh
+          setSearchParams({});
+          return true;
+        }
+      } catch (err) {
+        console.error("Error polling payment status:", err);
+      }
+      return false;
+    };
+
+    const interval = setInterval(async () => {
+      attempts++;
+      const success = await poll();
+      if (success || attempts >= maxAttempts) {
+        clearInterval(interval);
+        if (!success) {
+          setPaymentStatus('failed');
+          toast.error("Payment confirmation taking longer than expected. Please check your dashboard.");
+        }
+      }
+    }, 2000);
+
+    // Initial check
+    poll();
+  }, [setSearchParams]);
+
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id');
+    if (sessionId && paymentStatus === 'idle') {
+      checkPaymentStatus(sessionId);
+    }
+  }, [searchParams, paymentStatus, checkPaymentStatus]);
+
+  useEffect(() => {
+    const fetchSlots = async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any).from("slots").select("*").eq("is_active", true);
+      if (data) setSlots(data);
+    };
+
+    const fetchOutlets = async () => {
+      // @ts-expect-error - Table created in migration
+      const { data } = await supabase.from("media_outlets").select("id, name, price_cents, outlet_type").eq("active", true);
+      if (data) setOutlets(data as unknown as Outlet[]);
+    };
+
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+
+    fetchSlots();
+    fetchOutlets();
+    fetchUser();
+  }, []);
+
   const defaultValues: BookingFormData = {
     name: "",
     email: "",
@@ -46,28 +167,39 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
     preferredDate: "",
     description: "",
     links: "",
+    selectedOutlets: [],
+    submissionType: type === "music" ? "music" : "story",
   };
 
   const form = useForm<BookingFormData>({
     defaultValues,
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const slotLabels: Record<BookingFormData["slotType"], string> = {
-    "new-music-monday": "New Music Monday",
-    interview: "Featured Interview",
-    showcase: "Featured Showcase",
-  };
+  useEffect(() => {
+    const slotType = form.watch("slotType");
+    const slot = slots.find(s => s.slug === slotType);
+    setSelectedSlot(slot || null);
+  }, [form, slots]);
+
+  const watchOutlets = form.watch("selectedOutlets");
+  const outletsTotal = watchOutlets.reduce((acc, id) => {
+    const outlet = outlets.find(o => o.id === id);
+    return acc + (outlet?.price_cents || 0);
+  }, 0) / 100;
+
+  const totalPrice = (selectedSlot?.price || 0) + outletsTotal;
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onSubmit = async (data: BookingFormData) => {
     setIsSubmitting(true);
     const artistName = data.artistName.trim() || data.name.trim() || "Unknown Artist";
     const preferredDate = data.preferredDate || new Date().toISOString().split("T")[0];
     const [primaryLink] = data.links.split(/\s+/).filter(Boolean);
-    const genre = slotLabels[data.slotType] ?? data.slotType;
     const mood = data.description.trim() || "Needs artist input";
 
     try {
+      // 1. Ensure artist exists or create one
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: existingArtist } = await (supabase as any)
         .from("artists")
@@ -84,6 +216,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
           .insert({
             name: artistName,
             email: data.email,
+            user_id: user?.id,
           })
           .select("id")
           .single();
@@ -92,25 +225,82 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
         artistId = newArtist.id;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: submissionError } = await (supabase as any).from("submissions").insert({
+      const submissionPayload = {
         artist_id: artistId,
-        track_title: `${slotLabels[data.slotType] || "Submission"} — ${artistName}`,
+        slot_id: selectedSlot?.id,
+        track_title: `${selectedSlot?.name || "Submission"} — ${artistName}`,
         artist_name: artistName,
         spotify_track_url: primaryLink || "https://streetpolynews.com/booking",
         release_date: preferredDate,
-        genre,
+        genre: selectedSlot?.name || "General",
         mood,
-        status: "pending",
-        payment_status: "unpaid",
-        notes_internal: `${data.description}\nPreferred slot: ${slotLabels[data.slotType] ?? data.slotType}\nPreferred date: ${preferredDate}\nLinks: ${data.links}`,
-      });
+        notes_internal: `${data.description}\nPreferred slot: ${selectedSlot?.name}\nPreferred date: ${preferredDate}\nLinks: ${data.links}`,
+        submission_type: data.submissionType,
+        distribution_targets: data.selectedOutlets,
+        content_bundle: {
+          artist_name: artistName,
+          title: `${selectedSlot?.name || "Submission"} — ${artistName}`,
+          description: data.description,
+          links: data.links.split(/\s+/).filter(Boolean),
+          preferred_date: preferredDate
+        }
+      };
 
-      if (submissionError) throw submissionError;
+      let submissionId: string;
 
-      toast.success("Booking request submitted successfully!");
-      form.reset(defaultValues);
-      onSuccess?.();
+      if (paymentMethod === 'credits' && activeAccount) {
+        // Use Credit System
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: resultId, error: creditError } = await (supabase as any).rpc("submit_with_credits", {
+          p_account_id: activeAccount.id,
+          p_submission_data: submissionPayload,
+          p_credits_to_consume: 1 // For now, everything costs 1 credit
+        });
+
+        if (creditError) throw creditError;
+        submissionId = resultId;
+      } else {
+        // Traditional Stripe Flow
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: submission, error: submissionError } = await (supabase as any).from("submissions").insert({
+          ...submissionPayload,
+          account_id: activeAccount?.id,
+          user_id: user?.id,
+          status: "pending",
+          payment_status: "unpaid",
+          payment_type: "stripe"
+        }).select("id").single();
+
+        if (submissionError) throw submissionError;
+        submissionId = submission.id;
+      }
+
+      // 2b. Create distribution records (already handled in RPC for credits)
+      if (paymentMethod !== 'credits' && data.selectedOutlets.length > 0) {
+        const distributionRecords = data.selectedOutlets.map(outletId => ({
+          submission_id: submissionId,
+          outlet_id: outletId,
+          status: 'pending'
+        }));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: distError } = await (supabase as any).from("submission_distribution").insert(distributionRecords);
+        if (distError) throw distError;
+      }
+
+      // 3. STRIPE INTEGRATION POINT
+      if (paymentMethod === 'stripe' && selectedSlot && selectedSlot.price > 0) {
+        toast.info("Redirecting to Stripe Checkout...");
+        await createSlotCheckoutSession(
+          selectedSlot.id, 
+          selectedSlot.slug, 
+          submissionId,
+          data.selectedOutlets
+        );
+      } else {
+        toast.success(paymentMethod === 'credits' ? "Credits used! Submission successful." : "Submission successful!");
+        form.reset(defaultValues);
+        onSuccess?.();
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "An unknown error occurred";
       toast.error(message);
@@ -122,6 +312,106 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 text-blue-400">
+              <CreditCard className="w-4 h-4" />
+              <span className="text-sm font-semibold uppercase tracking-wider">Estimated Total</span>
+            </div>
+            {activeAccount && (
+              <div className="text-[10px] font-bold px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30">
+                {activeAccount.balance || 0} CREDITS AVAILABLE
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-end justify-between mb-4">
+            <div>
+              <p className="text-xs text-slate-400">
+                Service: <span className="text-white font-medium">{selectedSlot?.name || "Loading..."}</span>
+              </p>
+              {watchOutlets.length > 0 && (
+                <p className="text-xs text-slate-400">
+                  + {watchOutlets.length} Syndication Outlets
+                </p>
+              )}
+            </div>
+            <p className="text-2xl font-bold text-white">
+              ${totalPrice.toFixed(2)}
+            </p>
+          </div>
+
+          {activeAccount && (activeAccount.balance || 0) > 0 && (
+            <div className="pt-4 border-t border-blue-500/10 flex gap-2">
+              <Button
+                type="button"
+                variant={paymentMethod === 'stripe' ? 'default' : 'outline'}
+                className="flex-1 h-9 text-xs"
+                onClick={() => setPaymentMethod('stripe')}
+              >
+                Stripe
+              </Button>
+              <Button
+                type="button"
+                variant={paymentMethod === 'credits' ? 'default' : 'outline'}
+                className="flex-1 h-9 text-xs"
+                onClick={() => setPaymentMethod('credits')}
+              >
+                Use 1 Credit
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4 mb-8">
+          <div className="flex items-center gap-2 text-blue-400">
+            <Share2 className="w-4 h-4" />
+            <h4 className="text-sm font-semibold uppercase tracking-wider">Syndication Network & Promotional Opportunities (Optional)</h4>
+          </div>
+          <p className="text-xs text-slate-500 mb-4">Select outlets to distribute your content or other promotional opportunities. One click, maximum reach.</p>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {outlets.map((outlet) => (
+              <FormField
+                key={outlet.id}
+                control={form.control}
+                name="selectedOutlets"
+                render={({ field }) => {
+                  return (
+                    <FormItem
+                      key={outlet.id}
+                      className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border border-slate-800 p-4 hover:bg-slate-900/50 transition-colors"
+                    >
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value?.includes(outlet.id)}
+                          onCheckedChange={(checked) => {
+                            return checked
+                              ? field.onChange([...field.value, outlet.id])
+                              : field.onChange(
+                                  field.value?.filter(
+                                    (value) => value !== outlet.id
+                                  )
+                                )
+                          }}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          {outlet.name}
+                        </FormLabel>
+                        <p className="text-[10px] text-blue-400 font-bold">
+                          +${(outlet.price_cents / 100).toFixed(2)}
+                        </p>
+                      </div>
+                    </FormItem>
+                  )
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           <FormField
             control={form.control}
@@ -209,9 +499,16 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="new-music-monday">New Music Monday Review</SelectItem>
-                  <SelectItem value="interview">1-on-1 Interview</SelectItem>
-                  <SelectItem value="showcase">Featured Showcase</SelectItem>
+                  {slots.map((slot) => (
+                    <SelectItem key={slot.id} value={slot.slug}>
+                      {slot.name} (${slot.price.toFixed(2)})
+                    </SelectItem>
+                  ))}
+                  {slots.length === 0 && (
+                    <SelectItem value="loading" disabled>
+                      Loading services...
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />

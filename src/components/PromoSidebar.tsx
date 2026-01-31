@@ -8,7 +8,7 @@ import streetPolyMerchAd from "@/assets/StreetPolyMerch_Ad.jpeg";
 
 const SUPABASE_URL = "https://duldhllwapsjytdzpjfz.supabase.co";
 
-interface Ad {
+interface Promo {
   title: string;
   subtitle: string;
   bg: string;
@@ -23,7 +23,7 @@ interface Ad {
   objectPosition?: string;
 }
 
-const mockAds: { skyscraper: Ad[]; square: Ad[]; banner: Ad[] } = {
+const mockPromos: { skyscraper: Promo[]; square: Promo[]; banner: Promo[] } = {
   skyscraper: [
     {
       title: "NEW MUSIC MONDAYS",
@@ -89,24 +89,24 @@ const mockAds: { skyscraper: Ad[]; square: Ad[]; banner: Ad[] } = {
   ],
 };
 
-interface AdSidebarProps {
+interface PromoSidebarProps {
   position: "left" | "right";
 }
 
-export const AdSidebar = ({ position }: AdSidebarProps) => {
-  const skyAd = mockAds.skyscraper[position === "left" ? 0 : 1];
-  const sqAd = mockAds.square[position === "left" ? 0 : 2];
+export const PromoSidebar = ({ position }: PromoSidebarProps) => {
+  const skyPromo = mockPromos.skyscraper[position === "left" ? 0 : 1];
+  const sqPromo = mockPromos.square[position === "left" ? 0 : 2];
 
-  // Fetch affiliate link for tracked ads
+  // Fetch affiliate link for tracked promos
   const { data: affiliateLink } = useQuery({
-    queryKey: ["affiliate-link", skyAd.affiliateName],
+    queryKey: ["affiliate-link", skyPromo.affiliateName],
     queryFn: async () => {
-      if (!skyAd.affiliateName) return null;
+      if (!skyPromo.affiliateName) return null;
       
       const { data, error } = await supabase
         .from("affiliate_links")
         .select("id, click_count")
-        .eq("name", skyAd.affiliateName)
+        .eq("name", skyPromo.affiliateName)
         .maybeSingle();
 
       if (error) {
@@ -114,47 +114,47 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
       }
       return data;
     },
-    enabled: !!skyAd.affiliateName,
+    enabled: !!skyPromo.affiliateName,
   });
 
-  // Generate tracked URL for affiliate ads
+  // Generate tracked URL for affiliate promos
   const getTrackedUrl = () => {
     if (affiliateLink?.id) {
       return `${SUPABASE_URL}/functions/v1/track-click?id=${affiliateLink.id}`;
     }
-    return skyAd.link;
+    return skyPromo.link;
   };
 
-  const isInternal = skyAd.link?.startsWith("/");
+  const isInternal = skyPromo.link?.startsWith("/");
 
   return (
     <aside 
       className="hidden lg:flex flex-col items-center gap-6 sticky top-32 h-fit max-h-[calc(100vh-9rem)] w-[260px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
     >
-      {/* Skyscraper Ad 260x600 */}
+      {/* Skyscraper Promo 260x600 */}
       <div className="relative w-full flex flex-col items-center">
         <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
-          Advertisement
+          Promotion
         </span>
         {isInternal ? (
           <Link
-            to={skyAd.link || "#"}
-            title={skyAd.title}
-            className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
+            to={skyPromo.link || "#"}
+            title={skyPromo.title}
+            className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyPromo.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyPromo.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
           >
-            {skyAd.image ? (
+            {skyPromo.image ? (
               <img
-                src={skyAd.image}
-                alt={skyAd.title}
-                className={`w-full h-full block object-cover object-${skyAd.objectPosition ?? 'center'} origin-${skyAd.objectPosition === 'top' ? 'top' : 'center'} ${skyAd.scaleClass ?? 'scale-100'}`}
+                src={skyPromo.image}
+                alt={skyPromo.title}
+                className={`w-full h-full block object-cover object-${skyPromo.objectPosition ?? 'center'} origin-${skyPromo.objectPosition === 'top' ? 'top' : 'center'} ${skyPromo.scaleClass ?? 'scale-100'}`}
               />
-            ) : skyAd.isAlbum ? (
+            ) : skyPromo.isAlbum ? (
               <>
                 {/* Album artwork */}
                 <div className="w-[130px] h-[130px] rounded-lg overflow-hidden mb-4 shadow-xl border-2 border-white/20">
                   <img 
-                    src={skyAd.albumArt} 
-                    alt={skyAd.title}
+                    src={skyPromo.albumArt} 
+                    alt={skyPromo.title}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -162,14 +162,14 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
                   New Album
                 </div>
                 <div className="text-foreground font-display text-3xl leading-tight mb-1">
-                  {skyAd.title}
+                  {skyPromo.title}
                 </div>
                 <div className="text-foreground/80 font-body text-sm mb-4">
-                  {skyAd.subtitle}
+                  {skyPromo.subtitle}
                 </div>
                 <div className="flex items-center gap-2 bg-dem text-dem-foreground font-display text-sm px-5 py-2.5 rounded-full">
                   <Download className="w-4 h-4" />
-                  {skyAd.text}
+                  {skyPromo.text}
                 </div>
                 <div className="mt-4 flex items-center gap-1.5 text-foreground/50 text-xs font-body">
                   <Music className="w-3 h-3" />
@@ -184,13 +184,13 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
             ) : (
               <>
                 <div className="text-foreground/90 font-display text-2xl leading-tight mb-2">
-                  {skyAd.title}
+                  {skyPromo.title}
                 </div>
                 <div className="text-foreground/70 font-body text-sm mb-6">
-                  {skyAd.subtitle}
+                  {skyPromo.subtitle}
                 </div>
                 <div className="bg-foreground text-background font-display text-sm px-6 py-2 rounded-full">
-                  {skyAd.text}
+                  {skyPromo.text}
                 </div>
               </>
             )}
@@ -200,22 +200,22 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
             href={getTrackedUrl()}
             target="_blank"
             rel="noopener noreferrer"
-            title={skyAd.title}
-            className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
+            title={skyPromo.title}
+            className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyPromo.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyPromo.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
           >
-            {skyAd.image ? (
+            {skyPromo.image ? (
               <img
-                src={skyAd.image}
-                alt={skyAd.title}
-                className={`w-full h-full block object-cover object-${skyAd.objectPosition ?? 'center'} origin-${skyAd.objectPosition === 'top' ? 'top' : 'center'} ${skyAd.scaleClass ?? 'scale-100'}`}
+                src={skyPromo.image}
+                alt={skyPromo.title}
+                className={`w-full h-full block object-cover object-${skyPromo.objectPosition ?? 'center'} origin-${skyPromo.objectPosition === 'top' ? 'top' : 'center'} ${skyPromo.scaleClass ?? 'scale-100'}`}
               />
-            ) : skyAd.isAlbum ? (
+            ) : skyPromo.isAlbum ? (
               <>
                 {/* Album artwork */}
                 <div className="w-[130px] h-[130px] rounded-lg overflow-hidden mb-4 shadow-xl border-2 border-white/20">
                   <img 
-                    src={skyAd.albumArt} 
-                    alt={skyAd.title}
+                    src={skyPromo.albumArt} 
+                    alt={skyPromo.title}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -223,14 +223,14 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
                   New Album
                 </div>
                 <div className="text-foreground font-display text-3xl leading-tight mb-1">
-                  {skyAd.title}
+                  {skyPromo.title}
                 </div>
                 <div className="text-foreground/80 font-body text-sm mb-4">
-                  {skyAd.subtitle}
+                  {skyPromo.subtitle}
                 </div>
                 <div className="flex items-center gap-2 bg-dem text-dem-foreground font-display text-sm px-5 py-2.5 rounded-full">
                   <Download className="w-4 h-4" />
-                  {skyAd.text}
+                  {skyPromo.text}
                 </div>
                 <div className="mt-4 flex items-center gap-1.5 text-foreground/50 text-xs font-body">
                   <Music className="w-3 h-3" />
@@ -245,13 +245,13 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
             ) : (
               <>
                 <div className="text-foreground/90 font-display text-2xl leading-tight mb-2">
-                  {skyAd.title}
+                  {skyPromo.title}
                 </div>
                 <div className="text-foreground/70 font-body text-sm mb-6">
-                  {skyAd.subtitle}
+                  {skyPromo.subtitle}
                 </div>
                 <div className="bg-foreground text-background font-display text-sm px-6 py-2 rounded-full">
-                  {skyAd.text}
+                  {skyPromo.text}
                 </div>
               </>
             )}
@@ -259,61 +259,61 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
         )}
       </div>
 
-      {/* Square Ad 260x260 */}
+      {/* Square Promo 260x260 */}
       <div className="relative w-full flex flex-col items-center text-center">
         <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
-          Advertisement
+          Promotion
         </span>
-        {sqAd.link?.startsWith("/") ? (
+        {sqPromo.link?.startsWith("/") ? (
           <Link
-            to={sqAd.link}
-            title={sqAd.title}
-            className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 border-2 border-muted-foreground/20`}`}
+            to={sqPromo.link}
+            title={sqPromo.title}
+            className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqPromo.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqPromo.bg} shadow-lg p-4 border-2 border-muted-foreground/20`}`}
           >
-            {sqAd.image ? (
+            {sqPromo.image ? (
               <img
-                src={sqAd.image}
-                alt={sqAd.title}
-                className={`w-full h-auto block object-contain ${sqAd.scaleClass ?? 'scale-100'}`}
+                src={sqPromo.image}
+                alt={sqPromo.title}
+                className={`w-full h-auto block object-contain ${sqPromo.scaleClass ?? 'scale-100'}`}
               />
             ) : (
               <>
                 <div className="text-foreground/90 font-display text-4xl leading-tight mb-2">
-                  {sqAd.title}
+                  {sqPromo.title}
                 </div>
                 <div className="text-foreground/70 font-body text-sm mb-6">
-                  {sqAd.subtitle}
+                  {sqPromo.subtitle}
                 </div>
                 <div className="bg-foreground text-background font-display text-sm px-6 py-2 rounded-full">
-                  {sqAd.text}
+                  {sqPromo.text}
                 </div>
               </>
             )}
           </Link>
         ) : (
           <a
-            href={sqAd.link || "#"}
-            target={sqAd.link ? "_blank" : undefined}
-            rel={sqAd.link ? "noopener noreferrer" : undefined}
-            title={sqAd.title}
-            className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 border-2 border-muted-foreground/20`}`}
+            href={sqPromo.link || "#"}
+            target={sqPromo.link ? "_blank" : undefined}
+            rel={sqPromo.link ? "noopener noreferrer" : undefined}
+            title={sqPromo.title}
+            className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqPromo.image ? "p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${sqPromo.bg} shadow-lg p-4 border-2 border-muted-foreground/20`}`}
           >
-            {sqAd.image ? (
+            {sqPromo.image ? (
               <img
-                src={sqAd.image}
-                alt={sqAd.title}
-                className={`w-full h-auto block object-contain ${sqAd.scaleClass ?? 'scale-100'}`}
+                src={sqPromo.image}
+                alt={sqPromo.title}
+                className={`w-full h-auto block object-contain ${sqPromo.scaleClass ?? 'scale-100'}`}
               />
             ) : (
               <>
                 <div className="text-foreground/90 font-display text-4xl leading-tight mb-2">
-                  {sqAd.title}
+                  {sqPromo.title}
                 </div>
                 <div className="text-foreground/70 font-body text-sm mb-6">
-                  {sqAd.subtitle}
+                  {sqPromo.subtitle}
                 </div>
                 <div className="bg-foreground text-background font-display text-sm px-6 py-2 rounded-full">
-                  {sqAd.text}
+                  {sqPromo.text}
                 </div>
               </>
             )}
@@ -324,53 +324,53 @@ export const AdSidebar = ({ position }: AdSidebarProps) => {
   );
 };
 
-// Mobile/Tablet horizontal banner ad component
-export const MobileAdBanner = () => {
-  const bannerAd = mockAds.banner[0];
+// Mobile/Tablet horizontal banner promo component
+export const MobilePromoBanner = () => {
+  const bannerPromo = mockPromos.banner[0];
 
   const { data: affiliateLink } = useQuery({
-    queryKey: ["affiliate-link-mobile", bannerAd.affiliateName],
+    queryKey: ["affiliate-link-mobile", bannerPromo.affiliateName],
     queryFn: async () => {
-      if (!bannerAd.affiliateName) return null;
+      if (!bannerPromo.affiliateName) return null;
       
       const { data, error } = await supabase
         .from("affiliate_links")
         .select("id, click_count")
-        .eq("name", bannerAd.affiliateName)
+        .eq("name", bannerPromo.affiliateName)
         .maybeSingle();
 
       if (error) return null;
       return data;
     },
-    enabled: !!bannerAd.affiliateName,
+    enabled: !!bannerPromo.affiliateName,
   });
 
   const getTrackedUrl = () => {
     if (affiliateLink?.id) {
       return `${SUPABASE_URL}/functions/v1/track-click?id=${affiliateLink.id}`;
     }
-    return bannerAd.link || "#";
+    return bannerPromo.link || "#";
   };
 
-  const isInternal = bannerAd.link?.startsWith("/");
+  const isInternal = bannerPromo.link?.startsWith("/");
 
   return (
     <div className="xl:hidden my-6">
       <div className="relative">
         <span className="absolute top-[3%] left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
-          Advertisement
+          Promotion
         </span>
         {isInternal ? (
           <Link
-            to={bannerAd.link || "#"}
-            className={`w-full h-20 md:h-24 bg-gradient-to-r ${bannerAd.bg} rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-muted-foreground/20`}
+            to={bannerPromo.link || "#"}
+            className={`w-full h-20 md:h-24 bg-gradient-to-r ${bannerPromo.bg} rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-muted-foreground/20`}
           >
             <div className="flex items-center gap-3 md:gap-4">
-              {bannerAd.isAlbum && (
+              {bannerPromo.isAlbum && (
                 <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden shadow-xl border-2 border-white/20 flex-shrink-0">
                   <img 
-                    src={bannerAd.albumArt} 
-                    alt={bannerAd.title}
+                    src={bannerPromo.albumArt} 
+                    alt={bannerPromo.title}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -380,15 +380,15 @@ export const MobileAdBanner = () => {
                   New Album
                 </div>
                 <div className="text-foreground font-display text-xl md:text-2xl leading-tight">
-                  {bannerAd.title}
+                  {bannerPromo.title}
                 </div>
                 <div className="text-foreground/70 font-body text-xs">
-                  {bannerAd.subtitle}
+                  {bannerPromo.subtitle}
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-foreground text-background font-display text-xs md:text-sm px-4 py-2 rounded-full flex-shrink-0">
-              {bannerAd.text}
+              {bannerPromo.text}
             </div>
           </Link>
         ) : (
@@ -396,14 +396,14 @@ export const MobileAdBanner = () => {
             href={getTrackedUrl()}
             target="_blank"
             rel="noopener noreferrer"
-            className={`w-full h-20 md:h-24 bg-gradient-to-r ${bannerAd.bg} rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-muted-foreground/20`}
+            className={`w-full h-20 md:h-24 bg-gradient-to-r ${bannerPromo.bg} rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-muted-foreground/20`}
           >
             <div className="flex items-center gap-3 md:gap-4">
-              {bannerAd.isAlbum && (
+              {bannerPromo.isAlbum && (
                 <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden shadow-xl border-2 border-white/20 flex-shrink-0">
                   <img 
-                    src={bannerAd.albumArt} 
-                    alt={bannerAd.title}
+                    src={bannerPromo.albumArt} 
+                    alt={bannerPromo.title}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -413,15 +413,15 @@ export const MobileAdBanner = () => {
                   New Album
                 </div>
                 <div className="text-foreground font-display text-xl md:text-2xl leading-tight">
-                  {bannerAd.title}
+                  {bannerPromo.title}
                 </div>
                 <div className="text-foreground/70 font-body text-xs">
-                  {bannerAd.subtitle}
+                  {bannerPromo.subtitle}
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-foreground text-background font-display text-xs md:text-sm px-4 py-2 rounded-full flex-shrink-0">
-              {bannerAd.text}
+              {bannerPromo.text}
             </div>
           </a>
         )}
@@ -430,49 +430,49 @@ export const MobileAdBanner = () => {
   );
 };
 
-export const MobileSkyscraperAd = ({ index = 0 }: { index?: number }) => {
-  const skyAd = mockAds.skyscraper[index];
+export const MobileSkyscraperPromo = ({ index = 0 }: { index?: number }) => {
+  const skyPromo = mockPromos.skyscraper[index];
 
   const { data: affiliateLink } = useQuery({
-    queryKey: ["affiliate-link-mobile-sky", skyAd.affiliateName, index],
+    queryKey: ["affiliate-link-mobile-sky", skyPromo.affiliateName, index],
     queryFn: async () => {
-      if (!skyAd.affiliateName) return null;
+      if (!skyPromo.affiliateName) return null;
       
       const { data, error } = await supabase
         .from("affiliate_links")
         .select("id, click_count")
-        .eq("name", skyAd.affiliateName)
+        .eq("name", skyPromo.affiliateName)
         .maybeSingle();
 
       if (error) return null;
       return data;
     },
-    enabled: !!skyAd.affiliateName,
+    enabled: !!skyPromo.affiliateName,
   });
 
   const getTrackedUrl = () => {
     if (affiliateLink?.id) {
       return `${SUPABASE_URL}/functions/v1/track-click?id=${affiliateLink.id}`;
     }
-    return skyAd.link;
+    return skyPromo.link;
   };
 
-  const isInternal = skyAd.link?.startsWith("/");
+  const isInternal = skyPromo.link?.startsWith("/");
 
-  const AdContent = () => (
+  const PromoContent = () => (
     <>
-      {skyAd.image ? (
+      {skyPromo.image ? (
         <img
-          src={skyAd.image}
-          alt={skyAd.title}
+          src={skyPromo.image}
+          alt={skyPromo.title}
           className={`w-full h-auto block object-contain`}
         />
-      ) : skyAd.isAlbum ? (
+      ) : skyPromo.isAlbum ? (
         <>
           <div className="w-[130px] h-[130px] rounded-lg overflow-hidden mb-4 shadow-xl border-2 border-white/20">
             <img 
-              src={skyAd.albumArt} 
-              alt={skyAd.title}
+              src={skyPromo.albumArt} 
+              alt={skyPromo.title}
               className="w-full h-full object-cover"
             />
           </div>
@@ -480,26 +480,26 @@ export const MobileSkyscraperAd = ({ index = 0 }: { index?: number }) => {
             New Album
           </div>
           <div className="text-foreground font-display text-3xl leading-tight mb-1">
-            {skyAd.title}
+            {skyPromo.title}
           </div>
           <div className="text-foreground/80 font-body text-sm mb-4">
-            {skyAd.subtitle}
+            {skyPromo.subtitle}
           </div>
           <div className="flex items-center gap-2 bg-dem text-dem-foreground font-display text-sm px-5 py-2.5 rounded-full">
             <Download className="w-4 h-4" />
-            {skyAd.text}
+            {skyPromo.text}
           </div>
         </>
       ) : (
         <>
           <div className="text-foreground/90 font-display text-2xl leading-tight mb-2">
-            {skyAd.title}
+            {skyPromo.title}
           </div>
           <div className="text-foreground/70 font-body text-sm mb-6">
-            {skyAd.subtitle}
+            {skyPromo.subtitle}
           </div>
           <div className="bg-foreground text-background font-display text-sm px-6 py-2 rounded-full">
-            {skyAd.text}
+            {skyPromo.text}
           </div>
         </>
       )}
@@ -510,25 +510,25 @@ export const MobileSkyscraperAd = ({ index = 0 }: { index?: number }) => {
     <div className="lg:hidden w-full my-6 flex justify-center">
       <div className="relative w-full max-w-sm flex flex-col items-center">
         <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
-          Advertisement
+          Promotion
         </span>
         {isInternal ? (
           <Link
-            to={skyAd.link || "#"}
-            title={skyAd.title}
-            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
+            to={skyPromo.link || "#"}
+            title={skyPromo.title}
+            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyPromo.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyPromo.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
           >
-            <AdContent />
+            <PromoContent />
           </Link>
         ) : (
           <a
             href={getTrackedUrl()}
             target="_blank"
             rel="noopener noreferrer"
-            title={skyAd.title}
-            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyAd.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
+            title={skyPromo.title}
+            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${skyPromo.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `bg-gradient-to-b ${skyPromo.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
           >
-            <AdContent />
+            <PromoContent />
           </a>
         )}
       </div>
@@ -536,28 +536,29 @@ export const MobileSkyscraperAd = ({ index = 0 }: { index?: number }) => {
   );
 };
 
-export const MobileSquareAd = () => {
-  const sqAd = mockAds.square[0];
-  const isInternal = sqAd.link?.startsWith("/");
 
-  const AdContent = () => (
+export const MobileSquarePromo = () => {
+  const sqPromo = mockPromos.square[0];
+  const isInternal = sqPromo.link?.startsWith("/");
+
+  const PromoContent = () => (
     <>
-      {sqAd.image ? (
+      {sqPromo.image ? (
         <img
-          src={sqAd.image}
-          alt={sqAd.title}
+          src={sqPromo.image}
+          alt={sqPromo.title}
           className="object-contain w-full h-auto block"
         />
       ) : (
         <>
           <div className="text-foreground/90 font-display text-xl leading-tight mb-2">
-            {sqAd.title}
+            {sqPromo.title}
           </div>
           <div className="text-foreground/70 font-body text-xs mb-4">
-            {sqAd.subtitle}
+            {sqPromo.subtitle}
           </div>
           <div className="bg-foreground text-background font-display text-xs px-4 py-1.5 rounded-full">
-            {sqAd.text}
+            {sqPromo.text}
           </div>
         </>
       )}
@@ -568,28 +569,29 @@ export const MobileSquareAd = () => {
     <div className="lg:hidden w-full my-6 flex justify-center">
       <div className="relative w-full max-w-sm flex flex-col items-center">
         <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
-          Advertisement
+          Promotion
         </span>
         {isInternal ? (
           <Link
-            to={sqAd.link || "#"}
-            title={sqAd.title}
-            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `aspect-square bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
+            to={sqPromo.link || "#"}
+            title={sqPromo.title}
+            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqPromo.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `aspect-square bg-gradient-to-b ${sqPromo.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
           >
-            <AdContent />
+            <PromoContent />
           </Link>
         ) : (
           <a
-            href={sqAd.link || "#"}
-            target={sqAd.link ? "_blank" : undefined}
-            rel={sqAd.link ? "noopener noreferrer" : undefined}
-            title={sqAd.title}
-            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqAd.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `aspect-square bg-gradient-to-b ${sqAd.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
+            href={sqPromo.link || "#"}
+            target={sqPromo.link ? "_blank" : undefined}
+            rel={sqPromo.link ? "noopener noreferrer" : undefined}
+            title={sqPromo.title}
+            className={`rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${sqPromo.image ? "h-auto p-0 overflow-hidden border-0 bg-transparent" : `aspect-square bg-gradient-to-b ${sqPromo.bg} shadow-lg p-4 text-center border-2 border-muted-foreground/20`}`}
           >
-            <AdContent />
+            <PromoContent />
           </a>
         )}
       </div>
     </div>
   );
 };
+

@@ -1,75 +1,102 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Chrome, Mail, ArrowRight } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+
+  const from = location.state?.from?.pathname || "/admin";
 
   useEffect(() => {
     // Check if user is already logged in
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         if (session) {
-          console.log("Session found, redirecting to admin...");
-          navigate("/admin");
+          navigate(from, { replace: true });
         }
-      })
-      .catch(err => {
-        console.error("Error getting session:", err);
       });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session?.user?.email);
-      if (session) {
-        navigate("/admin");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && event === "SIGNED_IN") {
+        navigate(from, { replace: true });
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, from]);
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const mapAuthError = (error: { message: string }) => {
+    const message = error.message.toLowerCase();
+    if (message.includes("invalid login credentials")) {
+      return "Email or password didn't match. Please try again.";
+    }
+    if (message.includes("user already registered")) {
+      return "That email already has an account. Try signing in instead.";
+    }
+    if (message.includes("email not confirmed")) {
+      return "Check your inbox to confirm your email before signing in.";
+    }
+    if (message.includes("password is too short")) {
+      return "Password must be at least 6 characters long.";
+    }
+    return error.message;
+  };
+
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+
     try {
       setLoading(true);
-      console.log("Login: Attempting sign in for:", email);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
       
-      if (error) {
-        console.error("Login: Sign in error:", error.message);
-        throw error;
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: fullName },
+            emailRedirectTo: `${window.location.origin}/login`,
+          },
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Verify your email",
+          description: "We've sent a confirmation link to your inbox.",
+        });
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Welcome back",
+          description: "Signed in successfully.",
+        });
       }
-      
-      console.log("Login: Sign in successful for:", data.user?.email);
-      
+    } catch (error: unknown) {
+      const authError = error as { message: string };
       toast({
-        title: "Success",
-        description: "Logged in successfully",
-      });
-      
-      console.log("Login: Navigating to /admin");
-      navigate("/admin");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "An unknown error occurred";
-      toast({
-        title: "Error signing in",
-        description: message,
+        title: isSignUp ? "Sign up failed" : "Sign in failed",
+        description: mapAuthError(authError),
         variant: "destructive",
       });
     } finally {
@@ -80,39 +107,18 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
-      
-      if (!supabase.auth) {
-        throw new Error("Supabase auth is not initialized. Check your environment variables.");
-      }
-
-      // Detect if we're on localhost or production
-      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      
-      // Use the correct redirect URL based on environment
-      // Supabase requires the exact URL to be added to the Redirect URLs list in the Auth settings
-      const redirectTo = isLocal 
-        ? `${window.location.origin}/admin`
-        : `https://streetpolynews.com/admin`;
-
-      console.log("Login: Initiating Google OAuth with redirect to:", redirectTo);
-
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
+          redirectTo: `${window.location.origin}/login`,
         },
       });
-
       if (error) throw error;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "An unknown error occurred";
+    } catch (error: unknown) {
+      const authError = error as { message: string };
       toast({
-        title: "Error signing in",
-        description: message,
+        title: "Google Login failed",
+        description: mapAuthError(authError),
         variant: "destructive",
       });
       setLoading(false);
@@ -120,77 +126,130 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md bg-dem-dark border-blue-900/50">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-display text-blue-50">Welcome Back</CardTitle>
-          <CardDescription className="text-blue-200/50">
-            Sign in to access the admin dashboard
+    <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4 relative overflow-hidden">
+      {/* Background Decorative Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-600/30 rounded-full blur-[120px]" />
+        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-red-600/20 rounded-full blur-[120px]" />
+      </div>
+
+      <Card className="w-full max-w-md bg-slate-900/50 border-slate-800 backdrop-blur-xl relative z-10">
+        <CardHeader className="text-center space-y-1">
+          <CardTitle className="text-3xl font-display text-white tracking-tight">
+            {isSignUp ? "Join StreetPoly" : "Welcome Back"}
+          </CardTitle>
+          <CardDescription className="text-slate-400">
+            {isSignUp 
+              ? "Create your account to get started" 
+              : "Sign in to manage your submissions"}
           </CardDescription>
         </CardHeader>
+        
         <CardContent className="space-y-6">
-          <form onSubmit={handleEmailLogin} className="space-y-4">
+          <form onSubmit={handleAuth} className="space-y-4">
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="fullName" className="text-slate-300 text-xs font-semibold uppercase tracking-wider">Full Name</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="John Doe"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required={isSignUp}
+                  className="bg-slate-950/50 border-slate-800 text-white h-11 focus:ring-blue-500/50 transition-all"
+                />
+              </div>
+            )}
+            
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-blue-200/70">Email</Label>
+              <Label htmlFor="email" className="text-slate-300 text-xs font-semibold uppercase tracking-wider">Email Address</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@example.com"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-slate-900 border-blue-900/50 text-white placeholder:text-blue-200/20"
+                className="bg-slate-950/50 border-slate-800 text-white h-11 focus:ring-blue-500/50 transition-all"
               />
             </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-blue-200/70">Password</Label>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="password" className="text-slate-300 text-xs font-semibold uppercase tracking-wider">Password</Label>
+                {!isSignUp && (
+                  <button type="button" className="text-[10px] text-blue-400 hover:text-blue-300 font-medium uppercase tracking-tighter">
+                    Forgot Password?
+                  </button>
+                )}
+              </div>
               <Input
                 id="password"
                 type="password"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-slate-900 border-blue-900/50 text-white"
+                className="bg-slate-950/50 border-slate-800 text-white h-11 focus:ring-blue-500/50 transition-all"
               />
             </div>
+
             <Button
               type="submit"
-              className="w-full bg-rep hover:bg-rep/90 text-white font-display tracking-widest uppercase"
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white h-11 font-bold transition-all duration-200 group"
               disabled={loading}
             >
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                "Sign In"
+                <>
+                  {isSignUp ? "Create Account" : "Sign In"}
+                  <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </>
               )}
             </Button>
           </form>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-blue-900/50" />
+              <span className="w-full border-t border-slate-800" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-dem-dark px-2 text-blue-200/30">Or continue with</span>
+              <span className="bg-slate-900/50 px-2 text-slate-500 font-medium">Or continue with</span>
             </div>
           </div>
 
           <Button
-            onClick={handleGoogleLogin}
             variant="outline"
-            className="w-full border-blue-900/50 text-blue-100 hover:bg-blue-900/20"
+            type="button"
+            onClick={handleGoogleLogin}
+            className="w-full border-slate-800 bg-transparent hover:bg-slate-800/50 text-white h-11 font-medium transition-all"
             disabled={loading}
           >
             {loading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-                <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
-              </svg>
+              <>
+                <Chrome className="mr-2 h-4 w-4 text-blue-400" />
+                Google
+              </>
             )}
-            Google
           </Button>
         </CardContent>
+
+        <CardFooter className="justify-center border-t border-slate-800/50 pt-6">
+          <p className="text-sm text-slate-400">
+            {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+            <button
+              type="button"
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-blue-400 hover:text-blue-300 font-semibold transition-colors"
+            >
+              {isSignUp ? "Sign In" : "Create Account"}
+            </button>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );
