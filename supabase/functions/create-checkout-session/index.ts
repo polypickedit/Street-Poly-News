@@ -2,7 +2,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@12.18.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+// @ts-ignore: Deno is available in Supabase Edge Functions
+const stripe = new Stripe((globalThis as any).Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2022-11-15",
   httpClient: Stripe.createFetchHttpClient(),
 });
@@ -12,6 +13,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// @ts-expect-error: serve is available in Supabase Edge Functions
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -28,19 +30,25 @@ serve(async (req) => {
       selectedOutlets,
       type = 'slot', // default type
       packId, // for credits
+      amount, // for quick payment
+      description, // for quick payment
     } = await req.json();
 
     // 1. Initialize Supabase Client
+    // @ts-ignore: Deno is available in Supabase Edge Functions
     const supabaseClient = createClient(
+      // @ts-ignore
       Deno.env.get("SUPABASE_URL") ?? "",
+      // @ts-ignore
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    let lineItems = [];
-    let mode = "payment";
-    let metadata = {
-      userId,
-      type,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let lineItems: any[] = [];
+    let mode: "payment" | "subscription" = "payment";
+    let metadata: Record<string, string> = {
+      userId: userId || "",
+      type: type || "",
     };
 
     if (type === 'credits') {
@@ -69,8 +77,31 @@ serve(async (req) => {
       
       metadata = {
         ...metadata,
-        packId,
+        packId: packId || "",
         creditAmount: pack.credit_amount.toString(),
+      };
+
+    } else if (type === 'quick_payment') {
+      if (!amount || amount <= 0) throw new Error("Invalid amount for quick payment");
+
+      lineItems = [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: description || "Quick Payment",
+              description: "Custom service or offline item payment",
+            },
+            unit_amount: Math.round(amount * 100), // convert to cents
+          },
+          quantity: 1,
+        },
+      ];
+
+      metadata = {
+        ...metadata,
+        description: description || "Quick Payment",
+        amount: amount.toString(),
       };
 
     } else {
@@ -104,7 +135,7 @@ serve(async (req) => {
       
       metadata = {
         ...metadata,
-        slotId,
+        slotId: slotId || "",
         slotSlug: slotSlug || "",
         submissionId: submissionId || "",
         selectedOutlets: selectedOutlets ? selectedOutlets.join(",") : "",
@@ -130,7 +161,7 @@ serve(async (req) => {
                 unit_amount: outlet.price_cents,
               },
               quantity: 1,
-            } as any);
+            });
           }
         }
       }
@@ -140,12 +171,15 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer_email: userEmail,
       line_items: lineItems,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mode: mode as any,
       success_url: returnUrl,
       cancel_url: returnUrl,
       payment_intent_data: mode === "payment" ? {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata: metadata as any,
       } : undefined,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       metadata: metadata as any,
     });
 

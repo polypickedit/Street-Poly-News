@@ -19,13 +19,12 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
 
-  const from = location.state?.from || { pathname: "/dashboard" };
-
   useEffect(() => {
     // Check if user is already logged in
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         if (session) {
+          const from = location.state?.from || { pathname: "/dashboard" };
           const redirectPath = typeof from === 'string' ? from : from.pathname;
           navigate(redirectPath, { replace: true });
         }
@@ -33,13 +32,14 @@ const Login = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && event === "SIGNED_IN") {
+        const from = location.state?.from || { pathname: "/dashboard" };
         const redirectPath = typeof from === 'string' ? from : from.pathname;
         navigate(redirectPath, { replace: true });
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, from]);
+  }, [navigate, location.state?.from]);
 
   const mapAuthError = (error: { message: string }) => {
     const message = error.message.toLowerCase();

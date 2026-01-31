@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { BookingForm } from "@/components/BookingForm";
 import { useState } from "react";
+import { QuickPaymentDialog } from "@/components/QuickPaymentDialog";
 
 const Booking = () => {
   const [isMusicModalOpen, setIsMusicModalOpen] = useState(false);
@@ -148,13 +149,22 @@ const Booking = () => {
           </div>
 
           <div className="mt-16 bg-muted/30 border border-border rounded-3xl p-8 md:p-12 text-center w-full flex flex-col items-center">
-            <h2 className="font-display text-3xl text-foreground mb-4">Custom Advertising</h2>
-            <p className="font-body text-muted-foreground max-w-xl mx-auto mb-8">
+            <h2 className="font-display text-3xl md:text-4xl text-foreground mb-4">Custom Advertising</h2>
+            <p className="font-body text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-8">
               Looking for long-term partnerships or custom advertising slots on our sidebar and breaking news banners?
             </p>
-            <Button asChild variant="outline" className="rounded-full px-8">
-              <a href="/contact">Contact Sales Team</a>
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <Button asChild variant="outline" className="rounded-full px-8">
+                <a href="/contact">Contact Sales Team</a>
+              </Button>
+              <QuickPaymentDialog 
+                trigger={
+                  <Button className="bg-dem hover:bg-dem/90 text-white rounded-full px-8">
+                    Quick Payment
+                  </Button>
+                }
+              />
+            </div>
           </div>
         </div>
       </PageTransition>

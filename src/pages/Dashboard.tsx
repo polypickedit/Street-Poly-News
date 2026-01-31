@@ -283,7 +283,7 @@ export default function Dashboard() {
         >
           <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium text-slate-400">Account Access</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-400">Available Features</CardTitle>
               <Zap className="w-4 h-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
@@ -294,7 +294,7 @@ export default function Dashboard() {
                   capabilities.length
                 )}
               </div>
-              <p className="text-xs text-slate-500 mt-1">Active features</p>
+              <p className="text-sm text-slate-500 mt-1">Services you can use</p>
             </CardContent>
           </Card>
           
@@ -304,10 +304,10 @@ export default function Dashboard() {
               <UserIcon className="w-4 h-4 text-blue-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-bold text-white truncate">
+              <div className="text-xl font-bold text-white truncate">
                 {isLoadingAccount ? "Loading..." : activeAccount?.name || "No Account"}
               </div>
-              <Badge variant="outline" className="mt-1 text-[10px] uppercase tracking-wider border-slate-700 text-slate-400">
+              <Badge variant="outline" className="mt-1 text-xs uppercase tracking-wider border-slate-700 text-slate-400">
                 {activeAccount?.type || "Individual"}
               </Badge>
             </CardContent>
@@ -322,7 +322,7 @@ export default function Dashboard() {
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="w-full text-xs h-8 border-slate-700 hover:bg-slate-800"
+                className="w-full text-sm h-9 border-slate-700 hover:bg-slate-800"
                 onClick={() => navigate("/booking")}
               >
                 New Submission
@@ -334,39 +334,39 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
             <CardHeader className="pb-2">
-              <CardDescription className="text-slate-400 uppercase tracking-wider text-xs">Total Submissions</CardDescription>
+              <CardDescription className="text-slate-400 uppercase tracking-wider text-xs font-semibold">Total Submissions</CardDescription>
               <CardTitle className="text-3xl font-bold">{submissions?.length || 0}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <Music className="w-3 h-3" />
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                <Music className="w-4 h-4" />
                 <span>Track reviews and features</span>
               </div>
             </CardContent>
           </Card>
           <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
             <CardHeader className="pb-2">
-              <CardDescription className="text-slate-400 uppercase tracking-wider text-xs">Active Placements</CardDescription>
+              <CardDescription className="text-slate-400 uppercase tracking-wider text-xs font-semibold">Active Placements</CardDescription>
               <CardTitle className="text-3xl font-bold">{placements?.length || 0}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <Layout className="w-3 h-3" />
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                <Layout className="w-4 h-4" />
                 <span>Live on playlists or site</span>
               </div>
             </CardContent>
           </Card>
           <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
             <CardHeader className="pb-2">
-              <CardDescription className="text-slate-400 uppercase tracking-wider text-xs">Pending Review</CardDescription>
+              <CardDescription className="text-slate-400 uppercase tracking-wider text-xs font-semibold">Pending Review</CardDescription>
               <CardTitle className="text-3xl font-bold">
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {submissions?.filter((s: any) => s.status === 'pending').length || 0}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <Clock className="w-3 h-3" />
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                <Clock className="w-4 h-4" />
                 <span>Currently with our editors</span>
               </div>
             </CardContent>
@@ -404,15 +404,22 @@ export default function Dashboard() {
               <div className="grid gap-4">
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {submissions?.map((s: any) => (
-                  <Card key={s.id} className="bg-slate-900/30 border-slate-800 hover:border-slate-700 transition-colors">
+                  <Card 
+                    key={s.id} 
+                    className="bg-slate-900/30 border-slate-800 hover:border-slate-700 transition-all cursor-pointer group"
+                    onClick={() => navigate(`/orders/${s.id}`)}
+                  >
                     <CardContent className="p-6">
                       <div className="flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded bg-slate-800 flex items-center justify-center">
+                          <div className="w-12 h-12 rounded bg-slate-800 flex items-center justify-center group-hover:bg-blue-500/10 transition-colors">
                             <Music className="w-5 h-5 text-blue-400" />
                           </div>
                           <div>
-                            <h4 className="font-semibold text-lg">{s.track_title}</h4>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold text-lg">{s.track_title}</h4>
+                              <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+                            </div>
                             <p className="text-sm text-slate-400">{s.artist_name} • {s.slots?.name}</p>
                           </div>
                         </div>

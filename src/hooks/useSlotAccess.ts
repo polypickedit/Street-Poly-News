@@ -85,6 +85,13 @@ export const useSlotAccess = (slotSlug: string) => {
           return;
         }
 
+        // 3.5 Check if admin - Admins bypass paywalls
+        const { data: isAdmin } = await supabase.rpc("is_admin_or_editor");
+        if (isAdmin) {
+          setAccess({ hasAccess: true, slot: typedSlot });
+          return;
+        }
+
         if (typedSlot.visibility === 'account') {
           setAccess({ hasAccess: true, slot: typedSlot });
           return;

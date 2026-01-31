@@ -78,6 +78,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'capability'>('stripe');
 
   const requiredCapability = selectedSlot ? getProductBySlotSlug(selectedSlot.slug).grants[0] : 'post.submit';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const canUseCapability = hasCapability(requiredCapability as any);
 
   useEffect(() => {
@@ -264,6 +265,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
 
       if (paymentMethod === 'capability') {
         // 1. Consume the capability
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: consumed, error: consumeError } = await (supabase as any).rpc("consume_capability", {
           p_user_id: user?.id,
           p_capability: requiredCapability
@@ -273,6 +275,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
         if (!consumed) throw new Error(`You don't have an available ${requiredCapability} capability.`);
 
         // 2. Create the submission
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: submission, error: submissionError } = await (supabase as any).from("submissions").insert({
           ...submissionPayload,
           account_id: activeAccount?.id,

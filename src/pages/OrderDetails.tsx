@@ -23,6 +23,30 @@ import {
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
+interface SubmissionDetail {
+  id: string;
+  status: string;
+  payment_status: string;
+  track_title: string;
+  artist_name: string;
+  created_at: string;
+  spotify_track_url?: string;
+  notes_internal?: string;
+  slots?: { name: string };
+  artists?: { name: string; email: string };
+  submission_distribution?: Array<{
+    id: string;
+    status: string;
+    published_url?: string;
+    media_outlets?: { name: string };
+  }>;
+  placements?: Array<{
+    id: string;
+    end_date: string;
+    playlists?: { name: string; spotify_playlist_url?: string };
+  }>;
+}
+
 export default function OrderDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -37,10 +61,11 @@ export default function OrderDetails() {
     checkAdmin();
   }, []);
 
-  const { data: submission, isLoading, error } = useQuery({
+  const { data: submissionData, isLoading, error } = useQuery({
     queryKey: ["submission", id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
         .from("submissions")
         .select(`
           *,
@@ -59,9 +84,11 @@ export default function OrderDetails() {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as unknown as SubmissionDetail;
     },
   });
+
+  const submission = submissionData;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -155,36 +182,28 @@ export default function OrderDetails() {
                     </div>
                   </div>
 
-                  {submission.spotify_url && (
+                  {submission.spotify_track_url && (
                     <div>
                       <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Spotify Link</label>
                       <div className="mt-1">
                         <a 
-                          href={submission.spotify_url} 
+                          href={submission.spotify_track_url} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
                         >
-                          {submission.spotify_url}
+                          {submission.spotify_track_url}
                           <ExternalLink className="w-4 h-4" />
                         </a>
                       </div>
                     </div>
                   )}
 
-                  {submission.social_link && (
+                  {submission.notes_internal && (
                     <div>
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Artist Socials</label>
-                      <div className="mt-1">
-                        <a 
-                          href={submission.social_link} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
-                        >
-                          {submission.social_link}
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Additional Info</label>
+                      <div className="mt-1 text-sm text-slate-300 whitespace-pre-wrap">
+                        {submission.notes_internal}
                       </div>
                     </div>
                   )}
@@ -200,7 +219,7 @@ export default function OrderDetails() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Playlists */}
-                    {submission.placements?.map((p: any) => (
+                    {submission.placements?.map((p) => (
                       <div key={p.id} className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded bg-green-500/10 flex items-center justify-center">
@@ -213,7 +232,12 @@ export default function OrderDetails() {
                         </div>
                         {p.playlists?.spotify_playlist_url && (
                           <Button variant="ghost" size="sm" asChild className="text-blue-400">
-                            <a href={p.playlists.spotify_playlist_url} target="_blank" rel="noopener noreferrer">
+                            <a 
+                              href={p.playlists.spotify_playlist_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              aria-label={`Open playlist ${p.playlists.name} on Spotify`}
+                            >
                               <ExternalLink className="w-4 h-4" />
                             </a>
                           </Button>
@@ -222,7 +246,7 @@ export default function OrderDetails() {
                     ))}
 
                     {/* Media Outlets */}
-                    {submission.submission_distribution?.map((dist: any) => (
+                    {submission.submission_distribution?.map((dist) => (
                       <div key={dist.id} className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded bg-blue-500/10 flex items-center justify-center">
@@ -237,7 +261,12 @@ export default function OrderDetails() {
                         </div>
                         {dist.published_url && (
                           <Button variant="ghost" size="sm" asChild className="text-blue-400">
-                            <a href={dist.published_url} target="_blank" rel="noopener noreferrer">
+                            <a 
+                              href={dist.published_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              aria-label={`View publication on ${dist.media_outlets?.name}`}
+                            >
                               <ExternalLink className="w-4 h-4" />
                             </a>
                           </Button>
@@ -284,12 +313,12 @@ export default function OrderDetails() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-rep/70">Update Status</label>
+                      <label className="text-xs font-bold uppercase tracking-[0.2em] text-rep/70">Update Status</label>
                       <div className="grid grid-cols-2 gap-2">
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="text-[10px] border-rep/30 hover:bg-rep/10"
+                          className="text-xs border-rep/30 hover:bg-rep/10"
                           onClick={() => {
                             toast({ title: "Status Update", description: "Updating to Approved..." });
                           }}
@@ -299,7 +328,7 @@ export default function OrderDetails() {
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="text-[10px] border-rep/30 hover:bg-rep/10"
+                          className="text-xs border-rep/30 hover:bg-rep/10"
                           onClick={() => {
                             toast({ title: "Status Update", description: "Updating to Rejected..." });
                           }}
@@ -312,10 +341,10 @@ export default function OrderDetails() {
                     <div className="pt-4 border-t border-rep/10">
                       <Button 
                         variant="ghost" 
-                        className="w-full justify-start text-xs text-rep/80 hover:text-rep hover:bg-rep/5 px-0"
+                        className="w-full justify-start text-sm text-rep/80 hover:text-rep hover:bg-rep/5 px-0"
                         onClick={() => navigate("/admin/submissions")}
                       >
-                        <ExternalLink className="w-3 h-3 mr-2" />
+                        <ExternalLink className="w-4 h-4 mr-2" />
                         Go to Admin Queue
                       </Button>
                     </div>

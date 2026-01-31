@@ -17,6 +17,7 @@ import Contact from "./pages/Contact";
 import Gallery from "./pages/Gallery";
 import Booking from "./pages/Booking";
 import Dashboard from "./pages/Dashboard";
+import OrderDetails from "./pages/OrderDetails";
 import Admin from "./pages/Admin";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
@@ -51,6 +52,14 @@ const AnimatedRoutes = () => {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders/:id"
+          element={
+            <ProtectedRoute>
+              <OrderDetails />
             </ProtectedRoute>
           }
         />

@@ -34,6 +34,7 @@ export const createSlotCheckoutSession = async (
     const stripe = await stripePromise;
     if (!stripe) throw new Error('Stripe failed to initialize');
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: checkoutError } = await (stripe as any).redirectToCheckout({
       sessionId: data.sessionId
     });
@@ -68,6 +69,7 @@ export const createCreditPackCheckoutSession = async (packId: string) => {
     const stripe = await stripePromise;
     if (!stripe) throw new Error('Stripe failed to initialize');
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: checkoutError } = await (stripe as any).redirectToCheckout({
       sessionId: data.sessionId
     });
@@ -79,6 +81,7 @@ export const createCreditPackCheckoutSession = async (packId: string) => {
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createMerchCheckoutSession = async (items: any[]) => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
@@ -102,13 +105,50 @@ export const createMerchCheckoutSession = async (items: any[]) => {
     const stripe = await stripePromise;
     if (!stripe) throw new Error('Stripe failed to initialize');
 
-    const { error: checkoutError } = await stripe.redirectToCheckout({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: checkoutError } = await (stripe as any).redirectToCheckout({
       sessionId: data.sessionId
     });
 
     if (checkoutError) throw checkoutError;
   } catch (err) {
     console.error('Stripe merch checkout error:', err);
+    throw err;
+  }
+};
+
+export const createQuickPaymentSession = async (amount: number, description: string) => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error('You must be signed in to make a payment');
+    }
+
+    const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+      body: { 
+        type: 'quick_payment',
+        amount,
+        description,
+        userId: session.user.id,
+        userEmail: session.user.email,
+        returnUrl: window.location.origin + '/dashboard?session_id={CHECKOUT_SESSION_ID}'
+      }
+    });
+
+    if (error) throw error;
+
+    const stripe = await stripePromise;
+    if (!stripe) throw new Error('Stripe failed to initialize');
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: checkoutError } = await (stripe as any).redirectToCheckout({
+      sessionId: data.sessionId
+    });
+
+    if (checkoutError) throw checkoutError;
+  } catch (err) {
+    console.error('Stripe quick payment error:', err);
     throw err;
   }
 };
