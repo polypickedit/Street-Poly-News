@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Slot, SlotAccess, Entitlement } from '@/types/slots';
 
 export const useSlotAccess = (slotSlug: string) => {
+  const { session, isAdmin } = useAuth();
   const [access, setAccess] = useState<SlotAccess>({ hasAccess: true }); // Default to true for now to avoid breaking UI while tables are missing
   const [loading, setLoading] = useState(true);
 
@@ -75,7 +77,6 @@ export const useSlotAccess = (slotSlug: string) => {
         }
 
         // 3. Check session
-        const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           setAccess({ 
             hasAccess: false, 
@@ -86,7 +87,6 @@ export const useSlotAccess = (slotSlug: string) => {
         }
 
         // 3.5 Check if admin - Admins bypass paywalls
-        const { data: isAdmin } = await supabase.rpc("is_admin_or_editor");
         if (isAdmin) {
           setAccess({ hasAccess: true, slot: typedSlot });
           return;
@@ -137,7 +137,7 @@ export const useSlotAccess = (slotSlug: string) => {
     };
 
     checkAccess();
-  }, [slotSlug]);
+  }, [slotSlug, session, isAdmin]);
 
   return { ...access, loading };
 };

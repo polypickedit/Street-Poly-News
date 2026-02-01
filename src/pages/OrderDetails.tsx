@@ -64,8 +64,7 @@ export default function OrderDetails() {
   const { data: submissionData, isLoading, error } = useQuery({
     queryKey: ["submission", id],
     queryFn: async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("submissions")
         .select(`
           *,
@@ -237,6 +236,7 @@ export default function OrderDetails() {
                               target="_blank" 
                               rel="noopener noreferrer"
                               aria-label={`Open playlist ${p.playlists.name} on Spotify`}
+                              title={`Open playlist ${p.playlists.name} on Spotify`}
                             >
                               <ExternalLink className="w-4 h-4" />
                             </a>
@@ -266,6 +266,7 @@ export default function OrderDetails() {
                               target="_blank" 
                               rel="noopener noreferrer"
                               aria-label={`View publication on ${dist.media_outlets?.name}`}
+                              title={`View publication on ${dist.media_outlets?.name}`}
                             >
                               <ExternalLink className="w-4 h-4" />
                             </a>

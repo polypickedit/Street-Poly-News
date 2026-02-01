@@ -1,4 +1,4 @@
-import { PRODUCTS, getProductByPriceId } from "./pricing.ts";
+import { getProductByPriceId } from "./pricing.ts";
 
 export type StripeEventLike = {
   type: string;
@@ -9,21 +9,20 @@ export type StripeEventLike = {
 
 export type SupabaseLikeClient = {
   from: (table: string) => {
-    select: (...args: any[]) => any;
-    eq: (...args: any[]) => any;
-    order: (...args: any[]) => any;
-    single: () => Promise<{ data: any; error: any }>;
-    update: (...args: any[]) => { 
-      eq: (...args: any[]) => Promise<{ error: any }>;
-      match: (...args: any[]) => Promise<{ error: any }>;
+    insert: (data: unknown) => {
+      catch: (callback: (err: unknown) => void) => Promise<{ error: unknown }>;
+    } & Promise<{ error: unknown }>;
+    upsert: (data: unknown, options?: unknown) => {
+      catch: (callback: (err: unknown) => void) => Promise<{ error: unknown }>;
+    } & Promise<{ error: unknown }>;
+    update: (data: unknown) => {
+      eq: (column: string, value: unknown) => {
+        catch: (callback: (err: unknown) => void) => Promise<{ error: unknown }>;
+      } & Promise<{ error: unknown }>;
+      match: (filter: unknown) => {
+        catch: (callback: (err: unknown) => void) => Promise<{ error: unknown }>;
+      } & Promise<{ error: unknown }>;
     };
-    insert: (...args: any[]) => Promise<{ error: any }>;
-    upsert: (...args: any[]) => Promise<{ error: any }>;
-    match: (...args: any[]) => any;
-    onConflict: (...args: any[]) => any;
-  };
-  auth: {
-    getUser: () => Promise<{ data: { user: { id: string } | null }; error: any }>;
   };
 };
 
@@ -57,9 +56,9 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
     const slotId = metadata?.["slotId"] as string | undefined;
     const submissionId = metadata?.["submissionId"] as string | undefined;
     const selectedOutlets = parseSelectedOutlets(metadata?.["selectedOutlets"]);
-    const priceId = (session?.["amount_total"] ? (session as any).line_items?.data?.[0]?.price?.id : null) 
-      || (event.data.object as any).price?.id 
-      || (event.data.object as any).items?.data?.[0]?.price?.id;
+    const priceId = (session?.["amount_total"] ? (session as Record<string, any>).line_items?.data?.[0]?.price?.id : null) 
+      || (event.data.object as Record<string, any>).price?.id 
+      || (event.data.object as Record<string, any>).items?.data?.[0]?.price?.id;
 
     if (!userId) {
       console.warn("⚠️ Missing userId in webhook event, skipping...");
@@ -77,14 +76,14 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
           granted_at: new Date().toISOString()
         }));
 
-        await supabase.from("user_capabilities").insert(capabilityRows).catch((err) => {
+        await supabase.from("user_capabilities").insert(capabilityRows).catch((err: unknown) => {
           console.error("❌ Error granting capabilities:", err);
         });
       }
     }
 
     // 2. Legacy/Specific logic for submissions and slots
-    const piId = typeof paymentIntent === "string" ? paymentIntent : Array.isArray(paymentIntent) ? String(paymentIntent[0]) : paymentIntent?.["id"];
+    const piId = typeof paymentIntent === "string" ? paymentIntent : Array.isArray(paymentIntent) ? String(paymentIntent[0]) : (paymentIntent as Record<string, unknown>)?.["id"];
     const amount = typeof session?.["amount_total"] === "number"
       ? session.amount_total
       : (event.data.object as Record<string, unknown>)["amount"];
@@ -100,7 +99,7 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
         amount_cents: amount,
         currency: currency ?? "usd",
         status: "succeeded",
-      }, { onConflict: "stripe_payment_intent_id" }).catch((err) => {
+      }, { onConflict: "stripe_payment_intent_id" }).catch((err: unknown) => {
         console.error("❌ Error recording payment:", err);
       });
     }
@@ -109,7 +108,7 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
       await supabase.from("submissions").update({
         payment_status: "paid",
         paid_at: new Date().toISOString(),
-      }).eq("id", submissionId).catch((err) => {
+      }).eq("id", submissionId).catch((err: unknown) => {
         console.error("❌ Error updating submission payment status:", err);
       });
 
@@ -121,7 +120,7 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
           paid: true,
         }));
 
-        await supabase.from("submission_distribution").upsert(distributionRows, { onConflict: "submission_id,outlet_id" }).catch((err) => {
+        await supabase.from("submission_distribution").upsert(distributionRows, { onConflict: "submission_id,outlet_id" }).catch((err: unknown) => {
           console.error("❌ Error creating distribution rows:", err);
         });
       }
@@ -135,19 +134,19 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
         is_active: true,
         granted_at: new Date().toISOString(),
         expires_at: null,
-      }).catch((err) => {
+      }).catch((err: unknown) => {
         console.error("❌ Error granting entitlement:", err);
       });
     }
   }
 
   if (event.type === "customer.subscription.deleted") {
-    const subscription = event.data.object as any;
+    const subscription = event.data.object as Record<string, any>;
     const userId = subscription.metadata?.userId as string | undefined;
     const slotId = subscription.metadata?.slotId as string | undefined;
 
     if (userId && slotId) {
-      await supabase.from("slot_entitlements").update({ is_active: false }).match({ user_id: userId, slot_id: slotId }).catch((err) => {
+      await supabase.from("slot_entitlements").update({ is_active: false }).match({ user_id: userId, slot_id: slotId }).catch((err: unknown) => {
         console.error("❌ Error revoking entitlement:", err);
       });
     }

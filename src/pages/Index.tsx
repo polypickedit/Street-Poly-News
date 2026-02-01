@@ -19,7 +19,7 @@ const Index = () => {
       description:
         "Coalition DJs’ New Music Mondays captures independent energy from BMY Treydawg and Foreign Freckles.",
       url: "https://www.youtube.com/shorts/3PXQSs-FsK4",
-      thumbnail: "https://i4.ytimg.com/vi/3PXQSs-FsK4/hqdefault.jpg",
+      thumbnail: "https://i.ytimg.com/vi/3PXQSs-FsK4/hqdefault.jpg",
     },
     {
       id: "Uxnw9TANizo",
@@ -30,53 +30,36 @@ const Index = () => {
       thumbnail: "https://i.ytimg.com/vi/Uxnw9TANizo/hqdefault.jpg",
     },
     {
-      id: "video3",
-      title: "New Video Title 3",
-      description: "Description for new video 3.",
-      url: "https://www.youtube.com/watch?v=video3",
-      thumbnail: "https://i.ytimg.com/vi/3PXQSs-FsK4/hqdefault.jpg",
+      id: "uU9fFp5KxWw",
+      title: "The Reality of Street Politics: Exclusive Interview",
+      description:
+        "Deep dive into the intersection of community leadership and street influence.",
+      url: "https://www.youtube.com/watch?v=uU9fFp5KxWw",
+      thumbnail: "https://i.ytimg.com/vi/uU9fFp5KxWw/hqdefault.jpg",
     },
     {
-      id: "video4",
-      title: "New Video Title 4",
-      description: "Description for new video 4.",
-      url: "https://www.youtube.com/watch?v=video4",
-      thumbnail: "https://i.ytimg.com/vi/Uxnw9TANizo/hqdefault.jpg",
+      id: "V8_Xh4Y4N0c",
+      title: "Independent Artists Taking Over the Game",
+      description:
+        "How the new wave of independent talent is reshaping the music industry landscape.",
+      url: "https://www.youtube.com/watch?v=V8_Xh4Y4N0c",
+      thumbnail: "https://i.ytimg.com/vi/V8_Xh4Y4N0c/hqdefault.jpg",
     },
     {
-      id: "video5",
-      title: "New Video Title 5",
-      description: "Description for new video 5.",
-      url: "https://www.youtube.com/watch?v=video5",
-      thumbnail: "https://i.ytimg.com/vi/3PXQSs-FsK4/hqdefault.jpg",
+      id: "mYm4h_qf0Uo",
+      title: "Community Impact: Real Stories from the Movement",
+      description:
+        "Highlighting the voices that matter and the change being driven from the heart of the city.",
+      url: "https://www.youtube.com/watch?v=mYm4h_qf0Uo",
+      thumbnail: "https://i.ytimg.com/vi/mYm4h_qf0Uo/hqdefault.jpg",
     },
     {
-      id: "video6",
-      title: "New Video Title 6",
-      description: "Description for new video 6.",
-      url: "https://www.youtube.com/watch?v=video6",
-      thumbnail: "https://i.ytimg.com/vi/Uxnw9TANizo/hqdefault.jpg",
-    },
-    {
-      id: "video7",
-      title: "New Video Title 7",
-      description: "Description for new video 7.",
-      url: "https://www.youtube.com/watch?v=video7",
-      thumbnail: "https://i.ytimg.com/vi/3PXQSs-FsK4/hqdefault.jpg",
-    },
-    {
-      id: "video8",
-      title: "New Video Title 8",
-      description: "Description for new video 8.",
-      url: "https://www.youtube.com/watch?v=video8",
-      thumbnail: "https://i.ytimg.com/vi/Uxnw9TANizo/hqdefault.jpg",
-    },
-    {
-      id: "video9",
-      title: "New Video Title 9",
-      description: "Description for new video 9.",
-      url: "https://www.youtube.com/watch?v=video9",
-      thumbnail: "https://i.ytimg.com/vi/3PXQSs-FsK4/hqdefault.jpg",
+      id: "zN5-N0o-Gq4",
+      title: "The Future of Street Media and News",
+      description:
+        "Exploring the evolution of grassroots journalism and its role in modern society.",
+      url: "https://www.youtube.com/watch?v=zN5-N0o-Gq4",
+      thumbnail: "https://i.ytimg.com/vi/zN5-N0o-Gq4/hqdefault.jpg",
     },
   ];
 
@@ -84,18 +67,20 @@ const Index = () => {
     <PageLayoutWithAds mainClassName="w-full">
       <PageTransition>
         {/* Brand Headline */}
-        <div className="py-8 md:py-16 px-4 text-center">
-          <p className="text-xs md:text-sm uppercase tracking-[0.3em] mb-3 font-body font-bold">
+        <div className="py-8 md:py-16 px-4 text-center overflow-hidden">
+          <p className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.2em] md:tracking-[0.3em] mb-3 font-body font-bold">
             <span className="text-dem">Street</span>
             <span className="text-rep mx-2">Politics</span>
             <span className="text-dem">Feed</span>
           </p>
-          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold tracking-[0.3em] uppercase leading-none">
-            <span className="text-dem">Street</span>
-            <span className="text-rep">Poly</span>
-            <span className="text-foreground ml-2">News</span>
+          <h1 className="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-[0.1em] md:tracking-[0.3em] uppercase leading-[1.1] md:leading-none flex flex-col sm:block">
+            <span className="inline-block">
+              <span className="text-dem">Street</span>
+              <span className="text-rep">Poly</span>
+            </span>
+            <span className="text-foreground sm:ml-2">News</span>
           </h1>
-          <p className="mt-6 text-muted-foreground/80 text-sm md:text-lg max-w-2xl mx-auto font-body leading-relaxed">
+          <p className="mt-6 text-muted-foreground/80 text-sm md:text-lg max-w-2xl mx-auto font-body leading-relaxed px-2">
             Unfiltered stories from the heart of the movement. <br className="hidden md:block" /> Real voices, real impact, real news.
           </p>
         </div>

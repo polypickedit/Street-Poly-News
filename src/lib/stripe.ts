@@ -1,4 +1,4 @@
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import { supabase } from '@/integrations/supabase/client';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -31,15 +31,11 @@ export const createSlotCheckoutSession = async (
 
     if (error) throw error;
 
-    const stripe = await stripePromise;
-    if (!stripe) throw new Error('Stripe failed to initialize');
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: checkoutError } = await (stripe as any).redirectToCheckout({
-      sessionId: data.sessionId
-    });
-
-    if (checkoutError) throw checkoutError;
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error('No checkout URL returned from server');
+    }
   } catch (err) {
     console.error('Stripe checkout error:', err);
     throw err;
@@ -66,15 +62,11 @@ export const createCreditPackCheckoutSession = async (packId: string) => {
 
     if (error) throw error;
 
-    const stripe = await stripePromise;
-    if (!stripe) throw new Error('Stripe failed to initialize');
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: checkoutError } = await (stripe as any).redirectToCheckout({
-      sessionId: data.sessionId
-    });
-
-    if (checkoutError) throw checkoutError;
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error('No checkout URL returned from server');
+    }
   } catch (err) {
     console.error('Stripe credit purchase error:', err);
     throw err;
@@ -102,15 +94,11 @@ export const createMerchCheckoutSession = async (items: any[]) => {
 
     if (error) throw error;
 
-    const stripe = await stripePromise;
-    if (!stripe) throw new Error('Stripe failed to initialize');
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: checkoutError } = await (stripe as any).redirectToCheckout({
-      sessionId: data.sessionId
-    });
-
-    if (checkoutError) throw checkoutError;
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error('No checkout URL returned from server');
+    }
   } catch (err) {
     console.error('Stripe merch checkout error:', err);
     throw err;
@@ -138,15 +126,11 @@ export const createQuickPaymentSession = async (amount: number, description: str
 
     if (error) throw error;
 
-    const stripe = await stripePromise;
-    if (!stripe) throw new Error('Stripe failed to initialize');
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: checkoutError } = await (stripe as any).redirectToCheckout({
-      sessionId: data.sessionId
-    });
-
-    if (checkoutError) throw checkoutError;
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error('No checkout URL returned from server');
+    }
   } catch (err) {
     console.error('Stripe quick payment error:', err);
     throw err;

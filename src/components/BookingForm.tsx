@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { 
   Upload, Music, Mic2, Calendar as CalendarIcon, User, Mail, 
-  MessageSquare, CreditCard, Share2, Globe, CheckCircle2, Loader2 
+  MessageSquare, CreditCard, Share2 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,9 +26,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "../hooks/useAuth";
 import { createSlotCheckoutSession } from "@/lib/stripe";
-import { useAccount } from "@/hooks/useAccount";
-import { useCapabilities } from "@/hooks/useCapabilities";
 import { getProductBySlotSlug } from "@/config/pricing";
 
 interface BookingFormProps {
@@ -64,22 +63,16 @@ interface Slot {
 
 export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'confirming' | 'paid' | 'failed'>('idle');
-  const [confirmedSubmissionId, setConfirmedSubmissionId] = useState<string | null>(null);
   
   const [slots, setSlots] = useState<Slot[]>([]);
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [user, setUser] = useState<any>(null);
-  const { activeAccount, isLoading: isLoadingAccount } = useAccount();
-  const { hasCapability, capabilities, isLoading: isLoadingCapabilities } = useCapabilities();
+  const { user, isAdmin, isEditor } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'capability'>('stripe');
 
   const requiredCapability = selectedSlot ? getProductBySlotSlug(selectedSlot.slug).grants[0] : 'post.submit';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const canUseCapability = hasCapability(requiredCapability as any);
+  const canUseCapability = isAdmin || isEditor;
 
   useEffect(() => {
     if (canUseCapability) {
@@ -89,22 +82,18 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
     }
   }, [canUseCapability]);
 
-  const checkPaymentStatus = useCallback(async (sessionId: string) => {
+  const checkPaymentStatus = useCallback(async () => {
     setPaymentStatus('confirming');
     
-    // Poll for up to 15 seconds
     let attempts = 0;
     const maxAttempts = 15;
     
     const poll = async () => {
       try {
-        // We look for a payment record associated with this session or user
-        // But the easiest way is to check the most recent submission for the user that is marked as paid
         const { data: { session: authSession } } = await supabase.auth.getSession();
         if (!authSession) return;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: submissions, error } = await (supabase as any)
+        const { data: submissions, error } = await supabase
           .from("submissions")
           .select("id, payment_status")
           .eq("user_id", authSession.user.id)
@@ -116,9 +105,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
 
         if (submissions && submissions.length > 0) {
           setPaymentStatus('paid');
-          setConfirmedSubmissionId(submissions[0].id);
           toast.success("Payment confirmed!");
-          // Clear search params so the user doesn't re-trigger confirmation on refresh
           setSearchParams({});
           return true;
         }
@@ -140,38 +127,29 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
       }
     }, 2000);
 
-    // Initial check
     poll();
   }, [setSearchParams]);
 
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
     if (sessionId && paymentStatus === 'idle') {
-      checkPaymentStatus(sessionId);
+      checkPaymentStatus();
     }
   }, [searchParams, paymentStatus, checkPaymentStatus]);
 
   useEffect(() => {
     const fetchSlots = async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase as any).from("slots").select("*").eq("is_active", true);
+      const { data } = await supabase.from("slots").select("*").eq("is_active", true);
       if (data) setSlots(data);
     };
 
     const fetchOutlets = async () => {
-      // @ts-expect-error - Table created in migration
       const { data } = await supabase.from("media_outlets").select("id, name, price_cents, outlet_type").eq("active", true);
       if (data) setOutlets(data as unknown as Outlet[]);
     };
 
-    const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-
     fetchSlots();
     fetchOutlets();
-    fetchUser();
   }, []);
 
   const defaultValues: BookingFormData = {
@@ -214,9 +192,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
     const mood = data.description.trim() || "Needs artist input";
 
     try {
-      // 1. Ensure artist exists or create one
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: existingArtist } = await (supabase as any)
+      const { data: existingArtist } = await supabase
         .from("artists")
         .select("id")
         .eq("email", data.email)
@@ -225,8 +201,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
       let artistId = existingArtist?.id;
 
       if (!artistId) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: newArtist, error: artistError } = await (supabase as any)
+        const { data: newArtist, error: artistError } = await supabase
           .from("artists")
           .insert({
             name: artistName,
@@ -237,7 +212,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
           .single();
 
         if (artistError) throw artistError;
-        artistId = newArtist.id;
+        artistId = newArtist!.id;
       }
 
       const submissionPayload = {
@@ -264,35 +239,27 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
       let submissionId: string;
 
       if (paymentMethod === 'capability') {
-        // 1. Consume the capability
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: consumed, error: consumeError } = await (supabase as any).rpc("consume_capability", {
-          p_user_id: user?.id,
-          p_capability: requiredCapability
+        const { data: consumed, error: consumeError } = await supabase.rpc("consume_capability", {
+          p_user_id: user?.id || "",
+          p_capability: requiredCapability || ""
         });
 
         if (consumeError) throw consumeError;
         if (!consumed) throw new Error(`You don't have an available ${requiredCapability} capability.`);
 
-        // 2. Create the submission
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: submission, error: submissionError } = await (supabase as any).from("submissions").insert({
+        const { data: submission, error: submissionError } = await supabase.from("submissions").insert({
           ...submissionPayload,
-          account_id: activeAccount?.id,
           user_id: user?.id,
           status: "pending",
-          payment_status: "paid", // Already paid via capability
-          payment_type: "credits" // Keep this for DB compatibility or update migration later
+          payment_status: "paid",
+          payment_type: "credits"
         }).select("id").single();
 
         if (submissionError) throw submissionError;
-        submissionId = submission.id;
+        submissionId = submission!.id;
       } else {
-        // Traditional Stripe Flow
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: submission, error: submissionError } = await (supabase as any).from("submissions").insert({
+        const { data: submission, error: submissionError } = await supabase.from("submissions").insert({
           ...submissionPayload,
-          account_id: activeAccount?.id,
           user_id: user?.id,
           status: "pending",
           payment_status: "unpaid",
@@ -300,22 +267,19 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
         }).select("id").single();
 
         if (submissionError) throw submissionError;
-        submissionId = submission.id;
+        submissionId = submission!.id;
       }
 
-      // 2b. Create distribution records
       if (data.selectedOutlets.length > 0) {
         const distributionRecords = data.selectedOutlets.map(outletId => ({
           submission_id: submissionId,
           outlet_id: outletId,
           status: 'pending'
         }));
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: distError } = await (supabase as any).from("submission_distribution").insert(distributionRecords);
+        const { error: distError } = await supabase.from("submission_distribution").insert(distributionRecords);
         if (distError) throw distError;
       }
 
-      // 3. STRIPE INTEGRATION POINT
       if (paymentMethod === 'stripe' && selectedSlot && selectedSlot.price > 0) {
         toast.info("Redirecting to Stripe Checkout...");
         await createSlotCheckoutSession(
@@ -555,7 +519,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
                   <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Textarea 
                     placeholder={type === "music" ? "Tell us about your track..." : "What would you like to discuss?"} 
-                    className="pl-9 min-h-[100px]" 
+                    className="pl-9 min-h-[100px]"
                     {...field} 
                   />
                 </div>

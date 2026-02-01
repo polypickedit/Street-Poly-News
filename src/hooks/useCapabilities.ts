@@ -16,7 +16,10 @@ export function useCapabilities() {
         .eq("user_id", user.id);
 
       if (error) {
-        console.error("Error fetching capabilities:", error);
+        // Only log if it's not a "table not found" error which is common during initial setup/migration
+        if (error.code !== 'PGRST205') {
+          console.error("Error fetching capabilities:", error);
+        }
         return [];
       }
 

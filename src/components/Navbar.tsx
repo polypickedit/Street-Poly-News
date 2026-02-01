@@ -2,16 +2,17 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ShoppingBag, Search, Zap, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useCart } from "@/hooks/use-cart";
-import { useAccount } from "@/hooks/useAccount";
-import { SearchBar } from "@/components/SearchBar";
+import { useAuth } from "../hooks/useAuth";
+import { useCart } from "../hooks/use-cart";
+import { useAccount } from "../hooks/useAccount";
+import { SearchBar } from "./SearchBar";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHeaderVisible } from "@/hooks/useHeaderVisible";
-import { useCategories } from "@/hooks/useCategories";
+import { useHeaderVisible } from "../hooks/useHeaderVisible";
+import { useCategories } from "../hooks/useCategories";
 import logo from "/logo.svg";
-import mobileSeal from "@/assets/mobile-seal.png";
+import mobileSeal from "../assets/mobile-seal.png";
 
-import { useCapabilities } from "@/hooks/useCapabilities";
+import { useCapabilities } from "../hooks/useCapabilities";
 
 const navLinks = [
   { name: "Home", path: "/" },
@@ -27,46 +28,20 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [mobileLogoErrored, setMobileLogoErrored] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const { session, isAdmin, loading: authLoading } = useAuth();
+  const isAuthenticated = !!session;
   const { data: categories } = useCategories();
   const isVisible = useHeaderVisible();
   const location = useLocation();
   const { totalItems, setIsOpen: setCartOpen } = useCart();
   const { capabilities } = useCapabilities();
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setIsOpen(false);
+  };
+
   const { activeAccount, isLoading: isLoadingAccount } = useAccount();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setIsAuthenticated(!!session);
-        if (session) {
-          const { data: hasAccess, error } = await supabase.rpc("is_admin_or_editor");
-          if (error) throw error;
-          setIsAdmin(!!hasAccess);
-        } else {
-          setIsAdmin(false);
-        }
-      } catch (err) {
-        console.error("Error checking auth status:", err);
-        setIsAdmin(false);
-      } finally {
-        setIsAuthChecking(false);
-      }
-    };
-
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
-      checkAuth();
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const currentNavLinks = isAuthenticated ? [] : [];
 
@@ -117,30 +92,7 @@ export function Navbar() {
                   </Link>
                 </div>
 
-                    {/* Desktop Navigation */}
-                <div className="hidden lg:flex flex-1 justify-center">
-                  <div className="flex items-center gap-1 xl:gap-2">
-                    {navLinks.map((link) => (
-                      <Link
-                        key={link.name}
-                        to={link.path}
-                        className={`px-4 py-2 text-sm font-medium transition-all duration-300 uppercase tracking-[0.2em] relative group ${
-                          location.pathname === link.path
-                            ? "text-blue-400"
-                            : "text-slate-300 hover:text-white"
-                        }`}
-                      >
-                        {link.name}
-                        {location.pathname === link.path && (
-                          <motion.div
-                            layoutId="nav-underline"
-                            className="absolute bottom-0 left-4 right-4 h-0.5 bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
-                          />
-                        )}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
+
 
                   {/* Actions (Search & Cart) */}
                   <div className="flex items-center gap-2">
@@ -208,43 +160,30 @@ export function Navbar() {
                   >
                     All
                   </Link>
-                  {categories?.map((category) => (
-                    <Link
-                      key={category.id}
-                      to={`/?category=${category.slug}`}
-                      className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
-                    >
-                      {category.slug === "exclusive" ? "Exclusives" : category.name}
-                    </Link>
-                  ))}
-                  {(!categories || categories.length === 0) && (
-                    <>
-                      <Link
-                        to="/?category=politics"
-                        className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
-                      >
-                        Politics
-                      </Link>
-                      <Link
-                        to="/?category=entertainment"
-                        className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
-                      >
-                        Entertainment
-                      </Link>
-                      <Link
-                        to="/?category=business"
-                        className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
-                      >
-                        Business
-                      </Link>
-                      <Link
-                        to="/?category=exclusive"
-                        className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
-                      >
-                        Exclusives
-                      </Link>
-                    </>
-                  )}
+                  <Link
+                    to="/?category=politics"
+                    className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
+                  >
+                    Politics
+                  </Link>
+                  <Link
+                    to="/?category=entertainment"
+                    className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
+                  >
+                    Entertainment
+                  </Link>
+                  <Link
+                    to="/?category=business"
+                    className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
+                  >
+                    Business
+                  </Link>
+                  <Link
+                    to="/?category=exclusive"
+                    className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
+                  >
+                    Exclusives
+                  </Link>
                   <Link
                     to="/?category=fashion"
                     className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
@@ -286,9 +225,17 @@ export function Navbar() {
                       ))}
                       {/* Mobile Actions */}
                       <div className="flex flex-col items-center gap-4 mt-8 pt-8 border-t border-blue-900/30 w-full max-w-[200px]">
-                        {isAuthChecking ? (
-                          <div className="h-4 w-24 bg-blue-200/10 animate-pulse rounded" />
-                        ) : isAuthenticated ? (
+                        {!isAuthenticated && (
+                          <Link
+                            to="/login"
+                            onClick={() => setIsOpen(false)}
+                            className="text-xs uppercase tracking-[0.3em] text-blue-200 hover:text-rep font-bold transition-colors"
+                          >
+                            Sign In
+                          </Link>
+                        )}
+                        
+                        {isAuthenticated && (
                           <>
                             <Link
                               to="/dashboard"
@@ -332,15 +279,14 @@ export function Navbar() {
                                 </span>
                               </div>
                             )}
+
+                            <button
+                              onClick={handleSignOut}
+                              className="text-xs uppercase tracking-[0.3em] text-red-400 hover:text-red-300 font-bold transition-colors mt-4"
+                            >
+                              Sign Out
+                            </button>
                           </>
-                        ) : (
-                          <Link
-                            to="/login"
-                            onClick={() => setIsOpen(false)}
-                            className="text-xs uppercase tracking-[0.3em] text-blue-200/50 font-bold"
-                          >
-                            Sign In
-                          </Link>
                         )}
                       </div>
                     </div>

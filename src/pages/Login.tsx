@@ -1,45 +1,30 @@
-
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Chrome, Mail, ArrowRight } from "lucide-react";
+import { Loader2, Chrome, ArrowRight } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const { session, loading: isAuthLoading } = useAuth();
 
   useEffect(() => {
-    // Check if user is already logged in
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        if (session) {
-          const from = location.state?.from || { pathname: "/dashboard" };
-          const redirectPath = typeof from === 'string' ? from : from.pathname;
-          navigate(redirectPath, { replace: true });
-        }
-      });
+    if (session) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [session, navigate]);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session && event === "SIGNED_IN") {
-        const from = location.state?.from || { pathname: "/dashboard" };
-        const redirectPath = typeof from === 'string' ? from : from.pathname;
-        navigate(redirectPath, { replace: true });
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate, location.state?.from]);
 
   const mapAuthError = (error: { message: string }) => {
     const message = error.message.toLowerCase();
@@ -58,29 +43,50 @@ const Login = () => {
     return error.message;
   };
 
-  const isRecovery = new URLSearchParams(location.search).get("type") === "recovery";
-  const [newPassword, setNewPassword] = useState("");
-
-  const handleUpdatePassword = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
 
     try {
       setLoading(true);
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-      if (error) throw error;
-      toast({
-        title: "Password updated",
-        description: "Your password has been reset successfully.",
-      });
-      navigate("/login", { replace: true });
+      
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { 
+              full_name: fullName,
+            },
+            emailRedirectTo: `${window.location.origin}/dashboard`,
+          },
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Verify your email",
+          description: "We've sent a confirmation link to your inbox.",
+        });
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Welcome back",
+          description: "Signed in successfully.",
+        });
+        // On successful sign-in, the useEffect will redirect.
+      }
     } catch (error: unknown) {
-      const err = error as { message: string };
+      const authError = error as { message: string };
       toast({
-        title: "Update failed",
-        description: err.message,
+        title: isSignUp ? "Sign up failed" : "Sign in failed",
+        description: mapAuthError(authError),
         variant: "destructive",
       });
     } finally {
@@ -88,6 +94,29 @@ const Login = () => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+      if (error) throw error;
+    } catch (error: unknown) {
+      const authError = error as { message: string };
+      toast({
+        title: "Google Login failed",
+        description: mapAuthError(authError),
+        variant: "destructive",
+      });
+    } finally {
+      // Don't setLoading(false) here because the page will redirect on success.
+      // If it fails, the user is still on the page and can try again.
+    }
+  };
+  
   const handleForgotPassword = async () => {
     if (!email) {
       toast({
@@ -120,119 +149,10 @@ const Login = () => {
     }
   };
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loading) return;
-
-    try {
-      setLoading(true);
-      
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { 
-              full_name: fullName,
-              role: email.toLowerCase() === 'polypickedit@gmail.com' ? 'admin' : 'user'
-            },
-            emailRedirectTo: `${window.location.origin}/login`,
-          },
-        });
-        
-        if (error) throw error;
-        
-        toast({
-          title: "Verify your email",
-          description: "We've sent a confirmation link to your inbox.",
-        });
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        
-        if (error) throw error;
-        
-        toast({
-          title: "Welcome back",
-          description: "Signed in successfully.",
-        });
-      }
-    } catch (error: unknown) {
-      const authError = error as { message: string };
-      toast({
-        title: isSignUp ? "Sign up failed" : "Sign in failed",
-        description: mapAuthError(authError),
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/login`,
-        },
-      });
-      if (error) throw error;
-    } catch (error: unknown) {
-      const authError = error as { message: string };
-      toast({
-        title: "Google Login failed",
-        description: mapAuthError(authError),
-        variant: "destructive",
-      });
-      setLoading(false);
-    }
-  };
-
-  if (isRecovery) {
+  if (isAuthLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
-          <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-600/30 rounded-full blur-[120px]" />
-          <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-red-600/20 rounded-full blur-[120px]" />
-        </div>
-
-        <Card className="w-full max-w-md bg-slate-900/50 border-slate-800 backdrop-blur-xl relative z-10">
-          <CardHeader className="text-center space-y-1">
-            <CardTitle className="text-3xl font-display text-white tracking-tight">
-              Reset Password
-            </CardTitle>
-            <CardDescription className="text-slate-400">
-              Enter your new password below
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <form onSubmit={handleUpdatePassword} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="newPassword" className="text-slate-300 text-xs font-semibold uppercase tracking-wider">New Password</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  className="bg-slate-950/50 border-slate-800 text-white h-11 focus:ring-blue-500/50 transition-all"
-                />
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white h-11 font-semibold uppercase tracking-wider transition-all"
-                disabled={loading}
-              >
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Update Password"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -259,21 +179,6 @@ const Login = () => {
         
         <CardContent className="space-y-6">
           <form onSubmit={handleAuth} className="space-y-4">
-            {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-slate-300 text-xs font-semibold uppercase tracking-wider">Full Name</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="John Doe"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required={isSignUp}
-                  className="bg-slate-950/50 border-slate-800 text-white h-11 focus:ring-blue-500/50 transition-all"
-                />
-              </div>
-            )}
-            
             <div className="space-y-2">
               <Label htmlFor="email" className="text-slate-300 text-xs font-semibold uppercase tracking-wider">Email Address</Label>
               <Input
@@ -290,15 +195,13 @@ const Login = () => {
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <Label htmlFor="password" className="text-slate-300 text-xs font-semibold uppercase tracking-wider">Password</Label>
-                {!isSignUp && (
-                  <button 
-                    type="button" 
-                    onClick={handleForgotPassword}
-                    className="text-[10px] text-blue-400 hover:text-blue-300 font-medium uppercase tracking-tighter"
-                  >
-                    Forgot Password?
-                  </button>
-                )}
+                <button 
+                  type="button" 
+                  onClick={handleForgotPassword}
+                  className="text-[10px] text-blue-400 hover:text-blue-300 font-medium uppercase tracking-tighter"
+                >
+                  Forgot Password?
+                </button>
               </div>
               <Input
                 id="password"
@@ -320,7 +223,7 @@ const Login = () => {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  {isSignUp ? "Create Account" : "Sign In"}
+                  Sign In
                   <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
@@ -356,14 +259,7 @@ const Login = () => {
 
         <CardFooter className="justify-center border-t border-slate-800/50 pt-6">
           <p className="text-sm text-slate-400">
-            {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-blue-400 hover:text-blue-300 font-semibold transition-colors"
-            >
-              {isSignUp ? "Sign In" : "Create Account"}
-            </button>
+            Welcome back to StreetPoly Media Portal
           </p>
         </CardFooter>
       </Card>

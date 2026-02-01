@@ -1,10 +1,9 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@12.18.0?target=deno";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
+import { serve } from "std/server";
+import Stripe from "stripe";
+import { createClient } from "supabase";
 
-// @ts-ignore: Deno is available in Supabase Edge Functions
-const stripe = new Stripe((globalThis as any).Deno.env.get("STRIPE_SECRET_KEY") || "", {
-  apiVersion: "2022-11-15",
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+  apiVersion: "2023-10-16",
   httpClient: Stripe.createFetchHttpClient(),
 });
 
@@ -13,8 +12,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// @ts-expect-error: serve is available in Supabase Edge Functions
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -35,11 +33,8 @@ serve(async (req) => {
     } = await req.json();
 
     // 1. Initialize Supabase Client
-    // @ts-ignore: Deno is available in Supabase Edge Functions
     const supabaseClient = createClient(
-      // @ts-ignore
       Deno.env.get("SUPABASE_URL") ?? "",
-      // @ts-ignore
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
@@ -183,11 +178,12 @@ serve(async (req) => {
       metadata: metadata as any,
     });
 
-    return new Response(JSON.stringify({ sessionId: session.id }), {
+    return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Checkout error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,

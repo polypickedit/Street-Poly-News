@@ -29,10 +29,7 @@ export const AdminSettings = () => {
     try {
       setLoading(true);
       
-      // We join user_roles with roles and profiles
-      // Using a more permissive query approach to bypass temporary type mismatch
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("user_roles")
         .select(`
           user_id,
@@ -74,8 +71,7 @@ export const AdminSettings = () => {
   const handleRemoveRole = async (userId: string) => {
     try {
       // In a real app, you'd want to prevent removing the last admin
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("user_roles")
         .delete()
         .eq("user_id", userId);

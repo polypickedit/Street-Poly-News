@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
 import { BreakingNewsBanner } from "@/components/BreakingNewsBanner";
 import { Button } from "@/components/ui/button";
@@ -22,16 +23,15 @@ const Admin = () => {
   const isVisible = useHeaderVisible();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [userProfile, setUserProfile] = useState<{ full_name: string | null } | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data } = await (supabase as any)
+        const { data } = await supabase
           .from("profiles")
           .select("full_name")
           .eq("id", user.id)
@@ -40,7 +40,7 @@ const Admin = () => {
       }
     };
     fetchProfile();
-  }, []);
+  }, [user]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -188,6 +188,14 @@ const Admin = () => {
       });
     }
   }, [categories]);
+
+  if (authLoading || !user) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-slate-950">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const handleCreateCategory = async () => {
     if (!newCategory.name) return;

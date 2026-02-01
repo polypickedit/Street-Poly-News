@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
@@ -25,40 +26,8 @@ export const BottomNav = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isNearBottom, setIsNearBottom] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin } = useAuth();
   const { data: categories } = useCategories();
-
-  useEffect(() => {
-    // TEMPORARY BYPASS: Force admin to true
-    setIsAdmin(true);
-    return;
-    
-    const checkAdmin = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        try {
-          // @ts-expect-error - RPC is not in the generated types
-          const { data: hasAccess, error } = await supabase.rpc("is_admin_or_editor");
-          
-          if (error) throw error;
-          setIsAdmin(!!hasAccess);
-        } catch (err) {
-          console.error("Error checking admin status:", err);
-          setIsAdmin(false);
-        }
-      } else {
-        setIsAdmin(false);
-      }
-    };
-
-    checkAdmin();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      checkAdmin();
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {

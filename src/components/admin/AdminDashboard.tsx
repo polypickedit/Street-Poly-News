@@ -43,16 +43,12 @@ export const AdminDashboard = () => {
         endingSoonRes,
         failedPaymentsRes
       ] = await Promise.all([
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase as any).from("submissions").select("*", { count: 'exact', head: true }).eq('status', 'pending'),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase as any).from("placements").select("*", { count: 'exact', head: true }).gt('end_date', new Date().toISOString()),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase as any).from("placements").select("*", { count: 'exact', head: true })
+        supabase.from("submissions").select("*", { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from("placements").select("*", { count: 'exact', head: true }).gt('end_date', new Date().toISOString()),
+        supabase.from("placements").select("*", { count: 'exact', head: true })
           .gt('end_date', new Date().toISOString())
           .lt('end_date', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase as any).from("payments").select("*", { count: 'exact', head: true }).eq('status', 'failed')
+        supabase.from("payments").select("*", { count: 'exact', head: true }).eq('status', 'failed')
       ]);
 
       setStats({
@@ -63,8 +59,7 @@ export const AdminDashboard = () => {
       });
 
       // Fetch recent activity
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: activityData } = await (supabase as any)
+      const { data: activityData } = await supabase
         .from("admin_actions")
         .select(`
           id,
@@ -105,45 +100,45 @@ export const AdminDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-slate-900 border-slate-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-slate-400">Pending Submissions</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-300">Pending Submissions</CardTitle>
             <ListMusic className="w-4 h-4 text-blue-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">{stats.pendingSubmissions}</div>
-            <p className="text-xs text-slate-500 mt-1">Requires review</p>
+            <p className="text-xs text-slate-400 mt-1">Requires review</p>
           </CardContent>
         </Card>
 
         <Card className="bg-slate-900 border-slate-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-slate-400">Active Placements</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-300">Active Placements</CardTitle>
             <TrendingUp className="w-4 h-4 text-green-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">{stats.activePlacements}</div>
-            <p className="text-xs text-slate-500 mt-1">Live on playlists</p>
+            <p className="text-xs text-slate-400 mt-1">Live on playlists</p>
           </CardContent>
         </Card>
 
         <Card className="bg-slate-900 border-slate-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-slate-400">Ending in 7 Days</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-300">Ending in 7 Days</CardTitle>
             <History className="w-4 h-4 text-yellow-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">{stats.endingSoon}</div>
-            <p className="text-xs text-slate-500 mt-1">Action required soon</p>
+            <p className="text-xs text-slate-400 mt-1">Action required soon</p>
           </CardContent>
         </Card>
 
         <Card className="bg-slate-900 border-slate-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-slate-400">System Alerts</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-300">System Alerts</CardTitle>
             <AlertCircle className="w-4 h-4 text-red-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-400">{stats.failedPayments}</div>
-            <p className="text-xs text-slate-500 mt-1">Payment issues</p>
+            <p className="text-xs text-slate-400 mt-1">Payment issues</p>
           </CardContent>
         </Card>
       </div>
@@ -157,20 +152,20 @@ export const AdminDashboard = () => {
           <CardContent>
             <div className="space-y-4">
               {activities.length === 0 ? (
-                <p className="text-center text-slate-500 py-8 text-sm">No recent activity found.</p>
+                <p className="text-center text-slate-400 py-8 text-sm">No recent activity found.</p>
               ) : (
                 activities.map((activity) => (
                   <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-slate-400">
+                      <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-slate-300">
                         <User className="w-4 h-4" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-white">
                           {activity.profiles?.full_name || "System"} 
-                          <span className="text-slate-400 font-normal"> {formatAction(activity.action_type)}</span>
+                          <span className="text-slate-300 font-normal"> {formatAction(activity.action_type)}</span>
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-slate-400">
                           {activity.target_type} • {new Date(activity.created_at).toLocaleDateString()}
                         </p>
                       </div>

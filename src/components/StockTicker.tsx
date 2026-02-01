@@ -52,42 +52,37 @@ export function StockTicker() {
   const { data: tickers } = useQuery({
     queryKey: ["ticker-data"],
     queryFn: async () => {
-      const fetchWithRetry = async (retries = 5, delay = 2000): Promise<CoinGeckoResponse> => {
+      // Use a shorter list of IDs to reduce URL length and potential for failure
+      const SHORT_IDS = ["bitcoin", "ethereum", "solana"];
+      
+      const fetchWithRetry = async (retries = 1, delay = 1000): Promise<CoinGeckoResponse> => {
         try {
-          console.log(`[StockTicker] Fetching CoinGecko data (retries left: ${retries})...`);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3000);
+
           const response = await fetch(
-            `https://api.coingecko.com/api/v3/simple/price?ids=${COINGECKO_IDS.join(
+            `https://api.coingecko.com/api/v3/simple/price?ids=${SHORT_IDS.join(
               ","
             )}&vs_currencies=usd&include_24hr_change=true`,
             {
-              headers: {
-                'Accept': 'application/json',
-              },
+              headers: { 'Accept': 'application/json' },
               mode: 'cors',
+              signal: controller.signal,
             }
-          );
+          ).catch(() => {
+            // Silently handle fetch failure (e.g. network error)
+            return null;
+          });
           
-          if (response.status === 429) {
-            if (retries > 0) {
-              const retryAfter = response.headers.get('Retry-After');
-              const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : delay;
-              console.warn(`[StockTicker] Rate limited (429). Retrying in ${waitTime}ms...`);
-              await new Promise(resolve => setTimeout(resolve, waitTime));
-              return fetchWithRetry(retries - 1, delay * 2);
-            }
-            throw new Error("CoinGecko rate limit exceeded");
-          }
+          clearTimeout(timeoutId);
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[StockTicker] API Error: ${response.status} - ${errorText}`);
-            throw new Error(`HTTP error! status: ${response.status}`);
+          if (!response || !response.ok) {
+            throw new Error("Fetch failed");
           }
           
           return (await response.json()) as CoinGeckoResponse;
         } catch (error) {
           if (retries > 0) {
-            console.warn(`[StockTicker] Fetch failed: ${error instanceof Error ? error.message : 'Unknown error'}. Retrying in ${delay}ms...`);
             await new Promise(resolve => setTimeout(resolve, delay));
             return fetchWithRetry(retries - 1, delay * 2);
           }
@@ -96,7 +91,8 @@ export function StockTicker() {
       };
 
       try {
-        const data = (await fetchWithRetry()) as CoinGeckoResponse;
+        const data = await fetchWithRetry();
+        if (!data) return FALLBACK_TICKERS;
         
         const cryptoTickers = Object.entries(data)
           .filter(([_, info]) => info && typeof info?.usd === 'number')
@@ -117,18 +113,16 @@ export function StockTicker() {
           { symbol: "AAPL", price: "189.43", change: "+0.8%", up: true },
           { symbol: "TSLA", price: "175.22", change: "-3.1%", up: false },
           { symbol: "NVDA", price: "894.55", change: "+4.2%", up: true },
-          { symbol: "SPY", price: "512.30", change: "+0.3%", up: true },
-          { symbol: "QQQ", price: "438.12", change: "-0.5%", up: false },
         ];
 
         return [...cryptoTickers, ...mockStocks];
       } catch (err) {
-        console.error("[StockTicker] Final fetch error, using fallback:", err);
         return FALLBACK_TICKERS;
       }
     },
-    refetchInterval: 60000,
+    refetchInterval: 300000, // Refresh every 5 minutes instead of 1
     initialData: FALLBACK_TICKERS,
+    retry: false, // Handle retries manually in queryFn
   });
 
   // Always use tickers (either from API or fallback)

@@ -61,8 +61,7 @@ export const UnifiedQueue = () => {
   const { data: awaitingApproval, isLoading: loadingApproval, error: errorApproval, refetch: refetchApproval } = useQuery({
     queryKey: ["admin-awaiting-approval"],
     queryFn: async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("submissions")
         .select("*, artists ( name, email ), slots ( name )")
         .eq("status", "pending")
@@ -104,8 +103,7 @@ export const UnifiedQueue = () => {
     queryKey: ["admin-awaiting-schedule"],
     queryFn: async () => {
       // Find approved submissions that don't have a placement yet
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("submissions")
         .select(`
           *,
@@ -129,8 +127,7 @@ export const UnifiedQueue = () => {
   const { data: activePlacements, isLoading: loadingActive, error: errorActive } = useQuery({
     queryKey: ["admin-active-placements"],
     queryFn: async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("placements")
         .select("*, playlists ( name ), submissions ( track_title, artist_name )")
         .lte("start_date", new Date().toISOString())
@@ -151,8 +148,7 @@ export const UnifiedQueue = () => {
       const sevenDaysFromNow = new Date();
       sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
       
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("placements")
         .select("*, playlists ( name ), submissions ( track_title, artist_name )")
         .gte("end_date", new Date().toISOString())
@@ -166,8 +162,7 @@ export const UnifiedQueue = () => {
     }
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const renderError = (error: any) => (
+  const renderError = (error: Error) => (
     <div className="text-center py-12 text-red-400 border border-dashed border-red-800 rounded-lg">
       <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
       <p>Error loading data: {error.message || "Unknown error"}</p>

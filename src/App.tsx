@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { CartProvider } from "@/contexts/CartContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { CartSidebar } from "@/components/CartSidebar";
 import { TipButton } from "@/components/TipButton";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -156,17 +157,21 @@ const AnimatedRoutes = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+    <AuthProvider>
       <CartProvider>
-        <Toaster />
-        <Sonner />
-        <CartSidebar />
-        <TipButton />
-        <BrowserRouter>
-          <AnimatedRoutes />
-        </BrowserRouter>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-blue-500/30">
+              <AnimatedRoutes />
+              <CartSidebar />
+              <TipButton />
+            </div>
+          </BrowserRouter>
+        </TooltipProvider>
       </CartProvider>
-    </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

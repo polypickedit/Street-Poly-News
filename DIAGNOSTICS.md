@@ -27,12 +27,13 @@
   - `submissions` and `placements` are linked to `payments`.
 - **Enforcement:** ✅ Database-level.
   - Trigger `check_payment_before_approval` prevents approving unpaid submissions.
-- **Frontend Gaps:** ⚠️
-  - Stripe checkout redirect is not yet implemented.
-  - Submission success currently creates a `failed` (pending) payment record as a placeholder.
-- **Stripe Webhooks:** ✅ Implemented.
+- **Frontend Gaps:** ✅ Resolved.
+  - Stripe checkout redirect is implemented in `BookingForm.tsx`.
+  - Submission success now initiates real Stripe Checkout sessions.
+- **Stripe Webhooks:** ✅ Implemented & Schema Synced.
   - Supabase Edge Function `stripe-webhook` handles `checkout.session.completed` and `payment_intent.succeeded`.
   - Logic automatically marks submissions as `paid` and grants entitlements.
+  - **Note:** Schema cache was refreshed to ensure `user_capabilities` table is visible to Edge Functions.
 - **Offer Abstraction:** ✅ Normalized.
   - `slots` table extended with `entitlement_code` and `duration_days` to unify monetization routes.
 - **User Dashboard:** ✅ Live.
@@ -42,7 +43,7 @@
 ## 4. Pending Actions
 
 - [x] Implement admin-side "Unified Queue" to normalize operator workflows.
-- [ ] Implement Stripe Checkout redirect in `BookingForm.tsx`.
+- [x] Implement Stripe Checkout redirect in `BookingForm.tsx`.
 - [ ] Resolve Docker daemon connection to verify local Supabase state.
 
 ## 5. Production Go-Live Checklist (Operator Mode)
@@ -53,6 +54,7 @@ Before switching to live payments, ensure these four gates are open simultaneous
   - [ ] Set `VITE_STRIPE_PUBLISHABLE_KEY = pk_live_...` in production environment variables.
   - [ ] Set `STRIPE_SECRET_KEY = sk_live_...` in production environment variables.
   - [ ] Rotate local keys if live keys were ever exposed in `.env`.
+  - [ ] **Critical:** Update `supabase/functions/stripe-webhook/pricing.ts` with your actual Stripe Price IDs to ensure capability grants work.
 - **Infrastructure:**
   - [ ] Verify site is served over **HTTPS** (Stripe requirement for real payments).
   - [ ] Confirm production domain matches the `returnUrl` logic in `lib/stripe.ts`.

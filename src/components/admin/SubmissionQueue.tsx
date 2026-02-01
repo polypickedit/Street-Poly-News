@@ -69,8 +69,7 @@ export const SubmissionQueue = () => {
   const { data: submissions = [], isLoading } = useQuery<SubmissionRow[]>({
     queryKey: ["submissions", filter],
     queryFn: async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query = (supabase as any)
+      let query = supabase
         .from("submissions")
         .select("*, artists ( name, email ), slots ( name, price )")
         .order("created_at", { ascending: false });
@@ -83,14 +82,12 @@ export const SubmissionQueue = () => {
       if (error) throw error;
       return data as SubmissionRow[];
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any);
+  });
 
   const updateStatus = async (id: string, newStatus: Exclude<SubmissionFilter, "all">) => {
     setBusyId(id);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("submissions")
         .update({ 
           status: newStatus,
@@ -103,8 +100,7 @@ export const SubmissionQueue = () => {
       // Log the admin action
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase as any).from("admin_actions").insert({
+        await supabase.from("admin_actions").insert({
           admin_user_id: user.id,
           action_type: newStatus === "approved" ? "approve_submission" : "decline_submission",
           target_type: "submission",
