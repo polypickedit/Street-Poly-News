@@ -7,25 +7,6 @@ export type StripeEventLike = {
   };
 };
 
-export type SupabaseLikeClient = {
-  from: (table: string) => {
-    insert: (data: unknown) => {
-      catch: (callback: (err: unknown) => void) => Promise<{ error: unknown }>;
-    } & Promise<{ error: unknown }>;
-    upsert: (data: unknown, options?: unknown) => {
-      catch: (callback: (err: unknown) => void) => Promise<{ error: unknown }>;
-    } & Promise<{ error: unknown }>;
-    update: (data: unknown) => {
-      eq: (column: string, value: unknown) => {
-        catch: (callback: (err: unknown) => void) => Promise<{ error: unknown }>;
-      } & Promise<{ error: unknown }>;
-      match: (filter: unknown) => {
-        catch: (callback: (err: unknown) => void) => Promise<{ error: unknown }>;
-      } & Promise<{ error: unknown }>;
-    };
-  };
-};
-
 const parseSelectedOutlets = (value: unknown): string[] | undefined => {
   if (!value) return undefined;
   if (Array.isArray(value)) return value.filter(Boolean).map(String);
@@ -43,7 +24,8 @@ const parseSelectedOutlets = (value: unknown): string[] | undefined => {
   return undefined;
 };
 
-export async function processStripeWebhookEvent(event: StripeEventLike, supabase: SupabaseLikeClient) {
+// deno-lint-ignore no-explicit-any
+export async function processStripeWebhookEvent(event: StripeEventLike, supabase: any) {
   if (event.type === "checkout.session.completed" || event.type === "payment_intent.succeeded") {
     const session = event.type === "checkout.session.completed" ? event.data.object : null;
     const paymentIntent = event.type === "payment_intent.succeeded"
@@ -56,8 +38,11 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
     const slotId = metadata?.["slotId"] as string | undefined;
     const submissionId = metadata?.["submissionId"] as string | undefined;
     const selectedOutlets = parseSelectedOutlets(metadata?.["selectedOutlets"]);
+    // deno-lint-ignore no-explicit-any
     const priceId = (session?.["amount_total"] ? (session as Record<string, any>).line_items?.data?.[0]?.price?.id : null) 
+      // deno-lint-ignore no-explicit-any
       || (event.data.object as Record<string, any>).price?.id 
+      // deno-lint-ignore no-explicit-any
       || (event.data.object as Record<string, any>).items?.data?.[0]?.price?.id;
 
     if (!userId) {
@@ -76,9 +61,10 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
           granted_at: new Date().toISOString()
         }));
 
-        await supabase.from("user_capabilities").insert(capabilityRows).catch((err: unknown) => {
-          console.error("❌ Error granting capabilities:", err);
-        });
+        const { error: capError } = await supabase.from("user_capabilities").insert(capabilityRows);
+        if (capError) {
+          console.error("❌ Error granting capabilities:", capError);
+        }
       }
     }
 
@@ -92,63 +78,72 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
       : (event.data.object as Record<string, unknown>)["currency"];
 
     if (piId) {
-      await supabase.from("payments").upsert({
+      const { error: payError } = await supabase.from("payments").upsert({
         user_id: userId,
         submission_id: submissionId ?? null,
         stripe_payment_intent_id: piId,
         amount_cents: amount,
         currency: currency ?? "usd",
         status: "succeeded",
-      }, { onConflict: "stripe_payment_intent_id" }).catch((err: unknown) => {
-        console.error("❌ Error recording payment:", err);
-      });
+      }, { onConflict: "stripe_payment_intent_id" });
+      
+      if (payError) {
+        console.error("❌ Error recording payment:", payError);
+      }
     }
 
     if (submissionId) {
-      await supabase.from("submissions").update({
+      const { error: subError } = await supabase.from("submissions").update({
         payment_status: "paid",
         paid_at: new Date().toISOString(),
-      }).eq("id", submissionId).catch((err: unknown) => {
-        console.error("❌ Error updating submission payment status:", err);
-      });
+      }).eq("id", submissionId);
+      
+      if (subError) {
+        console.error("❌ Error updating submission payment status:", subError);
+      }
 
       if (selectedOutlets?.length) {
-        const distributionRows = selectedOutlets.map((outletId) => ({
+        const distributionRows = selectedOutlets.map((outletId: string) => ({
           submission_id: submissionId,
           outlet_id: outletId,
           status: "pending",
           paid: true,
         }));
 
-        await supabase.from("submission_distribution").upsert(distributionRows, { onConflict: "submission_id,outlet_id" }).catch((err: unknown) => {
-          console.error("❌ Error creating distribution rows:", err);
-        });
+        const { error: distError } = await supabase.from("submission_distribution").upsert(distributionRows, { onConflict: "submission_id,outlet_id" });
+        if (distError) {
+          console.error("❌ Error creating distribution rows:", distError);
+        }
       }
     }
 
     if (slotId) {
-      await supabase.from("slot_entitlements").insert({
+      const { error: slotError } = await supabase.from("slot_entitlements").insert({
         user_id: userId,
         slot_id: slotId,
         source: session?.["mode"] === "subscription" ? "subscription" : "purchase",
         is_active: true,
         granted_at: new Date().toISOString(),
         expires_at: null,
-      }).catch((err: unknown) => {
-        console.error("❌ Error granting entitlement:", err);
       });
+      
+      if (slotError) {
+        console.error("❌ Error granting entitlement:", slotError);
+      }
     }
   }
 
   if (event.type === "customer.subscription.deleted") {
+    // deno-lint-ignore no-explicit-any
     const subscription = event.data.object as Record<string, any>;
     const userId = subscription.metadata?.userId as string | undefined;
     const slotId = subscription.metadata?.slotId as string | undefined;
 
     if (userId && slotId) {
-      await supabase.from("slot_entitlements").update({ is_active: false }).match({ user_id: userId, slot_id: slotId }).catch((err: unknown) => {
-        console.error("❌ Error revoking entitlement:", err);
-      });
+      const { error: revokeError } = await supabase.from("slot_entitlements").update({ is_active: false }).match({ user_id: userId, slot_id: slotId });
+      if (revokeError) {
+        console.error("❌ Error revoking entitlement:", revokeError);
+      }
     }
   }
 }

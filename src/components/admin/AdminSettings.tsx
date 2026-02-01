@@ -34,7 +34,7 @@ export const AdminSettings = () => {
         .select(`
           user_id,
           roles (name),
-          profiles:user_id (full_name)
+          profiles!user_id (full_name)
         `);
 
       if (error) throw error;

@@ -30,7 +30,8 @@ serve(async (req: Request) => {
     );
 
     console.log(`🔔 Webhook received: ${event.type}`);
-    await processStripeWebhookEvent(event as StripeEventLike, supabase);
+    // deno-lint-ignore no-explicit-any
+    await processStripeWebhookEvent(event as StripeEventLike, supabase as any);
 
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" },
