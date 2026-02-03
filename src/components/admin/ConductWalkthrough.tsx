@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAdmin } from "@/providers/AdminProvider";
+import { useAdmin } from "@/hooks/useAdmin";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, ChevronLeft, X, Play } from "lucide-react";
 import { cn } from "@/lib/utils";

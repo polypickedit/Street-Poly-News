@@ -36,6 +36,9 @@ export function ConductDrawer({
   const queryClient = useQueryClient();
   const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
   const [reason, setReason] = useState("");
+  const [deviceScope, setDeviceScope] = useState<'all' | 'mobile' | 'desktop'>('all');
+  const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
 
   // 1. Fetch current placement
   const { data: currentPlacement } = useQuery({
@@ -89,6 +92,9 @@ export function ConductDrawer({
           content_id: contentId,
           priority: (currentPlacement?.priority || 0) + 1,
           updated_by: user?.id,
+          device_scope: deviceScope,
+          starts_at: startsAt || null,
+          ends_at: endsAt || null,
           metadata: { reason } // Passed to trigger for admin_actions logging
         });
 
@@ -239,6 +245,62 @@ export function ConductDrawer({
             <p className="text-[10px] text-slate-500 mt-2 italic">
               Adding a reason turns logs into institutional memory.
             </p>
+          </section>
+
+          {/* Advanced Targeting */}
+          <section className="space-y-6 pt-2">
+            <Separator className="bg-slate-800" />
+            
+            <div className="space-y-4">
+              <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold flex items-center gap-2">
+                <Monitor className="w-3 h-3" /> Target Audience
+              </h3>
+              <div className="flex gap-2">
+                {(['all', 'mobile', 'desktop'] as const).map((scope) => (
+                  <button
+                    key={scope}
+                    onClick={() => setDeviceScope(scope)}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 p-2 rounded border transition-all text-[10px] font-bold uppercase",
+                      deviceScope === scope
+                        ? "bg-dem/20 border-dem text-dem"
+                        : "bg-slate-800/50 border-slate-700 text-slate-500 hover:text-slate-300"
+                    )}
+                  >
+                    {scope === 'mobile' && <Smartphone className="w-3 h-3" />}
+                    {scope === 'desktop' && <Monitor className="w-3 h-3" />}
+                    {scope}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold flex items-center gap-2">
+                <Calendar className="w-3 h-3" /> Temporal Scheduling
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Starts At</label>
+                  <Input 
+                    type="datetime-local" 
+                    value={startsAt}
+                    onChange={(e) => setStartsAt(e.target.value)}
+                    className="bg-slate-800/50 border-slate-700 text-[10px] h-8"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Ends At</label>
+                  <Input 
+                    type="datetime-local" 
+                    value={endsAt}
+                    onChange={(e) => setEndsAt(e.target.value)}
+                    className="bg-slate-800/50 border-slate-700 text-[10px] h-8"
+                  />
+                </div>
+              </div>
+              <p className="text-[9px] text-slate-600 italic">Leave empty for immediate / permanent placement.</p>
+            </div>
           </section>
 
           {/* Action Footer */}

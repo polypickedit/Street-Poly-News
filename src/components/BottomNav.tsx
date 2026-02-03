@@ -13,7 +13,7 @@ import {
 import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useAdmin } from "@/providers/AdminProvider";
+import { useAdmin } from "@/hooks/useAdmin";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/" },

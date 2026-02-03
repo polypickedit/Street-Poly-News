@@ -8,10 +8,12 @@ import { ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import streetPolyMerchAd from "@/assets/StreetPolyMerch_Ad.jpeg";
+import { ClipsGrid } from "@/components/ClipsGrid";
+import { useSlotContents } from "@/hooks/usePlacements";
 
 const Index = () => {
+  const { data: clipPlacements } = useSlotContents("home.clips");
+  const hasDynamicClips = clipPlacements && clipPlacements.length > 0;
   const videoLinks = [
     {
       id: "3PXQSs-FsK4",
@@ -117,35 +119,15 @@ const Index = () => {
             </a>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {videoLinks.map((video) => (
-              <a
-                key={video.id}
-                href={video.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex flex-col rounded-2xl border border-white/10 bg-card/80 transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg"
-              >
-                <div className="overflow-hidden rounded-t-2xl bg-muted/30">
-                  <img
-                    src={video.thumbnail}
-                    alt={video.title}
-                    className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-4 flex flex-col gap-2">
-                  <h3 className="font-display text-lg text-foreground transition-colors group-hover:text-white">
-                    {video.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground font-body mt-2">
-                    {video.description}
-                  </p>
-                  <span className="mt-3 text-xs font-semibold uppercase tracking-widest text-white/70">
-                    Watch on YouTube →
-                  </span>
-                </div>
-              </a>
-            ))}
+          <div 
+            data-slot="home.clips" 
+            data-accepts="video"
+          >
+            {hasDynamicClips ? (
+              <ClipsGrid slotKey="home.clips" />
+            ) : (
+              <FallbackClips videoLinks={videoLinks} />
+            )}
           </div>
         </section>
 
@@ -165,6 +147,51 @@ const Index = () => {
         <SuggestionsCarousel />
       </PageTransition>
     </PageLayoutWithAds>
+  );
+};
+
+interface VideoLink {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  thumbnail: string;
+}
+
+const FallbackClips = ({ videoLinks }: { videoLinks: VideoLink[] }) => {
+  // If we had a mechanism to check if ClipsGrid rendered something, we'd use it here.
+  // For now, these only show up if the database is empty or the user hasn't added placements.
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+      {videoLinks.map((video) => (
+        <a
+          key={video.id}
+          href={video.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex flex-col rounded-2xl border border-white/10 bg-card/80 transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg"
+        >
+          <div className="overflow-hidden rounded-t-2xl bg-muted/30">
+            <img
+              src={video.thumbnail}
+              alt={video.title}
+              className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div className="p-4 flex flex-col gap-2">
+            <h3 className="font-display text-lg text-foreground transition-colors group-hover:text-white">
+              {video.title}
+            </h3>
+            <p className="text-sm text-muted-foreground font-body mt-2 line-clamp-2">
+              {video.description}
+            </p>
+            <span className="mt-3 text-xs font-semibold uppercase tracking-widest text-white/70">
+              Watch on YouTube →
+            </span>
+          </div>
+        </a>
+      ))}
+    </div>
   );
 };
 

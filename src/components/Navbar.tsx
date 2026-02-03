@@ -9,7 +9,7 @@ import { SearchBar } from "./SearchBar";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHeaderVisible } from "../hooks/useHeaderVisible";
 import { useCategories } from "../hooks/useCategories";
-import { useAdmin } from "@/providers/AdminProvider";
+import { useAdmin } from "@/hooks/useAdmin";
 import logo from "/logo.svg";
 import mobileSeal from "../assets/mobile-seal.png";
 import { cn } from "@/lib/utils";

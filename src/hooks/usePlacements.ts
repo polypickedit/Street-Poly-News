@@ -4,54 +4,72 @@ import { ContentPlacement } from "@/types/cms";
 
 /**
  * Fetches the active placement for a given slot key.
- * Resolves by priority and time window (controlled by RLS).
+ * Resolves by priority, device scope, and time window.
  */
 export function useSlotContent(slotKey: string) {
   return useQuery({
     queryKey: ["slot-content", slotKey],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const now = new Date().toISOString();
+      
+      let query = supabase
         .from("content_placements")
         .select("*")
         .eq("slot_key", slotKey)
         .eq("active", true)
-        .order("priority", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .or(`starts_at.is.null,starts_at.lte.${now}`)
+        .or(`ends_at.is.null,ends_at.gt.${now}`)
+        .order("priority", { ascending: false });
+
+      const { data, error } = await query;
 
       if (error) {
         console.error(`Error resolving slot ${slotKey}:`, error);
         return null;
       }
 
-      return data as ContentPlacement | null;
+      // Filter by device scope in JS to keep the DB query simple
+      const isMobile = window.innerWidth < 768; // Simple check for resolution
+      const filtered = (data as ContentPlacement[]).filter(p => 
+        p.device_scope === 'all' || 
+        (isMobile ? p.device_scope === 'mobile' : p.device_scope === 'desktop')
+      );
+
+      return filtered[0] || null;
     },
-    // Keep data fresh but don't over-query unless focused
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 30, // Shorter stale time for temporal changes
   });
 }
-/**
- * Fetches all active placements for a given slot key.
- * Useful for collections (trending, breaking news, etc).
- */
 export function useSlotContents(slotKey: string) {
   return useQuery({
     queryKey: ["slot-contents", slotKey],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const now = new Date().toISOString();
+      
+      let query = supabase
         .from("content_placements")
         .select("*")
         .eq("slot_key", slotKey)
         .eq("active", true)
+        .or(`starts_at.is.null,starts_at.lte.${now}`)
+        .or(`ends_at.is.null,ends_at.gt.${now}`)
         .order("priority", { ascending: false });
+
+      const { data, error } = await query;
 
       if (error) {
         console.error(`Error resolving multi-slot ${slotKey}:`, error);
         return [];
       }
 
-      return data as ContentPlacement[];
+      const isMobile = window.innerWidth < 768;
+      const filtered = (data as ContentPlacement[]).filter(p => 
+        p.device_scope === 'all' || 
+        (isMobile ? p.device_scope === 'mobile' : p.device_scope === 'desktop')
+      );
+
+      return filtered;
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 30,
   });
 }

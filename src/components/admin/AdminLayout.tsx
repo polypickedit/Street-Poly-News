@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { useAdmin } from "@/providers/AdminProvider";
+import { useAdmin } from "@/hooks/useAdmin";
 import { Zap } from "lucide-react";
 
 interface AdminLayoutProps {

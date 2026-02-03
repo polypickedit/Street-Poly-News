@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAdmin } from "@/providers/AdminProvider";
+import { useAdmin } from "@/hooks/useAdmin";
 import { ConductDrawer } from "./ConductDrawer";
 import { ConductWalkthrough } from "./ConductWalkthrough";
 import { ContentType } from "@/types/cms";
@@ -17,7 +17,8 @@ export function AdminOverlay() {
     hasCompletedWalkthrough, 
     isWalkthroughActive, 
     setIsWalkthroughActive,
-    walkthroughStep
+    walkthroughStep,
+    activeAdmins
   } = useAdmin();
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null);
   
@@ -100,6 +101,29 @@ export function AdminOverlay() {
             Conduction Mode
           </span>
         </div>
+
+        {/* Presence Indicator */}
+        {activeAdmins.length > 1 && (
+          <div className="flex items-center gap-2 pl-2 border-l border-white/10">
+            <div className="flex -space-x-2">
+              {activeAdmins.slice(0, 3).map((admin, idx) => (
+                <div 
+                  key={admin.user_id || idx} 
+                  className="w-6 h-6 rounded-full border-2 border-dem bg-slate-800 flex items-center justify-center text-[8px] font-bold uppercase cursor-help shadow-lg"
+                  title={`${admin.email} is in the booth`}
+                >
+                  {admin.email?.substring(0, 2)}
+                </div>
+              ))}
+              {activeAdmins.length > 3 && (
+                <div className="w-6 h-6 rounded-full border-2 border-dem bg-slate-900 flex items-center justify-center text-[8px] font-bold">
+                  +{activeAdmins.length - 3}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="h-4 w-px bg-white/20 mx-1" />
         <div className="flex items-center gap-2">
           <button 

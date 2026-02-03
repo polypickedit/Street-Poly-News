@@ -4,7 +4,7 @@ import { ListMusic, History, AlertCircle, TrendingUp, Loader2, User } from "luci
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useAdmin } from "@/providers/AdminProvider";
+import { useAdmin } from "@/hooks/useAdmin";
 import { Zap } from "lucide-react";
 
 interface ActivityLog {
