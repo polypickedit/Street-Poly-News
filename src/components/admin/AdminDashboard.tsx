@@ -1,14 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListMusic, History, AlertCircle, TrendingUp, Loader2, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-
-interface StatData {
-  pendingSubmissions: number;
-  activePlacements: number;
-  endingSoon: number;
-  failedPayments: number;
-}
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useAdmin } from "@/providers/AdminProvider";
+import { Zap } from "lucide-react";
 
 interface ActivityLog {
   id: string;
@@ -19,24 +16,13 @@ interface ActivityLog {
 }
 
 export const AdminDashboard = () => {
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<StatData>({
-    pendingSubmissions: 0,
-    activePlacements: 0,
-    endingSoon: 0,
-    failedPayments: 0
-  });
-  const [activities, setActivities] = useState<ActivityLog[]>([]);
+  const navigate = useNavigate();
+  const { setIsAdminMode } = useAdmin();
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch stats in parallel
+  // Use React Query for stats to handle lifecycle and aborts automatically
+  const { data: stats, isLoading: isLoadingStats } = useQuery({
+    queryKey: ["admin-dashboard-stats"],
+    queryFn: async () => {
       const [
         pendingRes,
         activeRes,
@@ -51,15 +37,21 @@ export const AdminDashboard = () => {
         supabase.from("payments").select("*", { count: 'exact', head: true }).eq('status', 'failed')
       ]);
 
-      setStats({
+      return {
         pendingSubmissions: pendingRes.count || 0,
         activePlacements: activeRes.count || 0,
         endingSoon: endingSoonRes.count || 0,
         failedPayments: failedPaymentsRes.count || 0
-      });
+      };
+    },
+    staleTime: 30000, // Cache for 30 seconds
+  });
 
-      // Fetch recent activity
-      const { data: activityData } = await supabase
+  // Use React Query for activities
+  const { data: activities = [], isLoading: isLoadingActivities } = useQuery({
+    queryKey: ["admin-dashboard-activities"],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from("admin_actions")
         .select(`
           id,
@@ -71,16 +63,13 @@ export const AdminDashboard = () => {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (activityData) {
-        setActivities(activityData);
-      }
+      if (error) throw error;
+      return data as ActivityLog[];
+    },
+    staleTime: 60000, // Cache for 1 minute
+  });
 
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = isLoadingStats || isLoadingActivities;
 
   const formatAction = (type: string) => {
     return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -89,7 +78,7 @@ export const AdminDashboard = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-dem" />
       </div>
     );
   }
@@ -98,74 +87,74 @@ export const AdminDashboard = () => {
     <div className="space-y-8">
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-card border-white/10">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-slate-300">Pending Submissions</CardTitle>
-            <ListMusic className="w-4 h-4 text-blue-400" />
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white/40">Pending Submissions</CardTitle>
+            <ListMusic className="w-4 h-4 text-dem" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{stats.pendingSubmissions}</div>
-            <p className="text-xs text-slate-400 mt-1">Requires review</p>
+            <div className="text-3xl font-bold text-white">{stats.pendingSubmissions}</div>
+            <p className="text-xs text-white/40 mt-1 font-medium">Requires review</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-card border-white/10">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-slate-300">Active Placements</CardTitle>
-            <TrendingUp className="w-4 h-4 text-green-400" />
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white/40">Active Placements</CardTitle>
+            <TrendingUp className="w-4 h-4 text-dem" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{stats.activePlacements}</div>
-            <p className="text-xs text-slate-400 mt-1">Live on playlists</p>
+            <div className="text-3xl font-bold text-white">{stats.activePlacements}</div>
+            <p className="text-xs text-white/40 mt-1 font-medium">Live on playlists</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-card border-white/10">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-slate-300">Ending in 7 Days</CardTitle>
-            <History className="w-4 h-4 text-yellow-400" />
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white/40">Ending in 7 Days</CardTitle>
+            <History className="w-4 h-4 text-rep" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{stats.endingSoon}</div>
-            <p className="text-xs text-slate-400 mt-1">Action required soon</p>
+            <div className="text-3xl font-bold text-white">{stats.endingSoon}</div>
+            <p className="text-xs text-white/40 mt-1 font-medium">Action required soon</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-card border-white/10">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-slate-300">System Alerts</CardTitle>
-            <AlertCircle className="w-4 h-4 text-red-400" />
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white/40">System Alerts</CardTitle>
+            <AlertCircle className="w-4 h-4 text-rep" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-400">{stats.failedPayments}</div>
-            <p className="text-xs text-slate-400 mt-1">Payment issues</p>
+            <div className="text-3xl font-bold text-rep">{stats.failedPayments}</div>
+            <p className="text-xs text-white/40 mt-1 font-medium">Payment issues</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Activity Feed */}
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-card border-white/10">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-white">Recent Admin Activity</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {activities.length === 0 ? (
-                <p className="text-center text-slate-400 py-8 text-sm">No recent activity found.</p>
+                <p className="text-center text-white/40 py-8 text-sm">No recent activity found.</p>
               ) : (
                 activities.map((activity) => (
-                  <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                  <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-slate-300">
+                      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60">
                         <User className="w-4 h-4" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-white">
                           {activity.profiles?.full_name || "System"} 
-                          <span className="text-slate-300 font-normal"> {formatAction(activity.action_type)}</span>
+                          <span className="text-white/60 font-normal"> {formatAction(activity.action_type)}</span>
                         </p>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-white/40">
                           {activity.target_type} • {new Date(activity.created_at).toLocaleDateString()}
                         </p>
                       </div>
@@ -178,26 +167,60 @@ export const AdminDashboard = () => {
         </Card>
 
         {/* System Health / Quick Links */}
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-card border-white/10">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-white">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <button type="button" className="flex flex-col items-center justify-center p-4 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700">
-                <ListMusic className="w-6 h-6 text-blue-400 mb-2" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button 
+                type="button" 
+                onClick={() => {
+                  setIsAdminMode(true);
+                  navigate("/");
+                }}
+                className="col-span-1 sm:col-span-2 flex items-center justify-between p-4 rounded-lg bg-dem/10 hover:bg-dem/20 transition-all border border-dem/30 hover:shadow-[0_0_20px_rgba(20,184,166,0.2)] group"
+              >
+                <div className="flex items-center gap-3">
+                  <Zap className="w-8 h-8 text-dem fill-current animate-pulse" />
+                  <div className="text-left">
+                    <span className="text-sm font-bold text-white block">Launch Control Room</span>
+                    <span className="text-[10px] text-white/50 uppercase tracking-widest">Visual Layout Conductor</span>
+                  </div>
+                </div>
+                <TrendingUp className="w-5 h-5 text-dem group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <button 
+                type="button" 
+                onClick={() => navigate("/admin/queue")}
+                className="flex flex-col items-center justify-center p-4 rounded-lg bg-white/5 hover:bg-dem/20 transition-colors border border-white/10 hover:border-dem/30 group"
+              >
+                <ListMusic className="w-6 h-6 text-dem mb-2 group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-medium text-white">Review Submissions</span>
               </button>
-              <button type="button" className="flex flex-col items-center justify-center p-4 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700">
-                <TrendingUp className="w-6 h-6 text-green-400 mb-2" />
+              <button 
+                type="button" 
+                onClick={() => navigate("/admin/placements")}
+                className="flex flex-col items-center justify-center p-4 rounded-lg bg-white/5 hover:bg-dem/20 transition-colors border border-white/10 hover:border-dem/30 group"
+              >
+                <TrendingUp className="w-6 h-6 text-dem mb-2 group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-medium text-white">Manage Placements</span>
               </button>
-              <button type="button" className="flex flex-col items-center justify-center p-4 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700">
-                <History className="w-6 h-6 text-yellow-400 mb-2" />
+              <button 
+                type="button" 
+                onClick={() => navigate("/admin/submissions")}
+                className="flex flex-col items-center justify-center p-4 rounded-lg bg-white/5 hover:bg-rep/20 transition-colors border border-white/10 hover:border-rep/30 group"
+              >
+                <History className="w-6 h-6 text-rep mb-2 group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-medium text-white">View Audit Logs</span>
               </button>
-              <button type="button" className="flex flex-col items-center justify-center p-4 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700">
-                <AlertCircle className="w-6 h-6 text-red-400 mb-2" />
+              <button 
+                type="button" 
+                onClick={() => navigate("/admin/settings")}
+                className="flex flex-col items-center justify-center p-4 rounded-lg bg-white/5 hover:bg-rep/20 transition-colors border border-white/10 hover:border-rep/30 group"
+              >
+                <AlertCircle className="w-6 h-6 text-rep mb-2 group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-medium text-white">System Settings</span>
               </button>
             </div>

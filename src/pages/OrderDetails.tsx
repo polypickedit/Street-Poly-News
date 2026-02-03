@@ -91,21 +91,21 @@ export default function OrderDetails() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "pending": return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Pending Review</Badge>;
-      case "approved": return <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">Approved</Badge>;
-      case "rejected": return <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">Rejected</Badge>;
-      case "scheduled": return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">Scheduled</Badge>;
-      case "delivered": return <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">Delivered</Badge>;
-      default: return <Badge variant="outline">{status}</Badge>;
+      case "pending": return <Badge variant="outline" className="bg-white/5 text-white/70 border-white/10">Pending Review</Badge>;
+      case "approved": return <Badge variant="outline" className="bg-dem/10 text-dem border-dem/20">Approved</Badge>;
+      case "rejected": return <Badge variant="outline" className="bg-rep/10 text-rep border-rep/20">Rejected</Badge>;
+      case "scheduled": return <Badge variant="outline" className="bg-white/10 text-white border-white/20">Scheduled</Badge>;
+      case "delivered": return <Badge variant="outline" className="bg-dem/20 text-white border-dem/30">Delivered</Badge>;
+      default: return <Badge variant="outline" className="border-white/20 text-white/70">{status}</Badge>;
     }
   };
 
   const getPaymentBadge = (status: string) => {
     switch (status) {
-      case "paid": return <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">Paid</Badge>;
-      case "pending": return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Payment Pending</Badge>;
-      case "failed": return <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20">Payment Failed</Badge>;
-      default: return <Badge variant="outline">{status}</Badge>;
+      case "paid": return <Badge variant="outline" className="bg-dem/10 text-dem border-dem/20">Paid</Badge>;
+      case "pending": return <Badge variant="outline" className="bg-white/5 text-white/70 border-white/10">Payment Pending</Badge>;
+      case "failed": return <Badge variant="outline" className="bg-rep/10 text-rep border-rep/20">Payment Failed</Badge>;
+      default: return <Badge variant="outline" className="border-white/20 text-white/70">{status}</Badge>;
     }
   };
 
@@ -113,7 +113,7 @@ export default function OrderDetails() {
     return (
       <PageLayoutWithAds>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-dem" />
         </div>
       </PageLayoutWithAds>
     );
@@ -168,14 +168,14 @@ export default function OrderDetails() {
                     <div>
                       <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Submission Date</label>
                       <div className="flex items-center gap-2 mt-1 text-slate-200">
-                        <Calendar className="w-4 h-4 text-blue-400" />
+                        <Calendar className="w-4 h-4 text-dem" />
                         {format(new Date(submission.created_at), "MMMM d, yyyy")}
                       </div>
                     </div>
                     <div>
                       <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Service Type</label>
                       <div className="flex items-center gap-2 mt-1 text-slate-200">
-                        <Music className="w-4 h-4 text-blue-400" />
+                        <Music className="w-4 h-4 text-dem" />
                         {submission.slots?.name}
                       </div>
                     </div>
@@ -189,7 +189,7 @@ export default function OrderDetails() {
                           href={submission.spotify_track_url} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
+                          className="flex items-center gap-2 text-dem hover:text-dem/80 transition-colors"
                         >
                           {submission.spotify_track_url}
                           <ExternalLink className="w-4 h-4" />
@@ -221,8 +221,8 @@ export default function OrderDetails() {
                     {submission.placements?.map((p) => (
                       <div key={p.id} className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded bg-green-500/10 flex items-center justify-center">
-                            <Music className="w-5 h-5 text-green-400" />
+                          <div className="w-10 h-10 rounded bg-dem/10 flex items-center justify-center">
+                            <Music className="w-5 h-5 text-dem" />
                           </div>
                           <div>
                             <p className="font-semibold text-slate-200">{p.playlists?.name}</p>
@@ -230,7 +230,7 @@ export default function OrderDetails() {
                           </div>
                         </div>
                         {p.playlists?.spotify_playlist_url && (
-                          <Button variant="ghost" size="sm" asChild className="text-blue-400">
+                          <Button variant="ghost" size="sm" asChild className="text-dem hover:text-dem/80">
                             <a 
                               href={p.playlists.spotify_playlist_url} 
                               target="_blank" 
@@ -249,8 +249,8 @@ export default function OrderDetails() {
                     {submission.submission_distribution?.map((dist) => (
                       <div key={dist.id} className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded bg-blue-500/10 flex items-center justify-center">
-                            <Globe className="w-5 h-5 text-blue-400" />
+                          <div className="w-10 h-10 rounded bg-dem/10 flex items-center justify-center">
+                            <Globe className="w-5 h-5 text-dem" />
                           </div>
                           <div>
                             <p className="font-semibold text-slate-200">{dist.media_outlets?.name}</p>
@@ -260,7 +260,7 @@ export default function OrderDetails() {
                           </div>
                         </div>
                         {dist.published_url && (
-                          <Button variant="ghost" size="sm" asChild className="text-blue-400">
+                          <Button variant="ghost" size="sm" asChild className="text-dem hover:text-dem/80">
                             <a 
                               href={dist.published_url} 
                               target="_blank" 

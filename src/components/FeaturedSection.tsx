@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useLocation } from "react-router-dom";
-import { Play, Flame } from "lucide-react";
+import { Play, Flame, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { Post } from "@/hooks/usePosts";
 import { PostCard } from "./PostCard";
 import { getYouTubeId } from "@/lib/utils";
+import { Slot } from "./Slot";
 
 export function FeaturedSection() {
   const location = useLocation();
@@ -43,7 +44,7 @@ export function FeaturedSection() {
 
   if (isLoading || !featuredPosts?.length) return null;
 
-  const mainFeatured = featuredPosts[0];
+  const mainFeaturedFallback = featuredPosts[0];
   const sideFeatured = featuredPosts.slice(1, 7); // Get 6 side videos for 2x3 grid
 
   const getThumbnail = (post: Post) => {
@@ -67,32 +68,15 @@ export function FeaturedSection() {
         </div>
         
         <div className="space-y-4 md:space-y-6">
-          <Link
-            to={`/post/${mainFeatured.id}`}
-            className="group relative block aspect-video w-full overflow-hidden rounded-2xl lg:aspect-[21/9]"
+          <Slot
+            slotKey="home.hero"
+            accepts={["video", "article"]}
+            fallback={<HeroPost post={mainFeaturedFallback} getThumbnail={getThumbnail} />}
           >
-            <img
-              src={getThumbnail(mainFeatured)}
-              alt={mainFeatured.title}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
-            <div className="absolute bottom-0 left-0 p-4 md:p-6">
-              <div className="flex items-center gap-3">
-                {mainFeatured.is_featured && (
-                  <span className="rounded-full bg-blue-500/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-blue-400 backdrop-blur-sm">
-                    Featured
-                  </span>
-                )}
-                <span className="text-xs uppercase tracking-widest text-white/60">
-                  {mainFeatured.content_type}
-                </span>
-              </div>
-              <h2 className="mt-2 font-display text-xl text-white sm:text-2xl md:text-4xl">
-                {mainFeatured.title}
-              </h2>
-            </div>
-          </Link>
+            {(placement) => (
+              <ResolvedHero id={placement?.id} getThumbnail={getThumbnail} fallback={<HeroPost post={mainFeaturedFallback} getThumbnail={getThumbnail} />} />
+            )}
+          </Slot>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {sideFeatured.map((post) => (
@@ -114,5 +98,58 @@ export function FeaturedSection() {
         </div>
       </div>
     </section>
+  );
+}
+
+function ResolvedHero({ id, getThumbnail, fallback }: { id: string | null | undefined; getThumbnail: (post: Post) => string; fallback: React.ReactNode }) {
+  const { data: post, isLoading } = useQuery({
+    queryKey: ["post", id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data, error } = await supabase
+        .from("posts")
+        .select("*")
+        .eq("id", parseInt(id))
+        .single();
+      if (error) throw error;
+      return data as Post;
+    },
+    enabled: !!id,
+  });
+
+  if (isLoading) return <div className="aspect-video w-full animate-pulse bg-muted rounded-2xl lg:aspect-[21/9] flex items-center justify-center"><Loader2 className="animate-spin text-dem" /></div>;
+  if (!post) return <>{fallback}</>;
+
+  return <HeroPost post={post} getThumbnail={getThumbnail} />;
+}
+
+function HeroPost({ post, getThumbnail }: { post: Post; getThumbnail: (post: Post) => string }) {
+  return (
+    <Link
+      to={`/post/${post.id}`}
+      className="group relative block aspect-video w-full overflow-hidden rounded-2xl lg:aspect-[21/9]"
+    >
+      <img
+        src={getThumbnail(post)}
+        alt={post.title}
+        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
+      <div className="absolute bottom-0 left-0 p-4 md:p-6">
+        <div className="flex items-center gap-3">
+          {post.is_featured && (
+            <span className="rounded-full bg-dem/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
+              Featured
+            </span>
+          )}
+          <span className="text-xs uppercase tracking-widest text-white/60">
+            {post.content_type}
+          </span>
+        </div>
+        <h2 className="mt-2 font-display text-xl text-white sm:text-2xl md:text-4xl">
+          {post.title}
+        </h2>
+      </div>
+    </Link>
   );
 }

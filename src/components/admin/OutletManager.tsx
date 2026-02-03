@@ -85,7 +85,7 @@ export const OutletManager = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-dem" />
       </div>
     );
   }
@@ -94,10 +94,10 @@ export const OutletManager = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Syndication Network</h3>
-          <p className="text-xs text-slate-500 mt-1">Manage distribution targets and outlet requirements.</p>
+          <h3 className="text-sm font-medium text-white/40 uppercase tracking-wider">Syndication Network</h3>
+          <p className="text-xs text-white/50 mt-1">Manage distribution targets and outlet requirements.</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+        <Button className="bg-dem hover:bg-dem/90 text-white gap-2">
           <Plus className="w-4 h-4" />
           Add Outlet
         </Button>
@@ -105,14 +105,14 @@ export const OutletManager = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {outlets.map((outlet) => (
-          <Card key={outlet.id} className="bg-slate-900 border-slate-800 hover:border-slate-700 transition-all overflow-hidden group">
+          <Card key={outlet.id} className="bg-card border-white/10 hover:border-white/20 transition-all overflow-hidden group">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded bg-blue-600/20 flex items-center justify-center group-hover:bg-blue-600/30 transition-colors">
-                  <Share2 className="w-6 h-6 text-blue-400" />
+                <div className="w-12 h-12 rounded bg-dem/20 flex items-center justify-center group-hover:bg-dem/30 transition-colors">
+                  <Share2 className="w-6 h-6 text-dem" />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500 font-medium uppercase tracking-tighter">
+                  <span className="text-xs text-white/50 font-medium uppercase tracking-tighter">
                     {outlet.active ? "Active" : "Inactive"}
                   </span>
                   <Switch 
@@ -121,56 +121,56 @@ export const OutletManager = () => {
                   />
                 </div>
               </div>
-              <CardTitle className="mt-4 text-lg font-bold">{outlet.name}</CardTitle>
+              <CardTitle className="mt-4 text-lg font-bold text-white">{outlet.name}</CardTitle>
               <div className="flex flex-wrap gap-2 mt-2">
-                <Badge variant="outline" className="text-[10px] bg-blue-900/20 border-blue-800 text-blue-400 uppercase tracking-tight">
+                <Badge variant="outline" className="text-[10px] bg-dem/10 border-dem/30 text-dem uppercase tracking-tight">
                   {outlet.outlet_type}
                 </Badge>
                 {outlet.requires_review ? (
-                  <Badge variant="outline" className="text-[10px] bg-amber-900/20 border-amber-800 text-amber-400 uppercase tracking-tight gap-1">
+                  <Badge variant="outline" className="text-[10px] bg-white/5 border-white/10 text-white/60 uppercase tracking-tight gap-1">
                     <AlertCircle className="w-2 h-2" /> Review Required
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="text-[10px] bg-emerald-900/20 border-emerald-800 text-emerald-400 uppercase tracking-tight gap-1">
+                  <Badge variant="outline" className="text-[10px] bg-dem/20 border-dem/30 text-dem uppercase tracking-tight gap-1">
                     <CheckCircle2 className="w-2 h-2" /> Auto-Accept
                   </Badge>
                 )}
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-400 line-clamp-2 min-h-[40px]">
+              <p className="text-sm text-white/40 line-clamp-2 min-h-[40px]">
                 {outlet.description || "No description provided."}
               </p>
               
-              <div className="grid grid-cols-3 gap-4 border-t border-slate-800 pt-4 mt-6">
+              <div className="grid grid-cols-3 gap-4 border-t border-white/10 pt-4 mt-6">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-slate-500">
+                  <div className="flex items-center gap-2 text-white/50">
                     <FileText className="w-3 h-3" />
                     <span className="text-[10px] uppercase font-bold tracking-tight">Types</span>
                   </div>
-                  <p className="text-[10px] font-semibold text-slate-300 truncate">
+                  <p className="text-[10px] font-semibold text-white/70 truncate">
                     {outlet.accepted_content_types.join(", ")}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-slate-500">
+                  <div className="flex items-center gap-2 text-white/50">
                     <Globe className="w-3 h-3" />
                     <span className="text-[10px] uppercase font-bold tracking-tight">Words</span>
                   </div>
-                  <p className="text-sm font-semibold">{outlet.preferred_word_count || "N/A"}</p>
+                  <p className="text-sm font-semibold text-white">{outlet.preferred_word_count || "N/A"}</p>
                 </div>
                 <div className="space-y-1 text-right">
-                  <div className="flex items-center justify-end gap-2 text-slate-500">
+                  <div className="flex items-center justify-end gap-2 text-white/50">
                     <span className="text-[10px] uppercase font-bold tracking-tight">Price</span>
                   </div>
-                  <p className="text-sm font-bold text-blue-400">${(outlet.price_cents / 100).toFixed(2)}</p>
+                  <p className="text-sm font-bold text-dem">${(outlet.price_cents / 100).toFixed(2)}</p>
                 </div>
               </div>
               
               <div className="flex gap-2 mt-6">
                 <Button 
                   variant="secondary" 
-                  className="flex-1 text-xs bg-slate-800 hover:bg-slate-700"
+                  className="flex-1 text-xs bg-white/10 hover:bg-white/20 text-white border-none"
                   onClick={() => setEditDialog({ isOpen: true, outlet })}
                 >
                   Edit Profile
@@ -178,7 +178,7 @@ export const OutletManager = () => {
                 {outlet.website_url && (
                   <Button 
                     variant="ghost" 
-                    className="text-xs text-blue-400 hover:text-blue-300"
+                    className="text-xs text-dem hover:text-dem/80 hover:bg-dem/10"
                     onClick={() => window.open(outlet.website_url!, '_blank')}
                   >
                     Visit Site

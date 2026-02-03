@@ -279,21 +279,21 @@ export default function Dashboard() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "approved": return <Badge className="bg-green-500/10 text-green-400 border-green-500/30">Approved</Badge>;
-      case "published": return <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30">Published</Badge>;
-      case "scheduled": return <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/30">Scheduled</Badge>;
+      case "approved": return <Badge className="bg-dem/10 text-dem border-dem/20">Approved</Badge>;
+      case "published": return <Badge className="bg-dem/20 text-white border-dem/30">Published</Badge>;
+      case "scheduled": return <Badge className="bg-white/10 text-white border-white/20">Scheduled</Badge>;
       case "declined": 
-      case "rejected": return <Badge className="bg-red-500/10 text-red-400 border-red-500/30">Declined</Badge>;
-      case "pending": return <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/30">Pending</Badge>;
-      default: return <Badge variant="outline">{status}</Badge>;
+      case "rejected": return <Badge className="bg-rep/10 text-rep border-rep/20">Declined</Badge>;
+      case "pending": return <Badge className="bg-white/5 text-white/70 border-white/10">Pending</Badge>;
+      default: return <Badge variant="outline" className="border-white/20 text-white/70">{status}</Badge>;
     }
   };
 
   const getPaymentBadge = (status: string) => {
     switch (status) {
-      case "paid": return <Badge className="bg-green-500/10 text-green-400 border-green-500/30">Paid</Badge>;
-      case "unpaid": return <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/30">Unpaid</Badge>;
-      default: return <Badge variant="outline">{status}</Badge>;
+      case "paid": return <Badge className="bg-dem/10 text-dem border-dem/20">Paid</Badge>;
+      case "unpaid": return <Badge className="bg-rep/10 text-rep border-rep/20">Unpaid</Badge>;
+      default: return <Badge variant="outline" className="border-white/20 text-white/70">{status}</Badge>;
     }
   };
 
@@ -326,8 +326,8 @@ export default function Dashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   className="flex items-center gap-4 mb-4"
                 >
-                  <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
-                    <UserIcon className="w-6 h-6 text-blue-400" />
+                  <div className="w-12 h-12 rounded-full bg-dem/20 flex items-center justify-center border border-dem/30">
+                    <UserIcon className="w-6 h-6 text-dem" />
                   </div>
                   <div>
                     <h1 className="text-3xl font-bold tracking-tight text-white">My Dashboard</h1>
@@ -344,31 +344,31 @@ export default function Dashboard() {
           >
             <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-sm font-medium text-slate-300">Available Features</CardTitle>
-                <Zap className="w-4 h-4 text-yellow-500" />
+                <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-200">Available Features</CardTitle>
+                <Zap className="w-4 h-4 text-dem" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-white">
+                <div className="text-3xl font-bold text-white">
                   {isLoadingCapabilities ? (
                     <Loader2 className="w-6 h-6 animate-spin text-slate-600" />
                   ) : (
                     capabilities.length
                   )}
                 </div>
-                <p className="text-sm text-slate-400 mt-1">Services you can use</p>
+                <p className="text-sm text-dem mt-1 font-medium">Services you can use</p>
               </CardContent>
             </Card>
             
             <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-sm font-medium text-slate-300">Active Account</CardTitle>
-                <UserIcon className="w-4 h-4 text-blue-500" />
+                <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-200">Active Account</CardTitle>
+                <UserIcon className="w-4 h-4 text-dem" />
               </CardHeader>
               <CardContent>
                 <div className="text-xl font-bold text-white truncate">
                   {isLoadingAccount ? "Loading..." : activeAccount?.name || "No Account"}
                 </div>
-                <Badge variant="outline" className="mt-1 text-xs uppercase tracking-wider border-slate-700 text-slate-300">
+                <Badge variant="outline" className="mt-2 text-xs uppercase tracking-wider border-dem/20 bg-dem/10 text-dem font-bold">
                   {activeAccount?.type || "Individual"}
                 </Badge>
               </CardContent>
@@ -376,14 +376,14 @@ export default function Dashboard() {
 
             <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-sm font-medium text-slate-300">Quick Actions</CardTitle>
-                <Plus className="w-4 h-4 text-blue-500" />
+                <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-200">Quick Actions</CardTitle>
+                <Plus className="w-4 h-4 text-dem" />
               </CardHeader>
               <CardContent className="flex gap-2">
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  className="w-full text-sm h-9 border-slate-700 hover:bg-slate-800"
+                  className="w-full text-xs font-bold uppercase tracking-widest h-9 border-dem/20 bg-dem/10 hover:bg-dem/20 text-dem hover:text-white"
                   onClick={() => navigate("/booking")}
                 >
                   New Submission
@@ -395,38 +395,40 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
               <CardHeader className="pb-2">
-                <CardDescription className="text-slate-300 uppercase tracking-wider text-xs font-semibold">Total Submissions</CardDescription>
-                <CardTitle className="text-3xl font-bold text-white">{submissions?.length || 0}</CardTitle>
+                <CardDescription className="text-slate-200 uppercase tracking-[0.2em] text-[10px] font-bold">Total Submissions</CardDescription>
+                <CardTitle className="text-4xl font-bold text-white mt-1">{submissions?.length || 0}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-2 text-sm text-slate-400">
-                  <Music className="w-4 h-4" />
-                  <span>Track reviews and features</span>
+                <div className="flex items-center gap-2 text-sm text-slate-400 font-medium">
+                  <Music className="w-4 h-4 text-dem" />
+                  <span>History of all music submitted</span>
                 </div>
               </CardContent>
             </Card>
+
             <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
               <CardHeader className="pb-2">
-                <CardDescription className="text-slate-300 uppercase tracking-wider text-xs font-semibold">Active Placements</CardDescription>
-                <CardTitle className="text-3xl font-bold text-white">{placements?.length || 0}</CardTitle>
+                <CardDescription className="text-slate-200 uppercase tracking-[0.2em] text-[10px] font-bold">Active Placements</CardDescription>
+                <CardTitle className="text-4xl font-bold text-white mt-1">{placements?.length || 0}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <Layout className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-sm text-slate-400 font-medium">
+                  <Layout className="w-4 h-4 text-dem" />
                   <span>Live on playlists or site</span>
                 </div>
               </CardContent>
             </Card>
+
             <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
               <CardHeader className="pb-2">
-                <CardDescription className="text-slate-300 uppercase tracking-wider text-xs font-semibold">Pending Review</CardDescription>
-                <CardTitle className="text-3xl font-bold text-white">
+                <CardDescription className="text-slate-200 uppercase tracking-[0.2em] text-[10px] font-bold">Pending Review</CardDescription>
+                <CardTitle className="text-4xl font-bold text-white mt-1">
                   {submissions?.filter((s) => s.status === 'pending').length || 0}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <Clock className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-sm text-slate-400 font-medium">
+                  <Clock className="w-4 h-4 text-rep" />
                   <span>Currently with our editors</span>
                 </div>
               </CardContent>
@@ -471,13 +473,13 @@ export default function Dashboard() {
                       <CardContent className="p-6">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded bg-slate-800 flex items-center justify-center group-hover:bg-blue-500/10 transition-colors">
-                              <Music className="w-5 h-5 text-blue-400" />
+                            <div className="w-12 h-12 rounded bg-slate-800 flex items-center justify-center group-hover:bg-dem/10 transition-colors">
+                              <Music className="w-5 h-5 text-dem" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
                                 <h4 className="font-semibold text-lg text-white">{s.track_title}</h4>
-                                <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+                                <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-dem group-hover:translate-x-1 transition-all" />
                               </div>
                               <p className="text-sm text-slate-400">{s.artist_name} • {s.slots?.name}</p>
                             </div>
@@ -516,7 +518,7 @@ export default function Dashboard() {
                                     </div>
                                   </div>
                                   {dist.published_url && (
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-dem opacity-0 group-hover:opacity-100 transition-opacity" asChild>
                                       <a href={dist.published_url} target="_blank" rel="noopener noreferrer" title="View published story">
                                         <ExternalLink className="w-4 h-4" />
                                       </a>
@@ -565,7 +567,7 @@ export default function Dashboard() {
                               {format(new Date(p.start_date), "MMM d")} - {format(new Date(p.end_date), "MMM d, yyyy")}
                             </div>
                             {p.playlists?.spotify_playlist_url && (
-                              <Button variant="ghost" size="sm" asChild className="text-blue-400 hover:text-blue-300">
+                              <Button variant="ghost" size="sm" asChild className="text-dem hover:text-dem/70">
                                 <a href={p.playlists.spotify_playlist_url} target="_blank" rel="noopener noreferrer">
                                   <ExternalLink className="w-4 h-4 mr-2" />
                                   View Playlist
@@ -610,7 +612,7 @@ export default function Dashboard() {
                     )}
                     
                     <div className="pt-4">
-                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-sm h-10" onClick={() => navigate("/booking")}>
+                      <Button className="w-full bg-dem hover:bg-dem/80 text-sm h-10" onClick={() => navigate("/booking")}>
                         Get Featured
                       </Button>
                     </div>

@@ -1,12 +1,30 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
+import { useSlotContents } from "@/hooks/usePlacements";
 
 export function BreakingNewsBanner() {
-  const { data: breakingPosts, error } = useQuery({
-    queryKey: ["breaking-posts"],
+  const { data: placements, isLoading: loadingPlacements } = useSlotContents("home.breaking");
+
+  const { data: breakingPosts, isLoading: loadingPosts } = useQuery({
+    queryKey: ["breaking-posts", placements?.map(p => p.content_id)],
     queryFn: async () => {
+      // If we have specific placements, fetch them
+      if (placements && placements.length > 0) {
+        const ids = placements.map(p => parseInt(p.content_id!)).filter(id => !isNaN(id));
+        if (ids.length > 0) {
+          const { data, error } = await supabase
+            .from("posts")
+            .select("*")
+            .in("id", ids);
+          if (error) throw error;
+          // Sort by placement priority if possible, or just keep original
+          return data;
+        }
+      }
+
+      // Fallback: Latest breaking posts
       const { data, error } = await supabase
         .from("posts")
         .select("*")
@@ -17,10 +35,9 @@ export function BreakingNewsBanner() {
       if (error) throw error;
       return data;
     },
+    enabled: !loadingPlacements,
   });
 
-  // For testing/debugging, we'll render a placeholder if no posts are found
-  // This helps confirm the component is actually mounting and visible
   const hasPosts = breakingPosts && breakingPosts.length > 0;
   
   const displayPosts = hasPosts 
@@ -36,15 +53,17 @@ export function BreakingNewsBanner() {
       ];
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] bg-rep text-white overflow-hidden border-b border-blue-900 md:border-white/10">
+    <div 
+      data-slot="home.breaking" 
+      data-accepts="video,article"
+      className="fixed top-0 left-0 right-0 z-[60] bg-rep text-white overflow-hidden border-b border-white/10"
+    >
       <div className="flex items-center h-10 relative">
-        {/* Static Badge */}
         <div className="flex items-center gap-2 shrink-0 px-4 pl-4 md:pl-8 bg-rep z-20 relative h-full pr-6 shadow-[4px_0_24px_rgba(0,0,0,0.1)] after:content-[''] after:absolute after:right-0 after:top-0 after:bottom-0 after:w-4 after:bg-gradient-to-r after:from-rep after:to-transparent">
           <AlertTriangle className="w-4 h-4 animate-pulse fill-current" />
           <span className="font-display text-sm tracking-wider font-bold">BREAKING NEWS</span>
         </div>
 
-        {/* Marquee Content */}
         <div className="flex-1 overflow-hidden relative h-full flex items-center">
           <div className="animate-marquee whitespace-nowrap flex items-center hover:[animation-play-state:paused] py-2 [animation-duration:15s]">
             {displayPosts.map((post, idx) => (

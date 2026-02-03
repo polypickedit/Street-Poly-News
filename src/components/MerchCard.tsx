@@ -118,7 +118,7 @@ export const MerchCard = ({ item }: MerchCardProps) => {
         </div>
 
         <Button
-          className="w-full mt-4 bg-dem hover:bg-dem/90 text-dem-foreground font-body uppercase text-xs tracking-wider"
+          className="w-full mt-4 bg-dem hover:bg-dem/90 text-white font-body uppercase text-xs tracking-wider"
           onClick={handleAddToCart}
         >
           Add to Cart

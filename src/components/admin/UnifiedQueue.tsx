@@ -163,12 +163,12 @@ export const UnifiedQueue = () => {
   });
 
   const renderError = (error: Error) => (
-    <div className="text-center py-12 text-red-400 border border-dashed border-red-800 rounded-lg">
+    <div className="text-center py-12 text-rep border border-dashed border-rep/30 rounded-lg">
       <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
       <p>Error loading data: {error.message || "Unknown error"}</p>
       <Button 
         variant="link" 
-        className="text-blue-400 mt-2"
+        className="text-dem mt-2"
         onClick={() => window.location.reload()}
       >
         Retry
@@ -178,12 +178,12 @@ export const UnifiedQueue = () => {
 
   const renderLoading = () => (
     <div className="flex items-center justify-center py-12">
-      <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      <Loader2 className="w-8 h-8 animate-spin text-dem" />
     </div>
   );
 
   const renderEmpty = (message: string) => (
-    <div className="text-center py-12 text-slate-500 border border-dashed border-slate-800 rounded-lg">
+    <div className="text-center py-12 text-white/40 border border-dashed border-white/10 rounded-lg">
       <CheckCircle2 className="w-12 h-12 mx-auto mb-3 opacity-20" />
       <p>{message}</p>
     </div>
@@ -194,54 +194,54 @@ export const UnifiedQueue = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight text-white">Unified Queue</h2>
         <div className="flex gap-2">
-          <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
+          <Badge variant="outline" className="bg-dem/10 text-dem border-dem/20">
             {awaitingApproval?.length || 0} Awaiting Approval
           </Badge>
-          <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20">
+          <Badge variant="outline" className="bg-white/5 text-white/60 border-white/10">
             {awaitingSchedule?.length || 0} Needs Scheduling
           </Badge>
         </div>
       </div>
 
       <Tabs defaultValue="awaiting_approval" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="bg-slate-900 border border-slate-800 p-1 mb-6">
-          <TabsTrigger value="awaiting_approval" className="data-[state=active]:bg-slate-800">
+        <TabsList className="bg-card border border-white/10 p-1 mb-6">
+          <TabsTrigger value="awaiting_approval" className="data-[state=active]:bg-white/5">
             Awaiting Approval
           </TabsTrigger>
-          <TabsTrigger value="needs_scheduling" className="data-[state=active]:bg-slate-800">
+          <TabsTrigger value="needs_scheduling" className="data-[state=active]:bg-white/5">
             Needs Scheduling
           </TabsTrigger>
-          <TabsTrigger value="active" className="data-[state=active]:bg-slate-800">
+          <TabsTrigger value="active" className="data-[state=active]:bg-white/5">
             Active Placements
           </TabsTrigger>
-          <TabsTrigger value="expiring" className="data-[state=active]:bg-slate-800">
+          <TabsTrigger value="expiring" className="data-[state=active]:bg-white/5">
             Expiring Soon
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="awaiting_approval">
           {loadingApproval ? renderLoading() : errorApproval ? renderError(errorApproval) : !awaitingApproval?.length ? renderEmpty("All paid submissions have been reviewed.") : (
-            <Table className="border border-slate-800 rounded-lg overflow-hidden">
-              <TableHeader className="bg-slate-900/50">
-                <TableRow className="border-slate-800">
-                  <TableHead className="text-slate-400">Track</TableHead>
-                  <TableHead className="text-slate-400">Artist</TableHead>
-                  <TableHead className="text-slate-400">Offer</TableHead>
-                  <TableHead className="text-slate-400 text-right">Action</TableHead>
+            <Table className="border border-white/10 rounded-lg overflow-hidden">
+              <TableHeader className="bg-white/5">
+                <TableRow className="border-white/10">
+                  <TableHead className="text-white/40">Track</TableHead>
+                  <TableHead className="text-white/40">Artist</TableHead>
+                  <TableHead className="text-white/40">Offer</TableHead>
+                  <TableHead className="text-white/40 text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {awaitingApproval.map((s) => (
-                  <TableRow key={s.id} className="border-slate-800 hover:bg-slate-900/30">
+                  <TableRow key={s.id} className="border-white/10 hover:bg-white/5">
                     <TableCell className="font-medium text-white">{s.track_title}</TableCell>
-                    <TableCell className="text-slate-300">{s.artist_name}</TableCell>
+                    <TableCell className="text-white/70">{s.artist_name}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className="bg-blue-500/10 text-blue-400 border-none">
+                      <Badge variant="secondary" className="bg-dem/10 text-dem border-none">
                         {s.slots?.name}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button size="sm" onClick={() => navigate("/admin/submissions")}>
+                      <Button size="sm" className="bg-dem hover:bg-dem/90 text-white" onClick={() => navigate("/admin/submissions")}>
                         Review <ChevronRight className="w-4 h-4 ml-1" />
                       </Button>
                     </TableCell>
@@ -254,25 +254,25 @@ export const UnifiedQueue = () => {
 
         <TabsContent value="needs_scheduling">
           {loadingSchedule ? renderLoading() : errorSchedule ? renderError(errorSchedule) : !awaitingSchedule?.length ? renderEmpty("All approved submissions are scheduled.") : (
-            <Table className="border border-slate-800 rounded-lg overflow-hidden">
-              <TableHeader className="bg-slate-900/50">
-                <TableRow className="border-slate-800">
-                  <TableHead className="text-slate-400">Track</TableHead>
-                  <TableHead className="text-slate-400">Artist</TableHead>
-                  <TableHead className="text-slate-400">Status</TableHead>
-                  <TableHead className="text-slate-400 text-right">Action</TableHead>
+            <Table className="border border-white/10 rounded-lg overflow-hidden">
+              <TableHeader className="bg-white/5">
+                <TableRow className="border-white/10">
+                  <TableHead className="text-white/40">Track</TableHead>
+                  <TableHead className="text-white/40">Artist</TableHead>
+                  <TableHead className="text-white/40">Status</TableHead>
+                  <TableHead className="text-white/40 text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {awaitingSchedule.map((s) => (
-                  <TableRow key={s.id} className="border-slate-800 hover:bg-slate-900/30">
+                  <TableRow key={s.id} className="border-white/10 hover:bg-white/5">
                     <TableCell className="font-medium text-white">{s.track_title}</TableCell>
-                    <TableCell className="text-slate-300">{s.artist_name}</TableCell>
+                    <TableCell className="text-white/70">{s.artist_name}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-green-400 border-green-400/30">Approved</Badge>
+                      <Badge variant="outline" className="text-white bg-dem border-dem/30">Approved</Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button size="sm" onClick={() => navigate("/admin/placements")}>
+                      <Button size="sm" className="bg-dem hover:bg-dem/90 text-white" onClick={() => navigate("/admin/placements")}>
                         Schedule <Calendar className="w-4 h-4 ml-1" />
                       </Button>
                     </TableCell>
@@ -285,25 +285,25 @@ export const UnifiedQueue = () => {
 
         <TabsContent value="active">
           {loadingActive ? renderLoading() : errorActive ? renderError(errorActive) : !activePlacements?.length ? renderEmpty("No placements are currently live.") : (
-            <Table className="border border-slate-800 rounded-lg overflow-hidden">
-              <TableHeader className="bg-slate-900/50">
-                <TableRow className="border-slate-800">
-                  <TableHead className="text-slate-400">Track</TableHead>
-                  <TableHead className="text-slate-400">Playlist</TableHead>
-                  <TableHead className="text-slate-400">Ends In</TableHead>
-                  <TableHead className="text-slate-400 text-right">Link</TableHead>
+            <Table className="border border-white/10 rounded-lg overflow-hidden">
+              <TableHeader className="bg-white/5">
+                <TableRow className="border-white/10">
+                  <TableHead className="text-white/40">Track</TableHead>
+                  <TableHead className="text-white/40">Playlist</TableHead>
+                  <TableHead className="text-white/40">Ends In</TableHead>
+                  <TableHead className="text-white/40 text-right">Link</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {activePlacements.map((p) => (
-                  <TableRow key={p.id} className="border-slate-800 hover:bg-slate-900/30">
+                  <TableRow key={p.id} className="border-white/10 hover:bg-white/5">
                     <TableCell className="font-medium text-white">{p.submissions?.track_title}</TableCell>
-                    <TableCell className="text-slate-300">{p.playlists?.name}</TableCell>
-                    <TableCell className="text-slate-300">
+                    <TableCell className="text-white/70">{p.playlists?.name}</TableCell>
+                    <TableCell className="text-white/70">
                       {format(new Date(p.end_date), "MMM d")}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" asChild className="text-blue-400">
+                      <Button variant="ghost" size="sm" asChild className="text-dem hover:text-dem/80">
                         <a href={p.playlists?.spotify_playlist_url} target="_blank" rel="noopener noreferrer" title="View on Spotify">
                           <ExternalLink className="w-4 h-4" />
                         </a>
@@ -318,25 +318,25 @@ export const UnifiedQueue = () => {
 
         <TabsContent value="expiring">
           {loadingExpiring ? renderLoading() : errorExpiring ? renderError(errorExpiring) : !expiringSoon?.length ? renderEmpty("No placements expiring in the next 7 days.") : (
-            <Table className="border border-slate-800 rounded-lg overflow-hidden">
-              <TableHeader className="bg-slate-900/50">
-                <TableRow className="border-slate-800">
-                  <TableHead className="text-slate-400">Track</TableHead>
-                  <TableHead className="text-slate-400">Playlist</TableHead>
-                  <TableHead className="text-slate-400">Expiry Date</TableHead>
-                  <TableHead className="text-slate-400 text-right">Status</TableHead>
+            <Table className="border border-white/10 rounded-lg overflow-hidden">
+              <TableHeader className="bg-white/5">
+                <TableRow className="border-white/10">
+                  <TableHead className="text-white/40">Track</TableHead>
+                  <TableHead className="text-white/40">Playlist</TableHead>
+                  <TableHead className="text-white/40">Expiry Date</TableHead>
+                  <TableHead className="text-white/40 text-right">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {expiringSoon.map((p) => (
-                  <TableRow key={p.id} className="border-slate-800 hover:bg-slate-900/30">
+                  <TableRow key={p.id} className="border-white/10 hover:bg-white/5">
                     <TableCell className="font-medium text-white">{p.submissions?.track_title}</TableCell>
-                    <TableCell className="text-slate-300">{p.playlists?.name}</TableCell>
-                    <TableCell className="text-red-400 font-medium">
+                    <TableCell className="text-white/70">{p.playlists?.name}</TableCell>
+                    <TableCell className="text-rep font-medium">
                       {format(new Date(p.end_date), "MMM d, yyyy")}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Badge variant="outline" className="text-red-400 border-red-400/30">
+                      <Badge variant="outline" className="text-rep border-rep/30">
                         Ending Soon
                       </Badge>
                     </TableCell>

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
 import { getYouTubeId } from "@/lib/utils";
+import { Slot } from "@/components/Slot";
 
 interface PostCategory {
   id: string;
@@ -270,6 +271,14 @@ const PostDetail = () => {
               <h2 className="font-display text-2xl text-foreground mb-6">Comments</h2>
               <DisqusComments postId={String(post.id)} title={post.title} />
             </div>
+
+            {/* In-Article Ad Slot */}
+            <Slot
+              slotKey="post.detail.ad"
+              accepts={["ad"]}
+              fallback={<div className="h-32 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center text-white/20 uppercase tracking-[0.5em] text-[10px]">Advertisement</div>}
+              className="mt-8"
+            />
           </div>
 
           {/* Sidebar */}

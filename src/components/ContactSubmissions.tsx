@@ -37,6 +37,7 @@ export function ContactSubmissions() {
 
   const fetchSubmissions = useCallback(async () => {
     try {
+      // @ts-expect-error - Table may not be in generated types yet
       const { data, error } = await supabase
         .from("contact_submissions")
         .select("*")
@@ -61,6 +62,7 @@ export function ContactSubmissions() {
 
   const updateStatus = async (id: string, newStatus: string) => {
     try {
+      // @ts-expect-error - Table may not be in generated types yet
       const { error } = await supabase
         .from("contact_submissions")
         .update({ status: newStatus })
@@ -89,6 +91,7 @@ export function ContactSubmissions() {
     if (!confirm("Are you sure you want to delete this submission?")) return;
 
     try {
+      // @ts-expect-error - Table may not be in generated types yet
       const { error } = await supabase
         .from("contact_submissions")
         .delete()
@@ -186,6 +189,7 @@ export function ContactSubmissions() {
                       <Button
                         size="sm"
                         variant="outline"
+                        className="text-dem border-dem/20 hover:bg-dem/10"
                         asChild
                       >
                         <a href={`mailto:${submission.email}?subject=Re: ${submission.subject}`}>
@@ -196,6 +200,7 @@ export function ContactSubmissions() {
                       <Button
                         size="sm"
                         variant="destructive"
+                        className="bg-rep hover:bg-rep/90"
                         onClick={() => deleteSubmission(submission.id)}
                       >
                         <Trash2 className="w-4 h-4" />

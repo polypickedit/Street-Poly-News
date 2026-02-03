@@ -23,57 +23,51 @@ const Categories = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               <Link
                 to="/?category=politics"
-                className="group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg bg-muted dynamic-bg-muted"
-                style={{ "--bg-color": "#3b82f6" } as React.CSSProperties}
+                className="group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg bg-card border border-white/10"
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-primary dynamic-bg" />
-                <div className="w-4 h-4 rounded-full mb-3 bg-blue-500" />
-                <h2 className="text-lg font-semibold">Politics</h2>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-dem" />
+                <div className="w-4 h-4 rounded-full mb-3 bg-dem" />
+                <h2 className="text-lg font-semibold text-white">Politics</h2>
               </Link>
               <Link
                 to="/?category=entertainment"
-                className="group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg bg-muted dynamic-bg-muted"
-                style={{ "--bg-color": "#8b5cf6" } as React.CSSProperties}
+                className="group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg bg-card border border-white/10"
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-primary dynamic-bg" />
-                <div className="w-4 h-4 rounded-full mb-3 bg-purple-500" />
-                <h2 className="text-lg font-semibold">Entertainment</h2>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-dem" />
+                <div className="w-4 h-4 rounded-full mb-3 bg-white/40" />
+                <h2 className="text-lg font-semibold text-white">Entertainment</h2>
               </Link>
               <Link
                 to="/?category=business"
-                className="group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg bg-muted dynamic-bg-muted"
-                style={{ "--bg-color": "#f59e0b" } as React.CSSProperties}
+                className="group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg bg-card border border-white/10"
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-primary dynamic-bg" />
-                <div className="w-4 h-4 rounded-full mb-3 bg-amber-500" />
-                <h2 className="text-lg font-semibold">Business</h2>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-dem" />
+                <div className="w-4 h-4 rounded-full mb-3 bg-white/20" />
+                <h2 className="text-lg font-semibold text-white">Business</h2>
               </Link>
               <Link
                 to="/?category=exclusive"
-                className="group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg bg-muted dynamic-bg-muted"
-                style={{ "--bg-color": "#ef4444" } as React.CSSProperties}
+                className="group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg bg-card border border-white/10"
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-primary dynamic-bg" />
-                <div className="w-4 h-4 rounded-full mb-3 bg-red-500" />
-                <h2 className="text-lg font-semibold">Exclusives</h2>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-rep" />
+                <div className="w-4 h-4 rounded-full mb-3 bg-rep" />
+                <h2 className="text-lg font-semibold text-white">Exclusives</h2>
               </Link>
               <Link
                 to="/?category=fashion"
-                className="group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg bg-muted dynamic-bg-muted"
-                style={{ "--bg-color": "#ec4899" } as React.CSSProperties}
+                className="group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg bg-card border border-white/10"
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-primary dynamic-bg" />
-                <div className="w-4 h-4 rounded-full mb-3 bg-pink-500" />
-                <h2 className="text-lg font-semibold">Fashion</h2>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-rep" />
+                <div className="w-4 h-4 rounded-full mb-3 bg-rep/60" />
+                <h2 className="text-lg font-semibold text-white">Fashion</h2>
               </Link>
               <Link
                 to="/?category=health"
-                className="group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg bg-muted dynamic-bg-muted"
-                style={{ "--bg-color": "#10b981" } as React.CSSProperties}
+                className="group relative overflow-hidden rounded-xl p-6 transition-all hover:scale-[1.02] hover:shadow-lg bg-card border border-white/10"
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-primary dynamic-bg" />
-                <div className="w-4 h-4 rounded-full mb-3 bg-emerald-500" />
-                <h2 className="text-lg font-semibold">Health</h2>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-rep" />
+                <div className="w-4 h-4 rounded-full mb-3 bg-rep/30" />
+                <h2 className="text-lg font-semibold text-white">Health</h2>
               </Link>
             </div>
           )}

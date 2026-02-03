@@ -80,38 +80,38 @@ export const OutletEditDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] bg-slate-900 border-slate-800 text-white">
+      <DialogContent className="sm:max-w-[425px] bg-card border-white/10 text-white">
         <DialogHeader>
           <DialogTitle>Edit Outlet: {outlet?.name}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="price">Price (USD)</Label>
+            <Label htmlFor="price" className="text-white/60">Price (USD)</Label>
             <Input
               id="price"
               type="number"
               step="0.01"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              className="bg-slate-800 border-slate-700"
+              className="bg-white/5 border-white/10 text-white focus:border-dem"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="wordCount">Preferred Word Count</Label>
+            <Label htmlFor="wordCount" className="text-white/60">Preferred Word Count</Label>
             <Input
               id="wordCount"
               type="number"
               value={wordCount}
               onChange={(e) => setWordCount(e.target.value)}
-              className="bg-slate-800 border-slate-700"
+              className="bg-white/5 border-white/10 text-white focus:border-dem"
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} className="bg-slate-800 border-slate-700">
+          <Button variant="outline" onClick={onClose} className="bg-white/5 border-white/10 text-white hover:bg-white/10">
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={handleSave} disabled={loading} className="bg-dem hover:bg-dem/90 text-white">
             {loading ? "Saving..." : "Save Changes"}
           </Button>
         </DialogFooter>

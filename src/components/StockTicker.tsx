@@ -56,10 +56,10 @@ export function StockTicker() {
       const SHORT_IDS = ["bitcoin", "ethereum", "solana"];
       
       const fetchWithRetry = async (retries = 1, delay = 1000): Promise<CoinGeckoResponse> => {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
 
+        try {
           const response = await fetch(
             `https://api.coingecko.com/api/v3/simple/price?ids=${SHORT_IDS.join(
               ","
@@ -69,24 +69,32 @@ export function StockTicker() {
               mode: 'cors',
               signal: controller.signal,
             }
-          ).catch(() => {
-            // Silently handle fetch failure (e.g. network error)
-            return null;
-          });
+          );
           
           clearTimeout(timeoutId);
 
-          if (!response || !response.ok) {
-            throw new Error("Fetch failed");
+          if (!response.ok) {
+            if (response.status === 429) {
+              console.warn("StockTicker: Rate limited by CoinGecko");
+            }
+            throw new Error(`Fetch failed with status: ${response.status}`);
           }
           
           return (await response.json()) as CoinGeckoResponse;
-        } catch (error) {
+        } catch (err) {
+          clearTimeout(timeoutId);
+
+          if (err instanceof Error && err.name === 'AbortError') {
+            console.log("StockTicker: API request timed out or aborted");
+            return {}; // Return empty object to trigger fallback
+          }
+
           if (retries > 0) {
+            console.log(`StockTicker: Retrying API fetch (${retries} left)...`);
             await new Promise(resolve => setTimeout(resolve, delay));
             return fetchWithRetry(retries - 1, delay * 2);
           }
-          throw error;
+          throw err;
         }
       };
 
@@ -117,6 +125,11 @@ export function StockTicker() {
 
         return [...cryptoTickers, ...mockStocks];
       } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          console.log("StockTicker: Fetch aborted (likely HMR)");
+        } else {
+          console.error("StockTicker: Error fetching price data:", err);
+        }
         return FALLBACK_TICKERS;
       }
     },
@@ -148,7 +161,7 @@ export function StockTicker() {
                 </span>
                 <span
                   className={`flex items-center gap-0.5 text-[10px] font-bold ${
-                    item.up ? "text-green-500" : "text-red-500"
+                    item.up ? "text-dem" : "text-rep"
                   }`}
                 >
                   {item.up ? (

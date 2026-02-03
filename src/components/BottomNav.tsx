@@ -1,4 +1,4 @@
-import { Home, Grid3X3, Search, Menu, Settings } from "lucide-react";
+import { Home, Grid3X3, Search, Menu, Settings, Zap } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,6 +13,7 @@ import {
 import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdmin } from "@/providers/AdminProvider";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
@@ -26,8 +27,9 @@ export const BottomNav = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isNearBottom, setIsNearBottom] = useState(false);
-  const { isAdmin } = useAuth();
+  const { isAdmin, isEditor, user } = useAuth();
   const { data: categories } = useCategories();
+  const { isAdminMode, toggleAdminMode } = useAdmin();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -104,9 +106,9 @@ export const BottomNav = () => {
           animate={{ y: 0 }}
           exit={{ y: 100 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed bottom-8 left-0 right-0 z-50 bg-dem-dark/95 backdrop-blur-sm border-t border-blue-900/50 text-white safe-area-bottom"
+          className="fixed bottom-8 left-0 right-0 z-50 bg-dem-dark/95 backdrop-blur-sm border-t border-dem/50 text-white safe-area-bottom"
         >
-          <div className="flex items-center justify-between h-20 max-w-2xl mx-auto px-6">
+          <div className="flex items-center justify-between h-24 max-w-2xl mx-auto px-6">
             {navItems.map((item) => (
               <Link
                 key={item.path}
@@ -114,12 +116,12 @@ export const BottomNav = () => {
                 className={cn(
                   "relative flex flex-col items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-colors min-w-[80px]",
                   isActive(item.path)
-                    ? "text-blue-50"
-                    : "text-blue-200/70 hover:text-rep"
+                    ? "text-dem"
+                    : "text-white/70 hover:text-rep"
                 )}
               >
-                <item.icon className={cn("h-6 w-6", isActive(item.path) && "animate-bounce-subtle")} />
-                <span className="text-xs font-semibold uppercase tracking-wider font-display">
+                <item.icon className={cn("h-8 w-8", isActive(item.path) && "animate-bounce-subtle")} />
+                <span className="text-sm font-bold uppercase tracking-wider font-display">
                   {item.label}
                 </span>
                 {isActive(item.path) && (
@@ -133,17 +135,34 @@ export const BottomNav = () => {
             ))}
 
             {isAdmin && (
+              <button
+                onClick={toggleAdminMode}
+                className={cn(
+                  "relative flex flex-col items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all min-w-[80px]",
+                  isAdminMode
+                    ? "text-dem animate-pulse"
+                    : "text-dem/50 hover:text-dem"
+                )}
+              >
+                <Zap className={cn("h-8 w-8", isAdminMode && "fill-current")} />
+                <span className="text-sm font-bold uppercase tracking-wider font-display">
+                  {isAdminMode ? "On" : "Edit"}
+                </span>
+              </button>
+            )}
+
+            {isAdmin && (
               <Link
                 to="/admin"
                 className={cn(
                   "relative flex flex-col items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-colors min-w-[80px]",
                   location.pathname.startsWith("/admin")
                     ? "text-rep"
-                    : "text-blue-200/70 hover:text-rep"
+                    : "text-dem/70 hover:text-rep"
                 )}
               >
-                <Settings className={cn("h-6 w-6", location.pathname.startsWith("/admin") && "animate-spin-slow")} />
-                <span className="text-xs font-semibold uppercase tracking-wider font-display">
+                <Settings className={cn("h-8 w-8", location.pathname.startsWith("/admin") && "animate-spin-slow")} />
+                <span className="text-sm font-bold uppercase tracking-wider font-display">
                   Admin
                 </span>
               </Link>
@@ -155,11 +174,11 @@ export const BottomNav = () => {
                   type="button"
                   className={cn(
                     "flex flex-col items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-colors min-w-[80px]",
-                    menuOpen ? "text-blue-50" : "text-blue-200/70 hover:text-rep"
+                    menuOpen ? "text-dem" : "text-white/70 hover:text-rep"
                   )}
                 >
-                  <Menu className="h-6 w-6" />
-                  <span className="text-xs font-semibold uppercase tracking-wider font-display">Menu</span>
+                  <Menu className="h-8 w-8" />
+                  <span className="text-sm font-bold uppercase tracking-wider font-display">Menu</span>
                 </button>
               </SheetTrigger>
               <SheetContent side="left" aria-describedby={undefined} className="w-[300px] !bg-dem-dark border-r border-white/10 p-6 overflow-y-auto">
@@ -276,8 +295,56 @@ export const BottomNav = () => {
                       >
                         <span className="text-lg font-medium">Contact</span>
                       </Link>
+                      {isAdmin && (
+                        <>
+                          <button
+                            onClick={() => {
+                              toggleAdminMode();
+                              setMenuOpen(false);
+                            }}
+                            className={cn(
+                              "col-span-2 flex items-center justify-between p-4 rounded-lg border transition-all mt-4 group",
+                              isAdminMode
+                                ? "bg-dem/20 border-dem shadow-[0_0_15px_rgba(20,184,166,0.2)]"
+                                : "bg-white/5 border-white/10"
+                            )}
+                          >
+                            <span className={cn(
+                              "text-xl font-bold uppercase tracking-wider",
+                              isAdminMode ? "text-dem" : "text-white/70"
+                            )}>
+                              {isAdminMode ? "Conduction: ON" : "Conduction Mode"}
+                            </span>
+                            <Zap className={cn(
+                              "h-6 w-6 transition-transform group-hover:scale-110",
+                              isAdminMode ? "text-dem fill-current animate-pulse" : "text-white/40"
+                            )} />
+                          </button>
+
+                          <Link
+                            to="/admin"
+                            onClick={() => setMenuOpen(false)}
+                            className="col-span-2 flex items-center justify-between p-4 rounded-lg bg-rep/10 hover:bg-rep/20 text-rep border border-rep/20 transition-all mt-2 group"
+                          >
+                            <span className="text-xl font-bold uppercase tracking-wider">Admin Panel</span>
+                            <Settings className="h-6 w-6 animate-spin-slow group-hover:scale-110 transition-transform" />
+                          </Link>
+                        </>
+                      )}
                     </div>
                   </div>
+
+                  {/* Debug Info in Menu */}
+                  {user && (
+                    <div className="mt-8 p-4 bg-white/5 rounded-lg border border-white/10">
+                      <p className="text-[10px] text-white/40 uppercase mb-2">Auth Status</p>
+                      <div className="space-y-1">
+                        <p className="text-xs text-white/60">User: <span className="text-white">{user.email}</span></p>
+                        <p className="text-xs text-white/60">Admin: <span className={isAdmin ? "text-green-500" : "text-red-500"}>{isAdmin ? "YES" : "NO"}</span></p>
+                        <p className="text-xs text-white/60">Editor: <span className={isEditor ? "text-green-500" : "text-red-500"}>{isEditor ? "YES" : "NO"}</span></p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </SheetContent>
             </Sheet>

@@ -94,7 +94,7 @@ export function PostCard({
   return (
     <Link
       to={`/post/${id}`}
-      className="group block bg-card rounded-xl overflow-hidden border border-border hover:border-dem/50 transition-all duration-300 hover:shadow-xl hover:shadow-dem/10 hover:-translate-y-1"
+      className="group block bg-card rounded-xl overflow-hidden border border-white/10 hover:border-dem/50 transition-all duration-300 hover:shadow-xl hover:shadow-dem/10 hover:-translate-y-1"
     >
       <div className="relative aspect-video overflow-hidden">
         <img
@@ -109,25 +109,25 @@ export function PostCard({
         {/* Play button */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
           <div className="w-16 h-16 rounded-full bg-dem/90 backdrop-blur-sm flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg shadow-dem/50">
-            <Play className="w-7 h-7 text-dem-foreground ml-1" fill="currentColor" />
+            <Play className="w-7 h-7 text-white ml-1" fill="currentColor" />
           </div>
         </div>
         
         {/* Top badges */}
         <div className="absolute top-3 left-3 flex flex-wrap gap-2">
           {is_breaking && (
-            <span className="px-2.5 py-1 bg-rep text-rep-foreground text-[10px] font-body font-bold uppercase tracking-wider rounded-full animate-pulse shadow-lg">
+            <span className="px-2.5 py-1 bg-rep text-white text-[10px] font-body font-bold uppercase tracking-wider rounded-full animate-pulse shadow-lg">
               🔴 Breaking
             </span>
           )}
           {is_featured && (
-            <span className="px-2.5 py-1 bg-dem/90 backdrop-blur-sm text-dem-foreground text-[10px] font-body font-bold uppercase tracking-wider rounded-full shadow-lg flex items-center gap-1">
+            <span className="px-2.5 py-1 bg-dem/90 backdrop-blur-sm text-white text-[10px] font-body font-bold uppercase tracking-wider rounded-full shadow-lg flex items-center gap-1">
               <TrendingUp className="w-3 h-3" />
               Featured
             </span>
           )}
           {isNew && !is_breaking && (
-            <span className="px-2.5 py-1 bg-dem text-dem-foreground text-[10px] font-body font-bold uppercase tracking-wider rounded-full shadow-lg">
+            <span className="px-2.5 py-1 bg-dem text-white text-[10px] font-body font-bold uppercase tracking-wider rounded-full shadow-lg">
               New
             </span>
           )}
@@ -143,14 +143,14 @@ export function PostCard({
 
         {/* Bottom info bar */}
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-background to-transparent">
-          <div className="flex items-center justify-between text-muted-foreground text-[10px] font-body">
-            <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
+          <div className="flex items-center justify-between text-white text-xs font-body font-medium">
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-dem" />
               {timeAgo}
             </span>
             {view_count && view_count > 0 && (
-              <span className="flex items-center gap-1">
-                <Eye className="w-3 h-3" />
+              <span className="flex items-center gap-1.5">
+                <Eye className="w-3.5 h-3.5 text-dem" />
                 {view_count >= 1000 ? `${(view_count / 1000).toFixed(1)}K` : view_count}
               </span>
             )}
@@ -159,11 +159,11 @@ export function PostCard({
       </div>
 
       <div className="p-5">
-        <h3 className="font-display text-xl md:text-2xl text-foreground leading-tight mb-2 group-hover:text-dem transition-colors line-clamp-2">
+        <h3 className="font-display text-xl md:text-2xl text-white leading-tight mb-2 group-hover:text-dem transition-colors line-clamp-2">
           {title}
         </h3>
         {subtitle && (
-          <p className="text-muted-foreground font-body text-sm line-clamp-2 leading-relaxed">
+          <p className="text-white/70 font-body text-sm line-clamp-2 leading-relaxed">
             {subtitle}
           </p>
         )}

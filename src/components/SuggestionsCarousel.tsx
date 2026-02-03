@@ -10,11 +10,28 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getYouTubeId } from "@/lib/utils";
+import { useSlotContents } from "@/hooks/usePlacements";
 
 export const SuggestionsCarousel = () => {
-  const { data: posts, isLoading } = useQuery({
-    queryKey: ["suggested-posts"],
+  const { data: placements, isLoading: loadingPlacements } = useSlotContents("home.trending");
+
+  const { data: posts, isLoading: loadingPosts } = useQuery({
+    queryKey: ["suggested-posts", placements?.map(p => p.content_id)],
     queryFn: async () => {
+      // If we have specific placements, fetch them
+      if (placements && placements.length > 0) {
+        const ids = placements.map(p => parseInt(p.content_id!)).filter(id => !isNaN(id));
+        if (ids.length > 0) {
+          const { data, error } = await supabase
+            .from("posts")
+            .select("id, title, youtube_id, thumbnail_url")
+            .in("id", ids);
+          if (error) throw error;
+          return data;
+        }
+      }
+
+      // Fallback: Top 10 by views
       const { data, error } = await supabase
         .from("posts")
         .select("id, title, youtube_id, thumbnail_url")
@@ -24,9 +41,10 @@ export const SuggestionsCarousel = () => {
       if (error) throw error;
       return data;
     },
+    enabled: !loadingPlacements,
   });
 
-  if (isLoading) {
+  if (loadingPlacements || loadingPosts) {
     return (
       <div className="py-6 sm:py-8">
         <h2 className="text-lg sm:text-xl font-display font-bold mb-4 text-foreground">
@@ -34,7 +52,7 @@ export const SuggestionsCarousel = () => {
         </h2>
         <div className="flex gap-4 overflow-hidden">
           {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="w-48 h-32 rounded-lg flex-shrink-0 bg-muted" />
+            <Skeleton key={i} className="w-48 h-32 rounded-lg flex-shrink-0 bg-white/5" />
           ))}
         </div>
       </div>
@@ -44,7 +62,11 @@ export const SuggestionsCarousel = () => {
   if (!posts?.length) return null;
 
   return (
-    <div className="py-6 sm:py-8 border-t border-border">
+    <div 
+      data-slot="home.trending" 
+      data-accepts="video,article"
+      className="py-6 sm:py-8 border-t border-white/10"
+    >
       <h2 className="text-lg sm:text-xl font-display font-bold mb-4 text-foreground">
         Suggested For You
       </h2>
@@ -77,7 +99,7 @@ export const SuggestionsCarousel = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-dem/90 via-dem/20 to-transparent opacity-80" />
                 <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <h3 className="text-sm font-medium text-dem-foreground line-clamp-2 leading-tight group-hover:underline">
+                  <h3 className="text-sm font-medium text-white line-clamp-2 leading-tight group-hover:underline">
                     {post.title}
                   </h3>
                 </div>
@@ -85,8 +107,8 @@ export const SuggestionsCarousel = () => {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="hidden sm:flex -left-4 bg-background/80 backdrop-blur-sm border-border text-foreground hover:bg-dem hover:text-dem-foreground" />
-        <CarouselNext className="hidden sm:flex -right-4 bg-background/80 backdrop-blur-sm border-border text-foreground hover:bg-dem hover:text-dem-foreground" />
+        <CarouselPrevious className="hidden sm:flex -left-4 bg-background/80 backdrop-blur-sm border-white/10 text-foreground hover:bg-dem hover:text-white" />
+        <CarouselNext className="hidden sm:flex -right-4 bg-background/80 backdrop-blur-sm border-white/10 text-foreground hover:bg-dem hover:text-white" />
       </Carousel>
     </div>
   );

@@ -21,7 +21,7 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   if (loading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-slate-950">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-dem" />
       </div>
     );
   }

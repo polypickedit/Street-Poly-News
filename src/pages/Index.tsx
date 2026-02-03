@@ -80,16 +80,16 @@ const Index = () => {
             </span>
             <span className="text-foreground sm:ml-2">News</span>
           </h1>
-          <p className="mt-6 text-muted-foreground/80 text-sm md:text-lg max-w-2xl mx-auto font-body leading-relaxed px-2">
+          <p className="mt-6 text-white/70 text-sm md:text-lg max-w-2xl mx-auto font-body leading-relaxed px-2">
             Unfiltered stories from the heart of the movement. <br className="hidden md:block" /> Real voices, real impact, real news.
           </p>
         </div>
 
         {/* Divider */}
         <div className="flex items-center gap-3 md:gap-4 py-3 md:py-4 px-4">
-          <Separator className="flex-1" />
-          <span className="text-muted-foreground/40 text-[10px] md:text-xs font-body uppercase tracking-widest">Featured</span>
-          <Separator className="flex-1" />
+          <Separator className="flex-1 opacity-20" />
+          <span className="text-white/40 text-[10px] md:text-xs font-body uppercase tracking-widest font-bold">Featured</span>
+          <Separator className="flex-1 opacity-20" />
         </div>
 
         {/* Featured Section */}
@@ -110,7 +110,7 @@ const Index = () => {
               href="https://www.youtube.com/@STREETPOLYNEWS"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-widest text-dem hover:text-dem-foreground transition-colors"
+              className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-widest text-white/70 hover:text-white transition-colors"
             >
               View channel
               <ExternalLink className="w-4 h-4" />
@@ -124,7 +124,7 @@ const Index = () => {
                 href={video.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex flex-col rounded-2xl border border-border bg-card/80 transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg"
+                className="group flex flex-col rounded-2xl border border-white/10 bg-card/80 transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg"
               >
                 <div className="overflow-hidden rounded-t-2xl bg-muted/30">
                   <img
@@ -134,13 +134,13 @@ const Index = () => {
                   />
                 </div>
                 <div className="p-4 flex flex-col gap-2">
-                  <h3 className="font-display text-lg text-foreground transition-colors group-hover:text-dem">
+                  <h3 className="font-display text-lg text-foreground transition-colors group-hover:text-white">
                     {video.title}
                   </h3>
                   <p className="text-sm text-muted-foreground font-body mt-2">
                     {video.description}
                   </p>
-                  <span className="mt-3 text-xs font-semibold uppercase tracking-widest text-dem">
+                  <span className="mt-3 text-xs font-semibold uppercase tracking-widest text-white/70">
                     Watch on YouTube →
                   </span>
                 </div>
@@ -152,11 +152,11 @@ const Index = () => {
         {/* Posts Feed */}
         <section id="videos" className="pb-8 md:pb-12 px-4">
           <div className="flex items-center gap-3 md:gap-4 py-3 md:py-4 mb-6">
-            <Separator className="flex-1" />
-            <span className="text-muted-foreground/40 text-[10px] md:text-xs font-body uppercase tracking-widest">
+            <Separator className="flex-1 opacity-20" />
+            <span className="text-white/40 text-[10px] md:text-xs font-body uppercase tracking-widest font-bold">
               Latest Stories
             </span>
-            <Separator className="flex-1" />
+            <Separator className="flex-1 opacity-20" />
           </div>
           <InfinitePostFeed />
         </section>

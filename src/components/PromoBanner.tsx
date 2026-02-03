@@ -45,6 +45,7 @@ export const PromoBanner = ({ className = "", showLabel = true, type = "donTrip"
     queryFn: async () => {
       if (!currentPromo.affiliateName) return null;
       
+      // @ts-expect-error affiliate_links table might not be in the generated types yet
       const { data, error } = await supabase
         .from("affiliate_links")
         .select("id, click_count")
@@ -58,7 +59,9 @@ export const PromoBanner = ({ className = "", showLabel = true, type = "donTrip"
   });
 
   const getTrackedUrl = () => {
+    // @ts-expect-error data from affiliate_links query
     if (affiliateLink?.id) {
+      // @ts-expect-error data from affiliate_links query
       return `${SUPABASE_URL}/functions/v1/track-click?id=${affiliateLink.id}`;
     }
     return currentPromo.link || "#";
@@ -101,7 +104,7 @@ export const PromoBanner = ({ className = "", showLabel = true, type = "donTrip"
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3 bg-foreground text-background font-display text-sm md:text-base px-8 py-4 rounded-full flex-shrink-0 shadow-lg group-hover:bg-dem group-hover:text-dem-foreground transition-colors relative z-10">
+          <div className="flex items-center gap-3 bg-white text-black font-display text-sm md:text-base px-8 py-4 rounded-full flex-shrink-0 shadow-lg group-hover:bg-dem group-hover:text-white transition-colors relative z-10">
             {currentPromo.text}
           </div>
         </>

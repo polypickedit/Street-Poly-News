@@ -304,14 +304,14 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6">
+        <div className="bg-dem/10 border border-dem/20 rounded-lg p-4 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2 text-blue-400">
+            <div className="flex items-center gap-2 text-dem">
               <CreditCard className="w-4 h-4" />
               <span className="text-sm font-semibold uppercase tracking-wider">Estimated Total</span>
             </div>
             {canUseCapability && (
-              <div className="text-[10px] font-bold px-2 py-1 bg-green-500/20 text-green-400 rounded-full border border-green-500/30 uppercase tracking-widest">
+              <div className="text-[10px] font-bold px-2 py-1 bg-dem/20 text-dem rounded-full border border-dem/30 uppercase tracking-widest">
                 Capability Available
               </div>
             )}
@@ -319,11 +319,11 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
           
           <div className="flex items-end justify-between mb-4">
             <div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-white/40">
                 Service: <span className="text-white font-medium">{selectedSlot?.name || "Loading..."}</span>
               </p>
               {watchOutlets.length > 0 && (
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-white/40">
                   + {watchOutlets.length} Syndication Outlets
                 </p>
               )}
@@ -334,7 +334,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
           </div>
 
           {canUseCapability && (
-            <div className="pt-4 border-t border-blue-500/10 flex gap-2">
+            <div className="pt-4 border-t border-dem/10 flex gap-2">
               <Button
                 type="button"
                 variant={paymentMethod === 'stripe' ? 'default' : 'outline'}
@@ -346,7 +346,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
               <Button
                 type="button"
                 variant={paymentMethod === 'capability' ? 'default' : 'outline'}
-                className="flex-1 h-9 text-xs bg-green-600 hover:bg-green-700 border-green-500/50"
+                className="flex-1 h-9 text-xs bg-dem hover:bg-dem/90 border-dem/50"
                 onClick={() => setPaymentMethod('capability')}
               >
                 Use Capability
@@ -356,11 +356,11 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
         </div>
 
         <div className="space-y-4 mb-8">
-          <div className="flex items-center gap-2 text-blue-400">
+          <div className="flex items-center gap-2 text-dem">
             <Share2 className="w-4 h-4" />
             <h4 className="text-sm font-semibold uppercase tracking-wider">Syndication Network & Promotional Opportunities (Optional)</h4>
           </div>
-          <p className="text-xs text-slate-500 mb-4">Select outlets to distribute your content or other promotional opportunities. One click, maximum reach.</p>
+          <p className="text-xs text-white/50 mb-4">Select outlets to distribute your content or other promotional opportunities. One click, maximum reach.</p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {outlets.map((outlet) => (
@@ -372,7 +372,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
                   return (
                     <FormItem
                       key={outlet.id}
-                      className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border border-slate-800 p-4 hover:bg-slate-900/50 transition-colors"
+                      className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border border-white/10 p-4 hover:bg-white/5 transition-colors"
                     >
                       <FormControl>
                         <Checkbox
@@ -392,7 +392,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
                         <FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                           {outlet.name}
                         </FormLabel>
-                        <p className="text-[10px] text-blue-400 font-bold">
+                        <p className="text-[10px] text-dem font-bold">
                           +${(outlet.price_cents / 100).toFixed(2)}
                         </p>
                       </div>

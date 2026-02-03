@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AdminProvider } from "@/providers/AdminProvider";
 import { CartSidebar } from "@/components/CartSidebar";
 import { TipButton } from "@/components/TipButton";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -28,6 +29,7 @@ import { PlacementManager } from "@/components/admin/PlacementManager";
 import { OutletManager } from "@/components/admin/OutletManager";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { UnifiedQueue } from "@/components/admin/UnifiedQueue";
+import { AdminOverlay } from "@/components/admin/AdminOverlay";
 import { AdminRoute } from "@/components/AdminRoute";
 import Search from "./pages/Search";
 import Category from "./pages/Category";
@@ -158,19 +160,22 @@ const AnimatedRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <CartProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-blue-500/30">
-              <AnimatedRoutes />
-              <CartSidebar />
-              <TipButton />
-            </div>
-          </BrowserRouter>
-        </TooltipProvider>
-      </CartProvider>
+      <AdminProvider>
+        <CartProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-dem/30">
+                <AdminOverlay />
+                <AnimatedRoutes />
+                <CartSidebar />
+                <TipButton />
+              </div>
+            </BrowserRouter>
+          </TooltipProvider>
+        </CartProvider>
+      </AdminProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

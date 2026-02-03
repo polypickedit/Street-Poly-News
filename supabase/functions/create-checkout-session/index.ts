@@ -38,8 +38,7 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let lineItems: any[] = [];
+    let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
     let mode: "payment" | "subscription" = "payment";
     let metadata: Record<string, string> = {
       userId: userId || "",
@@ -166,25 +165,23 @@ serve(async (req: Request) => {
     const session = await stripe.checkout.sessions.create({
       customer_email: userEmail,
       line_items: lineItems,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mode: mode as any,
+      mode: mode,
       success_url: returnUrl,
       cancel_url: returnUrl,
       payment_intent_data: mode === "payment" ? {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: metadata as any,
+        metadata: metadata,
       } : undefined,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      metadata: metadata as any,
+      metadata: metadata,
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error: any) {
-    console.error("Checkout error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Checkout error:", err);
+    return new Response(JSON.stringify({ error: err.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
     });

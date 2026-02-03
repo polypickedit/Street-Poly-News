@@ -111,8 +111,8 @@ export function QuickPaymentDialog({ trigger }: QuickPaymentDialogProps) {
             />
           </div>
 
-          <div className="bg-muted/50 p-4 rounded-lg flex gap-3 text-xs text-muted-foreground">
-            <Info className="w-4 h-4 shrink-0 text-blue-500" />
+          <div className="bg-white/5 p-4 rounded-lg flex gap-3 text-xs text-muted-foreground">
+            <Info className="w-4 h-4 shrink-0 text-dem" />
             <p>
               This will create a secure Stripe checkout session for the specified amount. 
               Once paid, your order will be updated in your dashboard.

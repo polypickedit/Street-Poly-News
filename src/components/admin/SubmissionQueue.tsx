@@ -43,16 +43,16 @@ type SubmissionRow = {
 type SubmissionFilter = "all" | SubmissionStatus;
 
 const statusBadgeColor: Record<SubmissionStatus, string> = {
-  pending: "text-blue-400 bg-blue-500/10 border-blue-500/30",
-  approved: "text-green-400 bg-green-500/10 border-green-500/30",
-  declined: "text-red-400 bg-red-500/10 border-red-500/30",
-  archived: "text-slate-400 bg-slate-800 border-slate-700",
+  pending: "text-dem bg-dem/10 border-dem/30",
+  approved: "text-white bg-dem border-dem/30",
+  declined: "text-rep bg-rep/10 border-rep/30",
+  archived: "text-white/40 bg-white/5 border-white/10",
 };
 
 const paymentBadgeColor: Record<PaymentStatus, string> = {
-  paid: "text-green-400 bg-green-500/10 border-green-500/30",
-  unpaid: "text-yellow-400 bg-yellow-500/10 border-yellow-500/30",
-  refunded: "text-red-400 bg-red-500/10 border-red-500/30",
+  paid: "text-white bg-dem border-dem/30",
+  unpaid: "text-rep bg-rep/10 border-rep/30",
+  refunded: "text-white/60 bg-white/5 border-white/10",
 };
 
 export const SubmissionQueue = () => {
@@ -154,21 +154,21 @@ export const SubmissionQueue = () => {
             </Button>
           ))}
         </div>
-        <div className="text-sm text-slate-500 italic">
+        <div className="text-sm text-white/40 italic">
           Showing {submissions.length} results
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-800 bg-slate-900/50 overflow-hidden">
+      <div className="rounded-xl border border-white/10 bg-card overflow-hidden">
         <Table>
-          <TableHeader className="bg-slate-900/80">
-            <TableRow className="border-slate-800 hover:bg-transparent">
-              <TableHead className="text-slate-400">Submission</TableHead>
-              <TableHead className="text-slate-400">Slot</TableHead>
-              <TableHead className="text-slate-400">Payment</TableHead>
-              <TableHead className="text-slate-400">Status</TableHead>
-              <TableHead className="text-slate-400">Submitted</TableHead>
-              <TableHead className="text-right text-slate-400">Actions</TableHead>
+          <TableHeader className="bg-card/80">
+            <TableRow className="border-white/10 hover:bg-transparent">
+              <TableHead className="text-white/40">Submission</TableHead>
+              <TableHead className="text-white/40">Slot</TableHead>
+              <TableHead className="text-white/40">Payment</TableHead>
+              <TableHead className="text-white/40">Status</TableHead>
+              <TableHead className="text-white/40">Submitted</TableHead>
+              <TableHead className="text-right text-white/40">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -176,7 +176,7 @@ export const SubmissionQueue = () => {
               <TableRow>
                 <TableCell colSpan={6} className="py-12">
                   <div className="flex justify-center">
-                    <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
+                    <Loader2 className="h-6 w-6 animate-spin text-dem" />
                   </div>
                 </TableCell>
               </TableRow>
@@ -188,17 +188,17 @@ export const SubmissionQueue = () => {
               </TableRow>
             ) : (
               submissions.map((submission) => (
-                <TableRow key={submission.id} className="border-slate-800 hover:bg-slate-800/30 transition-colors">
+                <TableRow key={submission.id} className="border-white/10 hover:bg-white/5 transition-colors">
                   <TableCell className="py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded bg-slate-800 flex items-center justify-center">
-                        <ExternalLink className="w-4 h-4 text-slate-500" />
+                      <div className="w-12 h-12 rounded bg-white/5 flex items-center justify-center">
+                        <ExternalLink className="w-4 h-4 text-white/40" />
                       </div>
                       <div>
-                        <div className="font-medium">{submission.track_title}</div>
-                        <div className="text-xs text-slate-500">{submission.artist_name}</div>
+                        <div className="font-medium text-white">{submission.track_title}</div>
+                        <div className="text-xs text-white/40">{submission.artist_name}</div>
                         {submission.artists && (
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-white/30">
                             {submission.artists.email}
                           </div>
                         )}
@@ -207,17 +207,17 @@ export const SubmissionQueue = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1">
-                      <span className="text-sm font-semibold">{submission.slots?.name || submission.genre}</span>
-                      <span className="text-xs text-blue-400 font-mono">
+                      <span className="text-sm font-semibold text-white">{submission.slots?.name || submission.genre}</span>
+                      <span className="text-xs text-dem font-mono">
                         ${submission.slots?.price ? submission.slots.price.toFixed(2) : "0.00"}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell>{renderPaymentBadge(submission.payment_status)}</TableCell>
                   <TableCell>{renderStatusBadge(submission.status)}</TableCell>
-                  <TableCell className="text-right text-sm text-slate-400">
+                  <TableCell className="text-right text-sm text-white/40">
                     {format(new Date(submission.created_at), "MMM d, yyyy")}
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-white/30">
                       {format(new Date(submission.created_at), "h:mm a")}
                     </div>
                   </TableCell>
@@ -226,7 +226,7 @@ export const SubmissionQueue = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
+                        className="h-8 w-8 text-dem hover:text-dem/80 hover:bg-dem/10"
                         onClick={() =>
                           setDistributionDialog({
                             isOpen: true,
@@ -240,7 +240,7 @@ export const SubmissionQueue = () => {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-green-400 hover:text-green-300 hover:bg-green-400/10"
+                        className="h-8 w-8 text-dem hover:text-dem/80 hover:bg-dem/10"
                         onClick={() => {
                           if (submission.payment_status !== "paid") {
                             toast({
@@ -260,7 +260,7 @@ export const SubmissionQueue = () => {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                        className="h-8 w-8 text-rep hover:text-rep/80 hover:bg-rep/10"
                         onClick={() => updateStatus(submission.id, "declined")}
                         disabled={busyId === submission.id || submission.status === "declined"}
                       >
@@ -268,12 +268,12 @@ export const SubmissionQueue = () => {
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-500 hover:text-white">
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-white/40 hover:text-white">
                             <Clock className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-slate-900 border-slate-800 text-slate-200">
-                          <DropdownMenuItem asChild className="hover:bg-slate-800">
+                        <DropdownMenuContent align="end" className="bg-card border-white/10 text-white">
+                          <DropdownMenuItem asChild className="hover:bg-white/5">
                             <a
                               href={submission.spotify_track_url}
                               target="_blank"
@@ -282,9 +282,9 @@ export const SubmissionQueue = () => {
                               View Track
                             </a>
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="hover:bg-slate-800">Add internal note</DropdownMenuItem>
+                          <DropdownMenuItem className="hover:bg-white/5">Add internal note</DropdownMenuItem>
                           <DropdownMenuItem
-                            className="hover:bg-slate-800 text-red-400"
+                            className="hover:bg-white/5 text-rep"
                             onClick={() => updateStatus(submission.id, "archived")}
                           >
                             Archive submission

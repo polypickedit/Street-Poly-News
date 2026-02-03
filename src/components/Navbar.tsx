@@ -9,8 +9,10 @@ import { SearchBar } from "./SearchBar";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHeaderVisible } from "../hooks/useHeaderVisible";
 import { useCategories } from "../hooks/useCategories";
+import { useAdmin } from "@/providers/AdminProvider";
 import logo from "/logo.svg";
 import mobileSeal from "../assets/mobile-seal.png";
+import { cn } from "@/lib/utils";
 
 import { useCapabilities } from "../hooks/useCapabilities";
 
@@ -35,6 +37,7 @@ export function Navbar() {
   const location = useLocation();
   const { totalItems, setIsOpen: setCartOpen } = useCart();
   const { capabilities } = useCapabilities();
+  const { isAdminMode, toggleAdminMode } = useAdmin();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -57,7 +60,7 @@ export function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed top-10 left-0 right-0 z-50 bg-dem-dark border-b border-blue-900/50 lg:shadow-[0_1px_0_0_rgba(255,255,255,0.04)]"
+            className="fixed top-10 left-0 right-0 z-50 bg-dem-dark border-b border-dem/50 lg:shadow-[0_1px_0_0_rgba(255,255,255,0.04)]"
           >
             <div className="container mx-auto px-4 relative">
               <div className="flex h-24 md:h-32 items-center justify-between">
@@ -85,7 +88,7 @@ export function Navbar() {
                       />
                     </div>
 
-                    <span className="font-display text-2xl md:text-5xl tracking-widest text-blue-50 leading-none">
+                    <span className="font-display text-2xl md:text-5xl tracking-widest text-dem leading-none">
                       STREETPOLY <span className="text-rep ml-1">NEWS</span>
                     </span>
 
@@ -96,13 +99,51 @@ export function Navbar() {
 
                   {/* Actions (Search & Cart) */}
                   <div className="flex items-center gap-2">
+                    {/* Admin Link (Desktop Only) */}
+                    {isAdmin && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={toggleAdminMode}
+                          className={cn(
+                            "hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all group mr-2",
+                            isAdminMode 
+                              ? "bg-dem text-white border-dem shadow-[0_0_15px_rgba(20,184,166,0.3)] animate-pulse" 
+                              : "bg-dem/10 border-dem/20 text-dem hover:bg-dem/20"
+                          )}
+                          title={isAdminMode ? "Exit Conduction Mode" : "Enter Conduction Mode"}
+                        >
+                          <Zap size={18} className={cn(isAdminMode && "fill-current")} />
+                          <span className="text-[10px] font-bold uppercase tracking-[0.2em]">
+                            {isAdminMode ? "Conduction Active" : "Conduction Mode"}
+                          </span>
+                        </button>
+
+                        <Link
+                          to="/admin"
+                          className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-rep/10 border border-rep/20 text-rep hover:bg-rep/20 transition-all group mr-2"
+                          title="Admin Panel"
+                        >
+                          <Zap size={18} />
+                          <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Admin</span>
+                        </Link>
+                      </div>
+                    )}
+
+                    {/* Temporary Debug Indicator (Visible if logged in) */}
+                    {session?.user && (
+                      <div className="flex flex-col items-end mr-2 px-2 py-1 bg-white/5 rounded text-[8px] text-white/50 uppercase leading-tight">
+                        <span>{isAdmin ? "Admin Access: OK" : `Role: ${authLoading ? "Checking..." : "Standard User"}`}</span>
+                        <span className="opacity-50 text-[6px]">{session.user.email}</span>
+                      </div>
+                    )}
+
                     {/* Search Toggle (Desktop only shows if search hidden, Mobile always shows) */}
                     {(!showSearch || window.innerWidth < 1024) && (
                       <button
                         type="button"
                         onClick={() => setShowSearch(!showSearch)}
                         aria-label="Search"
-                        className="p-2 text-blue-200/70 hover:text-rep transition-colors"
+                        className="p-2 text-white/70 hover:text-rep transition-colors"
                       >
                         <Search size={24} />
                       </button>
@@ -112,7 +153,7 @@ export function Navbar() {
                     <button
                       type="button"
                       onClick={() => setCartOpen(true)}
-                      className="p-2 text-blue-200/70 hover:text-rep transition-colors relative"
+                      className="p-2 text-white/70 hover:text-rep transition-colors relative"
                       aria-label="Shopping bag"
                     >
                       <ShoppingBag size={24} />
@@ -127,7 +168,7 @@ export function Navbar() {
                     <button
                       type="button"
                       onClick={() => setIsOpen(!isOpen)}
-                      className="p-2 text-blue-200/70 hover:text-rep transition-colors"
+                      className="p-2 text-white/70 hover:text-rep transition-colors"
                       aria-label="Toggle menu"
                     >
                       {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -142,7 +183,7 @@ export function Navbar() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="absolute top-full left-0 right-0 bg-dem-dark border-b border-blue-900/50 p-4 flex justify-center z-40"
+                    className="absolute top-full left-0 right-0 bg-dem-dark border-b border-dem/50 p-4 flex justify-center z-40"
                   >
                     <SearchBar 
                       className="w-full max-w-2xl" 
@@ -152,47 +193,47 @@ export function Navbar() {
                 )}
               </AnimatePresence>
 
-              <div className="border-t border-blue-900/50 py-2 md:py-3 overflow-x-auto no-scrollbar scroll-smooth">
+              <div className="border-t border-dem/50 py-2 md:py-3 overflow-x-auto no-scrollbar scroll-smooth">
                 <div className="flex items-center justify-start md:justify-center gap-x-6 md:gap-x-8 px-4 min-w-max mx-auto">
                   <Link
                     to="/"
-                    className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
+                    className="font-display text-lg uppercase tracking-[0.2em] text-white/70 hover:text-rep transition-colors whitespace-nowrap"
                   >
                     All
                   </Link>
                   <Link
                     to="/?category=politics"
-                    className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
+                    className="font-display text-lg uppercase tracking-[0.2em] text-white/70 hover:text-rep transition-colors whitespace-nowrap"
                   >
                     Politics
                   </Link>
                   <Link
                     to="/?category=entertainment"
-                    className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
+                    className="font-display text-lg uppercase tracking-[0.2em] text-white/70 hover:text-rep transition-colors whitespace-nowrap"
                   >
                     Entertainment
                   </Link>
                   <Link
                     to="/?category=business"
-                    className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
+                    className="font-display text-lg uppercase tracking-[0.2em] text-white/70 hover:text-rep transition-colors whitespace-nowrap"
                   >
                     Business
                   </Link>
                   <Link
                     to="/?category=exclusive"
-                    className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
+                    className="font-display text-lg uppercase tracking-[0.2em] text-white/70 hover:text-rep transition-colors whitespace-nowrap"
                   >
                     Exclusives
                   </Link>
                   <Link
                     to="/?category=fashion"
-                    className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
+                    className="font-display text-lg uppercase tracking-[0.2em] text-white/70 hover:text-rep transition-colors whitespace-nowrap"
                   >
                     Fashion
                   </Link>
                   <Link
                     to="/?category=health"
-                    className="font-display text-lg uppercase tracking-[0.2em] text-blue-200/70 hover:text-rep transition-colors whitespace-nowrap"
+                    className="font-display text-lg uppercase tracking-[0.2em] text-white/70 hover:text-rep transition-colors whitespace-nowrap"
                   >
                     Health
                   </Link>
@@ -207,7 +248,7 @@ export function Navbar() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-full right-4 w-64 mt-2 !bg-dem-dark border border-blue-900/50 shadow-xl py-6 px-4 flex flex-col gap-6 rounded-xl max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-900/50 scrollbar-track-transparent"
+                    className="absolute top-full right-4 w-64 mt-2 !bg-dem-dark border border-dem/50 shadow-xl py-6 px-4 flex flex-col gap-6 rounded-xl max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-thin scrollbar-thumb-dem/50 scrollbar-track-transparent"
                   >
                     {/* Main Nav Links */}
                     <div className="flex flex-col items-center gap-6">
@@ -217,19 +258,19 @@ export function Navbar() {
                           to={link.path}
                           onClick={() => setIsOpen(false)}
                           className={`font-display text-2xl md:text-3xl uppercase tracking-tighter hover:text-rep transition-colors ${
-                            location.pathname === link.path ? "text-blue-50" : "text-blue-200/70"
+                            location.pathname === link.path ? "text-white" : "text-white/70"
                           }`}
                         >
                           {link.name}
                         </Link>
                       ))}
                       {/* Mobile Actions */}
-                      <div className="flex flex-col items-center gap-4 mt-8 pt-8 border-t border-blue-900/30 w-full max-w-[200px]">
+                      <div className="flex flex-col items-center gap-4 mt-8 pt-8 border-t border-dem/30 w-full max-w-[200px]">
                         {!isAuthenticated && (
                           <Link
                             to="/login"
                             onClick={() => setIsOpen(false)}
-                            className="text-xs uppercase tracking-[0.3em] text-blue-200 hover:text-rep font-bold transition-colors"
+                            className="text-xs uppercase tracking-[0.3em] text-dem/70 hover:text-rep font-bold transition-colors"
                           >
                             Sign In
                           </Link>
@@ -240,7 +281,7 @@ export function Navbar() {
                             <Link
                               to="/dashboard"
                               onClick={() => setIsOpen(false)}
-                              className="text-xs uppercase tracking-[0.3em] text-blue-400 font-bold"
+                              className="text-xs uppercase tracking-[0.3em] text-dem font-bold"
                             >
                               My Dashboard
                             </Link>
