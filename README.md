@@ -1,73 +1,56 @@
 # STREETPOLY NEWS
 
-## Project info
+StreetPoly News is a high-fidelity media portal and dynamic content engine designed for real-time editorial management. 🎙️⚡
 
-**URL**: https://github.com/polypickedit/Street-Poly-News.git
+## 🚀 Core Features
 
-## How can I edit this code?
+### 🎬 The Control Room (Conduction Mode)
+A visual overlay that transforms the site into an editable "Booth" for admins.
+- **Visual Editing**: Click any "Slot" on the live site to swap content instantly.
+- **Temporal Scheduling**: Schedule content to go live or expire at specific times (starts_at/ends_at).
+- **Device Targeting**: Serve vertical-friendly content to mobile users and cinematic layouts to desktop users in the same slot.
+- **Realtime Presence**: See other active admins currently in the "Booth" via Supabase Presence.
 
-There are several ways of editing your application.
+### 📰 Content Management
+- **Dynamic Slots**: Key areas (Hero, Breaking News, Clips) are "Virtual Slots" that resolve the highest-priority active placement.
+- **Infinite Feed**: A seamless, high-performance story feed with high-contrast typography.
+- **Monetization Ready**: Integrated Stripe infrastructure for slot entitlements and artist promotions.
 
-**Use Lovable**
+## 🛠️ Technology Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- **Frontend**: Vite + TypeScript + React 18
+- **Styling**: Tailwind CSS + Framer Motion (Animations) + Lucide (Icons)
+- **Backend & Auth**: Supabase (PostgreSQL, Auth, Realtime, RPCs, Edge Functions)
+- **State Management**: TanStack Query (React Query)
+- **UI Components**: shadcn/ui (Tailwind-based Radix primitives)
 
-Changes made via Lovable will be committed automatically to this repo.
+## 📦 Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
+- Node.js (v18+)
+- Supabase Project (with migrations applied in `/supabase/migrations`)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### Local Development
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# 1. Clone & Install
+git clone https://github.com/polypickedit/Street-Poly-News.git
+cd street-politics-feed-main
+npm install
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# 2. Setup Environment
+# Copy .env.example to .env.local and fill in your Supabase & Stripe keys
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 3. Launch
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 🚢 Deployment
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Simply open [Lovable](https://lovable.dev/projects) and click on **Share -> Publish**. Lovable automatically handles the Vercel/Vite build process. For the backend, ensure your environment variables are set in the Lovable/Vercel settings.
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 📜 Documentation
+- [Production Checklist](TODO.md)
+- [Testing Guide](TESTING.md)
+- [Environment Setup](ENVIRONMENT.md)
+- [Diagnostics](DIAGNOSTICS.md)

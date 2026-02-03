@@ -1,6 +1,16 @@
 # Production Readiness Checklist
 
-This project currently wires up the front-end routes, Supabase RPCs/policies, and Stripe hooks, but a few outstanding moves are still needed before the newsroom and admin portal are fully functional in a deployed environment.
+## ✅ Recently Completed (Live Logistics & Admin Overhaul)
+
+- [x] **Conduction Mode Overhaul**: Implemented a visual "Booth" overlay for real-time site layout management.
+- [x] **Temporal Scheduling**: Added support for `starts_at` and `ends_at` in content placements, allowing for future-dated or expiring content.
+- [x] **Device-Specific Targeting**: Added the ability to serve different content for Mobile vs. Desktop users within the same slot.
+- [x] **Realtime Booth Presence**: Integrated Supabase Presence to allow admins to see other active conductors in real-time.
+- [x] **Inventory Virtualization**: Converted hardcoded YouTube grid on the homepage to a dynamic `home.clips` slot.
+- [x] **Admin UX Polish**: Increased tap targets to 96px for mobile efficiency, added visible text labels, and ensured slot tags are always visible in edit mode.
+- [x] **Technical Debt**: Refactored hooks for React Fast Refresh and implemented strict typing for the Supabase service layer.
+
+---
 
 ## 1. Secrets & Runtime Config
 
