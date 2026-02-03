@@ -12,7 +12,7 @@ interface SlotProps {
   /** Optional wrapper class for the slot */
   className?: string;
   /** Function to render the resolved content */
-  children: (content: { type: ContentType; id: string | null; metadata: any } | null) => ReactNode;
+  children: (content: { type: ContentType; id: string | null; metadata: Record<string, any> } | null) => ReactNode;
 }
 
 /**

@@ -278,7 +278,9 @@ const PostDetail = () => {
               accepts={["ad"]}
               fallback={<div className="h-32 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center text-white/20 uppercase tracking-[0.5em] text-[10px]">Advertisement</div>}
               className="mt-8"
-            />
+            >
+              {() => null}
+            </Slot>
           </div>
 
           {/* Sidebar */}

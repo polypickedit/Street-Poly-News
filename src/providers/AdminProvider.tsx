@@ -1,12 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-interface ActiveAdmin {
-  user_id: string;
-  email: string;
-  online_at: string;
-}
+import { ActiveAdmin } from "@/types/admin";
+import { AdminContext } from "@/contexts/AdminContext";
 
 // Temporary types for schema extensions not yet in generated definitions
 type SupabaseRPCOverride = {
@@ -25,22 +21,6 @@ type SupabaseTableOverride = {
     };
   };
 };
-
-interface AdminContextType {
-  isAdmin: boolean;
-  isAdminMode: boolean;
-  setIsAdminMode: (mode: boolean) => void;
-  toggleAdminMode: () => void;
-  isWalkthroughActive: boolean;
-  setIsWalkthroughActive: (active: boolean) => void;
-  hasCompletedWalkthrough: boolean;
-  completeWalkthrough: () => void;
-  walkthroughStep: number;
-  setWalkthroughStep: (step: number) => void;
-  activeAdmins: ActiveAdmin[];
-}
-
-export const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();

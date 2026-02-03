@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SupabaseClient } from '@supabase/supabase-js';
 import { ContentType, ContentPlacement } from "@/types/cms";
 import { Post } from "@/hooks/usePosts";
-import { Loader2, Save, History, Smartphone, Monitor, CheckCircle2 } from "lucide-react";
+import { Loader2, Save, History, Smartphone, Monitor, CheckCircle2, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";

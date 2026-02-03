@@ -4,10 +4,15 @@ import { PostCard } from "./PostCard";
 import { Loader2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
-export function InfinitePostFeed() {
+interface InfinitePostFeedProps {
+  category?: string | null;
+  variant?: "list" | "grid";
+}
+
+export function InfinitePostFeed({ category: propCategory, variant = "list" }: InfinitePostFeedProps = {}) {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const currentCategory = searchParams.get("category");
+  const currentCategory = propCategory || searchParams.get("category");
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
     usePosts(currentCategory);

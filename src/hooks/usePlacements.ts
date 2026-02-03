@@ -11,8 +11,7 @@ export function useSlotContent(slotKey: string) {
     queryKey: ["slot-content", slotKey],
     queryFn: async () => {
       const now = new Date().toISOString();
-      
-      let query = supabase
+      const query = (supabase as any)
         .from("content_placements")
         .select("*")
         .eq("slot_key", slotKey)
@@ -30,10 +29,10 @@ export function useSlotContent(slotKey: string) {
 
       // Filter by device scope in JS to keep the DB query simple
       const isMobile = window.innerWidth < 768; // Simple check for resolution
-      const filtered = (data as ContentPlacement[]).filter(p => 
+      const filtered = (data as any[] | null)?.filter(p => 
         p.device_scope === 'all' || 
         (isMobile ? p.device_scope === 'mobile' : p.device_scope === 'desktop')
-      );
+      ) as ContentPlacement[] ?? [];
 
       return filtered[0] || null;
     },
@@ -46,7 +45,7 @@ export function useSlotContents(slotKey: string) {
     queryFn: async () => {
       const now = new Date().toISOString();
       
-      let query = supabase
+      const query = (supabase as any)
         .from("content_placements")
         .select("*")
         .eq("slot_key", slotKey)
@@ -63,10 +62,10 @@ export function useSlotContents(slotKey: string) {
       }
 
       const isMobile = window.innerWidth < 768;
-      const filtered = (data as ContentPlacement[]).filter(p => 
+      const filtered = (data as any[] | null)?.filter(p => 
         p.device_scope === 'all' || 
         (isMobile ? p.device_scope === 'mobile' : p.device_scope === 'desktop')
-      );
+      ) as ContentPlacement[] ?? [];
 
       return filtered;
     },
