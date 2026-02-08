@@ -303,16 +303,16 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto py-8">
           {authLoading ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-              <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-              <p className="text-slate-300 animate-pulse">Checking authentication...</p>
+              <Loader2 className="h-8 w-8 animate-spin text-dem mb-4" />
+              <p className="text-white/60 animate-pulse">Checking authentication...</p>
             </div>
           ) : !user ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-              <AlertCircle className="h-8 w-8 text-red-400 mb-4" />
-              <p className="text-slate-300">Please sign in to view your dashboard.</p>
+              <AlertCircle className="h-8 w-8 text-rep mb-4" />
+              <p className="text-white/70">Please sign in to view your dashboard.</p>
               <Button 
                 variant="outline" 
-                className="mt-4"
+                className="mt-4 border-white/20 hover:bg-white/10 text-white"
                 onClick={() => navigate("/login")}
               >
                 Sign In
@@ -331,7 +331,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <h1 className="text-3xl font-bold tracking-tight text-white">My Dashboard</h1>
-                    <p className="text-slate-300">{user.email}</p>
+                    <p className="text-white/60">{user.email}</p>
                   </div>
                 </motion.div>
               </header>
@@ -342,15 +342,15 @@ export default function Dashboard() {
             transition={{ delay: 0.1 }}
             className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
           >
-            <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+            <Card className="bg-card border-white/10 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-200">Available Features</CardTitle>
+                <CardTitle className="text-sm font-bold uppercase tracking-wider text-white/80">Available Features</CardTitle>
                 <Zap className="w-4 h-4 text-dem" />
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-white">
                   {isLoadingCapabilities ? (
-                    <Loader2 className="w-6 h-6 animate-spin text-slate-600" />
+                    <Loader2 className="w-6 h-6 animate-spin text-white/20" />
                   ) : (
                     capabilities.length
                   )}
@@ -359,9 +359,9 @@ export default function Dashboard() {
               </CardContent>
             </Card>
             
-            <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+            <Card className="bg-card border-white/10 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-200">Active Account</CardTitle>
+                <CardTitle className="text-sm font-bold uppercase tracking-wider text-white/80">Active Account</CardTitle>
                 <UserIcon className="w-4 h-4 text-dem" />
               </CardHeader>
               <CardContent>
@@ -374,9 +374,9 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+            <Card className="bg-card border-white/10 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-200">Quick Actions</CardTitle>
+                <CardTitle className="text-sm font-bold uppercase tracking-wider text-white/80">Quick Actions</CardTitle>
                 <Plus className="w-4 h-4 text-dem" />
               </CardHeader>
               <CardContent className="flex gap-2">
@@ -393,41 +393,41 @@ export default function Dashboard() {
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+            <Card className="bg-card border-white/10 backdrop-blur-sm">
               <CardHeader className="pb-2">
-                <CardDescription className="text-slate-200 uppercase tracking-[0.2em] text-[10px] font-bold">Total Submissions</CardDescription>
+                <CardDescription className="text-white/80 uppercase tracking-[0.2em] text-[10px] font-bold">Total Submissions</CardDescription>
                 <CardTitle className="text-4xl font-bold text-white mt-1">{submissions?.length || 0}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-2 text-sm text-slate-400 font-medium">
+                <div className="flex items-center gap-2 text-sm text-white/60 font-medium">
                   <Music className="w-4 h-4 text-dem" />
                   <span>History of all music submitted</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+            <Card className="bg-card border-white/10 backdrop-blur-sm">
               <CardHeader className="pb-2">
-                <CardDescription className="text-slate-200 uppercase tracking-[0.2em] text-[10px] font-bold">Active Placements</CardDescription>
+                <CardDescription className="text-white/80 uppercase tracking-[0.2em] text-[10px] font-bold">Active Placements</CardDescription>
                 <CardTitle className="text-4xl font-bold text-white mt-1">{placements?.length || 0}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-2 text-sm text-slate-400 font-medium">
+                <div className="flex items-center gap-2 text-sm text-white/60 font-medium">
                   <Layout className="w-4 h-4 text-dem" />
                   <span>Live on playlists or site</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+            <Card className="bg-card border-white/10 backdrop-blur-sm">
               <CardHeader className="pb-2">
-                <CardDescription className="text-slate-200 uppercase tracking-[0.2em] text-[10px] font-bold">Pending Review</CardDescription>
+                <CardDescription className="text-white/80 uppercase tracking-[0.2em] text-[10px] font-bold">Pending Review</CardDescription>
                 <CardTitle className="text-4xl font-bold text-white mt-1">
                   {submissions?.filter((s) => s.status === 'pending').length || 0}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-2 text-sm text-slate-400 font-medium">
+                <div className="flex items-center gap-2 text-sm text-white/60 font-medium">
                   <Clock className="w-4 h-4 text-rep" />
                   <span>Currently with our editors</span>
                 </div>
@@ -436,11 +436,11 @@ export default function Dashboard() {
           </div>
 
           <Tabs defaultValue="submissions" className="space-y-8">
-            <TabsList className="bg-slate-900/80 border border-slate-800 p-1">
-              <TabsTrigger value="submissions" className="data-[state=active]:bg-slate-800">Submissions</TabsTrigger>
-              <TabsTrigger value="placements" className="data-[state=active]:bg-slate-800">Placements</TabsTrigger>
-              <TabsTrigger value="capabilities" className="data-[state=active]:bg-slate-800">Features</TabsTrigger>
-              <TabsTrigger value="payments" className="data-[state=active]:bg-slate-800">Payments</TabsTrigger>
+            <TabsList className="bg-white/5 border border-white/10 p-1">
+              <TabsTrigger value="submissions" className="data-[state=active]:bg-white/10">Submissions</TabsTrigger>
+              <TabsTrigger value="placements" className="data-[state=active]:bg-white/10">Placements</TabsTrigger>
+              <TabsTrigger value="capabilities" className="data-[state=active]:bg-white/10">Features</TabsTrigger>
+              <TabsTrigger value="payments" className="data-[state=active]:bg-white/10">Payments</TabsTrigger>
               {isAdmin && (
                 <TabsTrigger value="management" className="data-[state=active]:bg-rep/20 text-rep">Management</TabsTrigger>
               )}
@@ -454,43 +454,43 @@ export default function Dashboard() {
 
             <TabsContent value="submissions" className="space-y-4">
               {loadingSubmissions ? (
-                <div className="py-12 text-center text-slate-400">Loading submissions...</div>
+                <div className="py-12 text-center text-white/40">Loading submissions...</div>
               ) : submissions?.length === 0 ? (
-                <div className="py-24 text-center border border-dashed border-slate-800 rounded-2xl">
-                  <Music className="w-12 h-12 text-slate-700 mx-auto mb-4" />
+                <div className="py-24 text-center border border-dashed border-white/10 rounded-2xl">
+                  <Music className="w-12 h-12 text-white/10 mx-auto mb-4" />
                   <h3 className="text-lg font-medium mb-2 text-white">No submissions yet</h3>
-                  <p className="text-slate-500 mb-6">Start your first submission to get featured.</p>
-                  <Button onClick={() => navigate("/booking")}>Submit Music</Button>
+                  <p className="text-white/40 mb-6">Start your first submission to get featured.</p>
+                  <Button className="bg-dem hover:bg-dem/90 text-white" onClick={() => navigate("/booking")}>Submit Music</Button>
                 </div>
               ) : (
                 <div className="grid gap-4">
                   {submissions?.map((s) => (
                     <Card 
                       key={s.id} 
-                      className="bg-slate-900/30 border-slate-800 hover:border-slate-700 transition-all cursor-pointer group"
+                      className="bg-white/5 border-white/10 hover:border-white/20 transition-all cursor-pointer group"
                       onClick={() => navigate(`/orders/${s.id}`)}
                     >
                       <CardContent className="p-6">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded bg-slate-800 flex items-center justify-center group-hover:bg-dem/10 transition-colors">
+                            <div className="w-12 h-12 rounded bg-white/10 flex items-center justify-center group-hover:bg-dem/10 transition-colors">
                               <Music className="w-5 h-5 text-dem" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
                                 <h4 className="font-semibold text-lg text-white">{s.track_title}</h4>
-                                <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-dem group-hover:translate-x-1 transition-all" />
+                                <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-dem group-hover:translate-x-1 transition-all" />
                               </div>
-                              <p className="text-sm text-slate-400">{s.artist_name} • {s.slots?.name}</p>
+                              <p className="text-sm text-white/60">{s.artist_name} • {s.slots?.name}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="text-right mr-4">
-                              <div className="text-xs text-slate-500 mb-1">Status</div>
+                              <div className="text-xs text-white/40 mb-1">Status</div>
                               {getStatusBadge(s.status)}
                             </div>
                             <div className="text-right">
-                              <div className="text-xs text-slate-500 mb-1">Payment</div>
+                              <div className="text-xs text-white/40 mb-1">Payment</div>
                               {getPaymentBadge(s.payment_status)}
                             </div>
                           </div>
@@ -498,20 +498,20 @@ export default function Dashboard() {
 
                         {/* Syndication Status Section */}
                         {s.submission_distribution && s.submission_distribution.length > 0 && (
-                          <div className="mt-6 pt-6 border-t border-slate-800">
-                            <div className="flex items-center gap-2 mb-4 text-slate-400">
+                          <div className="mt-6 pt-6 border-t border-white/10">
+                            <div className="flex items-center gap-2 mb-4 text-white/60">
                               <Share2 className="w-4 h-4" />
                               <h5 className="text-xs font-bold uppercase tracking-wider">Syndication Status</h5>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                {s.submission_distribution.map((dist: DistributionStatus) => (
-                                 <div key={dist.id} className="bg-slate-900/50 rounded-lg p-3 border border-slate-800/50 flex items-center justify-between group">
+                                 <div key={dist.id} className="bg-white/5 rounded-lg p-3 border border-white/10 flex items-center justify-between group">
                                   <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded bg-slate-800 flex items-center justify-center">
-                                      <Globe className="w-4 h-4 text-slate-500" />
+                                    <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center">
+                                      <Globe className="w-4 h-4 text-white/40" />
                                     </div>
                                     <div>
-                                      <p className="text-xs font-semibold text-slate-300">{dist.media_outlets?.name}</p>
+                                      <p className="text-xs font-semibold text-white/80">{dist.media_outlets?.name}</p>
                                       <div className="mt-1">
                                         {getStatusBadge(dist.status)}
                                       </div>
@@ -538,36 +538,36 @@ export default function Dashboard() {
 
             <TabsContent value="placements" className="space-y-4">
               {loadingPlacements ? (
-                <div className="py-12 text-center text-slate-500">Loading placements...</div>
+                <div className="py-12 text-center text-white/40">Loading placements...</div>
               ) : placements?.length === 0 ? (
-                <div className="py-24 text-center border border-dashed border-slate-800 rounded-2xl">
-                  <Layout className="w-12 h-12 text-slate-700 mx-auto mb-4" />
+                <div className="py-24 text-center border border-dashed border-white/10 rounded-2xl">
+                  <Layout className="w-12 h-12 text-white/10 mx-auto mb-4" />
                   <h3 className="text-lg font-medium mb-2 text-white">No active placements</h3>
-                  <p className="text-slate-500">Your music will appear here once approved and scheduled.</p>
+                  <p className="text-white/40">Your music will appear here once approved and scheduled.</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
                   {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {placements?.map((p: any) => (
-                    <Card key={p.id} className="bg-slate-900/30 border-slate-800">
+                    <Card key={p.id} className="bg-white/5 border-white/10">
                       <CardContent className="p-6">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded bg-green-500/10 flex items-center justify-center">
-                              <CheckCircle2 className="w-5 h-5 text-green-400" />
+                            <div className="w-12 h-12 rounded bg-dem/10 flex items-center justify-center">
+                              <CheckCircle2 className="w-5 h-5 text-dem" />
                             </div>
                             <div>
                               <h4 className="font-semibold text-lg text-white">{p.submissions?.track_title}</h4>
-                              <p className="text-sm text-slate-400">on {p.playlists?.name}</p>
+                              <p className="text-sm text-white/60">on {p.playlists?.name}</p>
                             </div>
                           </div>
                           <div className="flex flex-wrap gap-6 items-center">
-                            <div className="text-sm text-slate-400">
-                              <div className="text-xs text-slate-500 mb-1">Duration</div>
+                            <div className="text-sm text-white/60">
+                              <div className="text-xs text-white/40 mb-1">Duration</div>
                               {format(new Date(p.start_date), "MMM d")} - {format(new Date(p.end_date), "MMM d, yyyy")}
                             </div>
                             {p.playlists?.spotify_playlist_url && (
-                              <Button variant="ghost" size="sm" asChild className="text-dem hover:text-dem/70">
+                              <Button variant="ghost" size="sm" asChild className="text-dem hover:text-dem/70 hover:bg-dem/10">
                                 <a href={p.playlists.spotify_playlist_url} target="_blank" rel="noopener noreferrer">
                                   <ExternalLink className="w-4 h-4 mr-2" />
                                   View Playlist
@@ -585,53 +585,53 @@ export default function Dashboard() {
 
             <TabsContent value="capabilities" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="bg-slate-900/30 border-slate-800">
+                <Card className="bg-card border-white/10">
                   <CardHeader>
                     <CardTitle className="text-lg text-white">Account Access</CardTitle>
-                    <CardDescription>Your active features and services</CardDescription>
+                    <CardDescription className="text-white/60">Your active features and services</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {isLoadingCapabilities ? (
-                      <div className="py-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-700" /></div>
+                      <div className="py-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-white/20" /></div>
                     ) : capabilities.length === 0 ? (
-                      <div className="py-8 text-center text-slate-500 bg-slate-950/50 rounded-lg border border-slate-800/50">
+                      <div className="py-8 text-center text-white/40 bg-white/5 rounded-lg border border-white/10">
                         No active features found.
                       </div>
                     ) : (
                       <div className="space-y-2">
                         {capabilities.map((cap, i) => (
-                          <div key={i} className="flex items-center justify-between p-3 bg-slate-800/30 rounded-lg border border-slate-700/30">
+                          <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
                             <div className="flex items-center gap-3">
-                              <Zap className="w-4 h-4 text-yellow-500" />
-                              <span className="text-sm font-medium text-slate-200 uppercase tracking-wider">{cap.replace('.', ' ')}</span>
+                              <Zap className="w-4 h-4 text-dem" />
+                              <span className="text-sm font-medium text-white/80 uppercase tracking-wider">{cap.replace('.', ' ')}</span>
                             </div>
-                            <Badge variant="outline" className="text-[10px] border-green-500/30 text-green-400 bg-green-500/5">ACTIVE</Badge>
+                            <Badge variant="outline" className="text-[10px] border-dem/30 text-dem bg-dem/5">ACTIVE</Badge>
                           </div>
                         ))}
                       </div>
                     )}
                     
                     <div className="pt-4">
-                      <Button className="w-full bg-dem hover:bg-dem/80 text-sm h-10" onClick={() => navigate("/booking")}>
+                      <Button className="w-full bg-dem hover:bg-dem/90 text-white text-sm h-10" onClick={() => navigate("/booking")}>
                         Get Featured
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-slate-900/30 border-slate-800">
+                <Card className="bg-card border-white/10">
                   <CardHeader>
                     <CardTitle className="text-lg text-white">How it works</CardTitle>
-                    <CardDescription>Access to site features</CardDescription>
+                    <CardDescription className="text-white/60">Access to site features</CardDescription>
                   </CardHeader>
-                  <CardContent className="text-sm text-slate-400 space-y-4">
+                  <CardContent className="text-sm text-white/60 space-y-4">
                     <p>When you purchase a service or get featured, you unlock specific site features.</p>
                     <ul className="space-y-2 list-disc pl-4">
                       <li>Each submission uses one active feature slot.</li>
                       <li>Features remain active as long as your service is running.</li>
                       <li>One payment can unlock multiple features.</li>
                     </ul>
-                    <p className="pt-2 italic text-xs">Everything you need to manage your presence.</p>
+                    <p className="pt-2 italic text-xs text-white/40">Everything you need to manage your presence.</p>
                   </CardContent>
                 </Card>
               </div>
@@ -639,37 +639,37 @@ export default function Dashboard() {
 
             <TabsContent value="payments" className="space-y-4">
                {loadingPayments ? (
-                <div className="py-12 text-center text-slate-500">Loading payments...</div>
+                <div className="py-12 text-center text-white/40">Loading payments...</div>
               ) : payments?.length === 0 ? (
-                <div className="py-24 text-center border border-dashed border-slate-800 rounded-2xl">
-                  <CreditCard className="w-12 h-12 text-slate-700 mx-auto mb-4" />
+                <div className="py-24 text-center border border-dashed border-white/10 rounded-2xl">
+                  <CreditCard className="w-12 h-12 text-white/10 mx-auto mb-4" />
                   <h3 className="text-lg font-medium mb-2 text-white">No payment history</h3>
-                  <p className="text-slate-500">Your transaction receipts will appear here.</p>
+                  <p className="text-white/40">Your transaction receipts will appear here.</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
                   {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {payments?.map((pm: any) => (
-                    <Card key={pm.id} className="bg-slate-900/30 border-slate-800">
+                    <Card key={pm.id} className="bg-white/5 border-white/10">
                       <CardContent className="p-6">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded bg-slate-800 flex items-center justify-center">
-                              <CreditCard className="w-5 h-5 text-slate-400" />
+                            <div className="w-12 h-12 rounded bg-white/10 flex items-center justify-center">
+                              <CreditCard className="w-5 h-5 text-white/40" />
                             </div>
                             <div>
                               <h4 className="font-semibold text-lg text-white">${(pm.amount_cents / 100).toFixed(2)} {pm.currency.toUpperCase()}</h4>
-                              <p className="text-sm text-slate-400">{format(new Date(pm.created_at), "MMMM d, yyyy 'at' h:mm a")}</p>
+                              <p className="text-sm text-white/60">{format(new Date(pm.created_at), "MMMM d, yyyy 'at' h:mm a")}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-4">
                             <div className="text-right mr-4">
-                              <div className="text-xs text-slate-500 mb-1">Status</div>
-                              <Badge className={pm.status === 'succeeded' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}>
+                              <div className="text-xs text-white/40 mb-1">Status</div>
+                              <Badge className={pm.status === 'succeeded' ? 'bg-dem/10 text-dem' : 'bg-rep/10 text-rep'}>
                                 {pm.status.toUpperCase()}
                               </Badge>
                             </div>
-                            <div className="text-xs font-mono text-slate-500">
+                            <div className="text-xs font-mono text-white/40">
                               {pm.stripe_payment_intent_id}
                             </div>
                           </div>

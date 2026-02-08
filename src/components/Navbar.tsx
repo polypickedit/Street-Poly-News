@@ -291,14 +291,14 @@ export function Navbar() {
                                 <Link
                                   to="/admin/queue"
                                   onClick={() => setIsOpen(false)}
-                                  className="text-xs uppercase tracking-[0.3em] text-slate-400 hover:text-white font-bold"
+                                  className="text-xs uppercase tracking-[0.3em] text-white/60 hover:text-white font-bold"
                                 >
                                   Orders
                                 </Link>
                                 <Link
                                   to="/admin/submissions"
                                   onClick={() => setIsOpen(false)}
-                                  className="text-xs uppercase tracking-[0.3em] text-slate-400 hover:text-white font-bold"
+                                  className="text-xs uppercase tracking-[0.3em] text-white/60 hover:text-white font-bold"
                                 >
                                   Requests
                                 </Link>
@@ -313,9 +313,9 @@ export function Navbar() {
                             )}
 
                             {capabilities.length > 0 && (
-                              <div className="flex items-center gap-2 px-3 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded-full mt-2">
-                                <Zap className="w-3 h-3 text-yellow-500" />
-                                <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-wider">
+                              <div className="flex items-center gap-2 px-3 py-1 bg-dem/10 border border-dem/20 rounded-full mt-2">
+                                <Zap className="w-3 h-3 text-dem" />
+                                <span className="text-[10px] font-bold text-dem uppercase tracking-wider">
                                   {capabilities.length} Active
                                 </span>
                               </div>
@@ -323,7 +323,7 @@ export function Navbar() {
 
                             <button
                               onClick={handleSignOut}
-                              className="text-xs uppercase tracking-[0.3em] text-red-400 hover:text-red-300 font-bold transition-colors mt-4"
+                              className="text-xs uppercase tracking-[0.3em] text-rep hover:text-rep/80 font-bold transition-colors mt-4"
                             >
                               Sign Out
                             </button>

@@ -101,10 +101,10 @@ const Index = () => {
         <section className="mb-6 md:mb-10 px-4">
           <div className="flex items-center justify-between gap-4 mb-3">
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground font-body">
+              <p className="text-xs uppercase tracking-widest text-white/40 font-body">
                 STREETPOLY NEWS
               </p>
-              <h2 className="font-display text-2xl md:text-3xl text-foreground">
+              <h2 className="font-display text-2xl md:text-3xl text-white">
                 Latest Clips
               </h2>
             </div>
@@ -169,9 +169,9 @@ const FallbackClips = ({ videoLinks }: { videoLinks: VideoLink[] }) => {
           href={video.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex flex-col rounded-2xl border border-white/10 bg-card/80 transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg"
+          className="group flex flex-col rounded-2xl border border-white/10 bg-card transition-all hover:-translate-y-0.5 hover:border-dem/50 hover:shadow-lg"
         >
-          <div className="overflow-hidden rounded-t-2xl bg-muted/30">
+          <div className="overflow-hidden rounded-t-2xl bg-white/5">
             <img
               src={video.thumbnail}
               alt={video.title}
@@ -179,10 +179,10 @@ const FallbackClips = ({ videoLinks }: { videoLinks: VideoLink[] }) => {
             />
           </div>
           <div className="p-4 flex flex-col gap-2">
-            <h3 className="font-display text-lg text-foreground transition-colors group-hover:text-white">
+            <h3 className="font-display text-lg text-white transition-colors group-hover:text-white">
               {video.title}
             </h3>
-            <p className="text-sm text-muted-foreground font-body mt-2 line-clamp-2">
+            <p className="text-sm text-white/60 font-body mt-2 line-clamp-2">
               {video.description}
             </p>
             <span className="mt-3 text-xs font-semibold uppercase tracking-widest text-white/70">

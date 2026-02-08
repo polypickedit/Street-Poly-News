@@ -106,7 +106,7 @@ export const BottomNav = () => {
           animate={{ y: 0 }}
           exit={{ y: 100 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed bottom-8 left-0 right-0 z-50 bg-dem-dark/95 backdrop-blur-sm border-t border-dem/50 text-white safe-area-bottom"
+          className="fixed bottom-8 left-0 right-0 z-50 bg-black/95 backdrop-blur-sm border-t border-white/10 text-white safe-area-bottom"
         >
           <div className="flex items-center justify-between h-24 max-w-2xl mx-auto px-6">
             {navItems.map((item) => (
@@ -141,7 +141,7 @@ export const BottomNav = () => {
                   "relative flex flex-col items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all min-w-[80px]",
                   isAdminMode
                     ? "text-dem animate-pulse"
-                    : "text-dem/50 hover:text-dem"
+                    : "text-white/40 hover:text-dem"
                 )}
               >
                 <Zap className={cn("h-8 w-8", isAdminMode && "fill-current")} />
@@ -158,7 +158,7 @@ export const BottomNav = () => {
                   "relative flex flex-col items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-colors min-w-[80px]",
                   location.pathname.startsWith("/admin")
                     ? "text-rep"
-                    : "text-dem/70 hover:text-rep"
+                    : "text-white/40 hover:text-rep"
                 )}
               >
                 <Settings className={cn("h-8 w-8", location.pathname.startsWith("/admin") && "animate-spin-slow")} />
@@ -181,7 +181,7 @@ export const BottomNav = () => {
                   <span className="text-sm font-bold uppercase tracking-wider font-display">Menu</span>
                 </button>
               </SheetTrigger>
-              <SheetContent side="left" aria-describedby={undefined} className="w-[300px] !bg-dem-dark border-r border-white/10 p-6 overflow-y-auto">
+              <SheetContent side="left" aria-describedby={undefined} className="w-[300px] !bg-black border-r border-white/10 p-6 overflow-y-auto">
                 <SheetHeader className="mb-8">
                   <SheetTitle className="text-left">Menu</SheetTitle>
                 </SheetHeader>
@@ -224,7 +224,7 @@ export const BottomNav = () => {
                           onClick={() => setMenuOpen(false)}
                           className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-colors"
                         >
-                          <div className="w-3 h-3 rounded-full bg-pink-500" />
+                          <div className="w-3 h-3 rounded-full bg-white/10" />
                           <span className="text-lg font-medium">Fashion</span>
                         </Link>
                       )}
@@ -234,7 +234,7 @@ export const BottomNav = () => {
                           onClick={() => setMenuOpen(false)}
                           className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-colors"
                         >
-                          <div className="w-3 h-3 rounded-full bg-green-500" />
+                          <div className="w-3 h-3 rounded-full bg-white/10" />
                           <span className="text-lg font-medium">Health</span>
                         </Link>
                       )}
@@ -305,7 +305,7 @@ export const BottomNav = () => {
                             className={cn(
                               "col-span-2 flex items-center justify-between p-4 rounded-lg border transition-all mt-4 group",
                               isAdminMode
-                                ? "bg-dem/20 border-dem shadow-[0_0_15px_rgba(20,184,166,0.2)]"
+                                ? "bg-dem/20 border-dem shadow-[0_0_15px_rgba(0,71,171,0.2)]"
                                 : "bg-white/5 border-white/10"
                             )}
                           >
@@ -340,8 +340,8 @@ export const BottomNav = () => {
                       <p className="text-[10px] text-white/40 uppercase mb-2">Auth Status</p>
                       <div className="space-y-1">
                         <p className="text-xs text-white/60">User: <span className="text-white">{user.email}</span></p>
-                        <p className="text-xs text-white/60">Admin: <span className={isAdmin ? "text-green-500" : "text-red-500"}>{isAdmin ? "YES" : "NO"}</span></p>
-                        <p className="text-xs text-white/60">Editor: <span className={isEditor ? "text-green-500" : "text-red-500"}>{isEditor ? "YES" : "NO"}</span></p>
+                        <p className="text-xs text-white/60">Admin: <span className={isAdmin ? "text-dem" : "text-rep"}>{isAdmin ? "YES" : "NO"}</span></p>
+                        <p className="text-xs text-white/60">Editor: <span className={isEditor ? "text-dem" : "text-rep"}>{isEditor ? "YES" : "NO"}</span></p>
                       </div>
                     </div>
                   )}

@@ -58,7 +58,7 @@ function ResolvedGallery({ id }: { id: string | null | undefined }) {
 
   return (
     <div className="space-y-12">
-      <div className="bg-slate-900/50 rounded-3xl overflow-hidden border border-white/10 p-4 md:p-8">
+      <div className="bg-white/5 rounded-3xl overflow-hidden border border-white/10 p-4 md:p-8">
         <PostCard {...post} variant="featured" />
       </div>
       <div className="pt-12 border-t border-white/5">

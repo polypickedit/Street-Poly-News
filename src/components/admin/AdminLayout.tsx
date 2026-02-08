@@ -48,28 +48,28 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-50">
+    <div className="flex min-h-screen bg-black text-white">
       {/* Sidebar */}
       <aside className={cn(
-        "border-r border-slate-800 bg-slate-900/50 flex flex-col transition-all duration-300 ease-in-out",
+        "border-r border-white/10 bg-white/5 flex flex-col transition-all duration-300 ease-in-out",
         isCollapsed ? "w-20" : "w-64"
       )}>
         <div className={cn("p-6 flex items-center justify-between", isCollapsed && "px-4")}>
           {!isCollapsed && (
             <div>
                 <h1 className="text-xl font-bold tracking-tight text-dem">Streetpoly</h1>
-                <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-semibold">Media Portal</p>
+                <p className="text-xs text-white/40 mt-1 uppercase tracking-widest font-semibold">Media Portal</p>
               </div>
             )}
             <button 
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="p-2 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+              className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
             >
               {isCollapsed ? <Menu className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
             </button>
           </div>
 
-          <div className="p-4 border-t border-slate-800 space-y-2">
+          <div className="p-4 border-t border-white/10 space-y-2">
           <Link
             to="/"
             className={cn(
@@ -97,12 +97,12 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                     "flex items-center px-3 py-2 rounded-lg transition-colors group",
                     isActive 
                       ? "bg-dem/10 text-dem" 
-                      : "text-slate-300 hover:text-white hover:bg-slate-800",
+                      : "text-white/60 hover:text-white hover:bg-white/10",
                     isCollapsed ? "justify-center" : "justify-between"
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <Icon className={cn("w-5 h-5 shrink-0", isActive ? "text-dem" : "text-slate-400 group-hover:text-slate-200")} />
+                    <Icon className={cn("w-5 h-5 shrink-0", isActive ? "text-dem" : "text-white/40 group-hover:text-white")} />
                     {!isCollapsed && <span className="font-medium">{item.name}</span>}
                   </div>
                   {!isCollapsed && isActive && <ChevronRight className="w-4 h-4" />}
@@ -111,7 +111,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             })}
           </nav>
 
-          <div className={cn("p-4 border-t border-slate-800 space-y-4", isCollapsed && "p-2")}>
+          <div className={cn("p-4 border-t border-white/10 space-y-4", isCollapsed && "p-2")}>
             <div className={cn("flex items-center gap-3 px-3 py-2", isCollapsed && "px-0 justify-center")}>
               <div className="w-8 h-8 rounded-full bg-dem flex items-center justify-center text-xs font-bold uppercase shrink-0">
                 {user?.email?.substring(0, 2) || "AD"}
@@ -119,7 +119,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
               {!isCollapsed && (
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate text-white">{user?.email?.split('@')[0] || "Admin User"}</p>
-                  <p className="text-xs text-slate-500 truncate">{user?.email || "admin@streetpolynews.com"}</p>
+                  <p className="text-xs text-white/40 truncate">{user?.email || "admin@streetpolynews.com"}</p>
                 </div>
               )}
             </div>
@@ -127,11 +127,11 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
               onClick={handleLogout}
               title={isCollapsed ? "Sign Out" : undefined}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-300 hover:text-rep hover:bg-rep/10 rounded-lg transition-colors group",
+                "w-full flex items-center gap-3 px-3 py-2 text-sm text-white/60 hover:text-rep hover:bg-rep/10 rounded-lg transition-colors group",
                 isCollapsed && "justify-center"
               )}
             >
-              <LogOut className="w-5 h-5 group-hover:text-rep shrink-0 text-slate-400" />
+              <LogOut className="w-5 h-5 group-hover:text-rep shrink-0 text-white/40" />
               {!isCollapsed && <span className="font-medium">Sign Out</span>}
             </button>
           </div>
@@ -139,7 +139,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between px-8">
+        <header className="h-16 border-b border-white/10 bg-white/5 flex items-center justify-between px-8">
           <h2 className="text-lg font-semibold">
             {navItems.find(i => i.path === location.pathname)?.name || "Admin"}
           </h2>
@@ -150,14 +150,14 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
               className={cn(
                 "flex items-center gap-2 px-4 py-1.5 rounded-full border transition-all font-bold text-xs uppercase tracking-widest",
                 isAdminMode
-                  ? "bg-dem text-white border-dem shadow-[0_0_15px_rgba(20,184,166,0.3)]"
-                  : "bg-slate-800 border-slate-700 text-slate-400 hover:text-white"
+                  ? "bg-dem text-white border-dem shadow-[0_0_15px_rgba(0,71,171,0.3)]"
+                  : "bg-white/10 border-white/20 text-white/60 hover:text-white"
               )}
             >
               <Zap className={cn("w-3 h-3", isAdminMode && "fill-current animate-pulse")} />
               {isAdminMode ? "Conduction: ON" : "Enter Conduction Mode"}
             </button>
-            <div className="px-3 py-1 rounded-full bg-slate-800 text-slate-500 text-[10px] font-bold uppercase tracking-wider border border-slate-700">
+            <div className="px-3 py-1 rounded-full bg-white/5 text-white/40 text-[10px] font-bold uppercase tracking-wider border border-white/10">
               Live Environment
             </div>
           </div>

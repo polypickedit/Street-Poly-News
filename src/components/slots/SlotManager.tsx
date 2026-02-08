@@ -17,7 +17,6 @@ export const SlotManager = () => {
   const fetchSlots = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      // @ts-expect-error - slots table is not in the generated types
       .from('slots')
       .select('*')
       .order('created_at', { ascending: false });
@@ -41,35 +40,35 @@ export const SlotManager = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {slots.map((slot) => (
-          <Card key={slot.id} className="border-border bg-card/50 overflow-hidden">
-            <CardHeader className="pb-3 border-b border-border/50">
+          <Card key={slot.id} className="border-white/10 bg-white/5 overflow-hidden">
+            <CardHeader className="pb-3 border-b border-white/5">
               <div className="flex items-center justify-between">
                 <span className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full ${
-                  slot.is_active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-500/10 text-zinc-500'
+                  slot.is_active ? 'bg-dem/10 text-dem' : 'bg-white/10 text-white/40'
                 }`}>
                   {slot.is_active ? 'Active' : 'Inactive'}
                 </span>
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-white/40 hover:text-white">
                     <Settings2 className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
-              <CardTitle className="text-lg font-display mt-2">{slot.name}</CardTitle>
-              <p className="text-xs text-muted-foreground font-body">/{slot.slug}</p>
+              <CardTitle className="text-lg font-display mt-2 text-white">{slot.name}</CardTitle>
+              <p className="text-xs text-white/40 font-body">/{slot.slug}</p>
             </CardHeader>
             <CardContent className="pt-4 space-y-3">
               <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground font-body">Visibility</span>
-                <span className="font-semibold text-foreground uppercase">{slot.visibility}</span>
+                <span className="text-white/40 font-body">Visibility</span>
+                <span className="font-semibold text-white uppercase">{slot.visibility}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground font-body">Model</span>
-                <span className="font-semibold text-foreground uppercase">{slot.monetization_model}</span>
+                <span className="text-white/40 font-body">Model</span>
+                <span className="font-semibold text-white uppercase">{slot.monetization_model}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground font-body">Price</span>
-                <span className="font-semibold text-foreground">{slot.price ? `$${slot.price}` : 'Free'}</span>
+                <span className="text-white/40 font-body">Price</span>
+                <span className="font-semibold text-white">{slot.price ? `$${slot.price}` : 'Free'}</span>
               </div>
             </CardContent>
           </Card>

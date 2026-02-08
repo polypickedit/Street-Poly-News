@@ -111,7 +111,7 @@ export function ConductWalkthrough() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-slate-950/80 pointer-events-auto"
+        className="absolute inset-0 bg-black/80 pointer-events-auto"
         style={{
           clipPath: targetRect 
             ? `inset(0 0 0 0 round 0) polygon(0% 0%, 0% 100%, ${targetRect.left}px 100%, ${targetRect.left}px ${targetRect.top}px, ${targetRect.right}px ${targetRect.top}px, ${targetRect.right}px ${targetRect.bottom}px, ${targetRect.left}px ${targetRect.bottom}px, ${targetRect.left}px 100%, 100% 100%, 100% 0%)`
@@ -127,7 +127,7 @@ export function ConductWalkthrough() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: -20 }}
           className={cn(
-            "absolute pointer-events-auto bg-slate-900 border border-white/10 p-8 rounded-3xl shadow-2xl max-w-sm w-full z-[101]",
+            "absolute pointer-events-auto bg-black border border-white/10 p-8 rounded-3xl shadow-2xl max-w-sm w-full z-[101]",
             currentStep.position === "center" && "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
             currentStep.position === "bottom" && targetRect && "top-[calc(var(--target-bottom)+20px)] left-1/2 -translate-x-1/2",
             currentStep.position === "right" && targetRect && "left-[calc(var(--target-right)+20px)] top-1/2 -translate-y-1/2",
@@ -143,7 +143,7 @@ export function ConductWalkthrough() {
                 <Play className="w-8 h-8 text-dem fill-current" />
               </div>
               <h2 className="text-3xl font-display text-white">Welcome to the Control Room</h2>
-              <p className="text-slate-400 font-body text-lg">
+              <p className="text-white/40 font-body text-lg">
                 You don’t edit pages here. <br />
                 <span className="text-white font-bold">You conduct them.</span>
               </p>
@@ -155,7 +155,7 @@ export function ConductWalkthrough() {
               </Button>
               <button 
                 onClick={completeWalkthrough}
-                className="text-slate-500 text-xs uppercase tracking-widest hover:text-white transition-colors"
+                className="text-white/40 text-xs uppercase tracking-widest hover:text-white transition-colors"
               >
                 Skip Tour
               </button>
@@ -168,7 +168,7 @@ export function ConductWalkthrough() {
                 </span>
                 <button 
                   onClick={completeWalkthrough} 
-                  className="text-slate-500 hover:text-white transition-colors p-1"
+                  className="text-white/40 hover:text-white transition-colors p-1"
                   aria-label="Close walkthrough"
                   title="Close"
                 >
@@ -176,9 +176,9 @@ export function ConductWalkthrough() {
                 </button>
               </div>
               <h3 className="text-xl font-display text-white">{currentStep.title}</h3>
-              <p className="text-slate-300 font-body leading-relaxed">{currentStep.content}</p>
+              <p className="text-white/60 font-body leading-relaxed">{currentStep.content}</p>
               {currentStep.subContent && (
-                <p className="text-slate-500 text-sm font-body italic border-l-2 border-dem/30 pl-3">
+                <p className="text-white/40 text-sm font-body italic border-l-2 border-dem/30 pl-3">
                   {currentStep.subContent}
                 </p>
               )}
@@ -187,7 +187,7 @@ export function ConductWalkthrough() {
                 <button 
                   onClick={handleBack}
                   disabled={walkthroughStep === 0}
-                  className="flex items-center gap-1 text-xs text-slate-500 hover:text-white disabled:opacity-0 transition-all"
+                  className="flex items-center gap-1 text-xs text-white/40 hover:text-white disabled:opacity-0 transition-all"
                 >
                   <ChevronLeft className="w-3 h-3" /> Back
                 </button>

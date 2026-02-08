@@ -109,14 +109,14 @@ export function AdminOverlay() {
               {activeAdmins.slice(0, 3).map((admin, idx) => (
                 <div 
                   key={admin.user_id || idx} 
-                  className="w-6 h-6 rounded-full border-2 border-dem bg-slate-800 flex items-center justify-center text-[8px] font-bold uppercase cursor-help shadow-lg"
+                  className="w-6 h-6 rounded-full border-2 border-dem bg-white/10 flex items-center justify-center text-[8px] font-bold uppercase cursor-help shadow-lg"
                   title={`${admin.email} is in the booth`}
                 >
                   {admin.email?.substring(0, 2)}
                 </div>
               ))}
               {activeAdmins.length > 3 && (
-                <div className="w-6 h-6 rounded-full border-2 border-dem bg-slate-900 flex items-center justify-center text-[8px] font-bold">
+                <div className="w-6 h-6 rounded-full border-2 border-dem bg-white/10 flex items-center justify-center text-[8px] font-bold">
                   +{activeAdmins.length - 3}
                 </div>
               )}
@@ -137,7 +137,7 @@ export function AdminOverlay() {
           </button>
           <button 
             onClick={toggleAdminMode}
-            className="flex items-center gap-1.5 hover:text-re-700 hover:text-rep transition-colors px-2 py-1 rounded-full hover:bg-white/10"
+            className="flex items-center gap-1.5 hover:text-rep transition-colors px-2 py-1 rounded-full hover:bg-white/10"
             aria-label="Close Conduction Mode"
             title="Close"
           >
@@ -166,17 +166,17 @@ export function AdminOverlay() {
           transition: all 0.2s ease-in-out !important;
         }
         [data-slot]:not([data-slot-active="true"]):hover {
-          outline: 2px solid #14b8a6 !important; /* dem color */
+          outline: 2px solid #0047AB !important; /* dem color */
           outline-offset: -2px !important;
           cursor: pointer !important;
           filter: brightness(1.1) !important;
         }
-[data-slot]::after {
+        [data-slot]::after {
           content: attr(data-slot);
           position: absolute;
           top: 0;
           left: 0;
-          background: #14b8a6;
+          background: #0047AB;
           color: white;
           font-family: sans-serif;
           font-size: 10px;
@@ -191,7 +191,7 @@ export function AdminOverlay() {
           box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
         }
         [data-slot]:hover {
-          outline: 3px solid #14b8a6 !important;
+          outline: 3px solid #0047AB !important;
           outline-offset: -3px !important;
         }
         [data-slot]:hover::after {

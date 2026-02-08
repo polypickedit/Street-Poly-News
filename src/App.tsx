@@ -166,7 +166,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-dem/30">
+              <div className="min-h-screen bg-black text-white font-sans selection:bg-dem/30">
                 <AdminOverlay />
                 <AnimatedRoutes />
                 <CartSidebar />

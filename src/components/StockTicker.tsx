@@ -144,7 +144,7 @@ export function StockTicker() {
   if (displayTickers.length === 0) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[60] bg-slate-950 text-white overflow-hidden border-t border-slate-800 h-8">
+    <div className="fixed bottom-0 left-0 right-0 z-[60] bg-black text-white overflow-hidden border-t border-white/10 h-8">
       <div className="flex items-center h-full relative">
         <div className="flex-1 overflow-hidden relative h-full flex items-center">
           <div className="animate-marquee whitespace-nowrap flex items-center hover:[animation-play-state:paused] [animation-duration:40s]">
@@ -153,7 +153,7 @@ export function StockTicker() {
                 key={`${item.symbol}-${idx}`}
                 className="inline-flex items-center gap-2 mx-6"
               >
-                <span className="font-display text-xs font-bold tracking-wider text-slate-400">
+                <span className="font-display text-xs font-bold tracking-wider text-white/40">
                   {item.symbol}
                 </span>
                 <span className="font-body text-xs font-medium">

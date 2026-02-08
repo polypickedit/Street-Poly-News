@@ -136,7 +136,7 @@ export default function OrderDetails() {
         <div className="container mx-auto px-4 py-8 max-w-5xl">
           <button 
             onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8 group"
+            className="flex items-center gap-2 text-white/40 hover:text-white transition-colors mb-8 group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back to Dashboard
@@ -153,28 +153,28 @@ export default function OrderDetails() {
                 <h1 className="text-4xl font-bold text-white tracking-tight">
                   {submission.track_title}
                 </h1>
-                <p className="text-xl text-slate-400">
+                <p className="text-xl text-white/40">
                   by {submission.artist_name} • {submission.slots?.name}
                 </p>
               </header>
 
               {/* Details Card */}
-              <Card className="bg-slate-900/50 border-slate-800">
+              <Card className="bg-white/5 border-white/10">
                 <CardHeader>
-                  <CardTitle className="text-lg">Request Details</CardTitle>
+                  <CardTitle className="text-lg text-white">Request Details</CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Submission Date</label>
-                      <div className="flex items-center gap-2 mt-1 text-slate-200">
+                      <label className="text-xs font-bold uppercase tracking-wider text-white/40">Submission Date</label>
+                      <div className="flex items-center gap-2 mt-1 text-white/80">
                         <Calendar className="w-4 h-4 text-dem" />
                         {format(new Date(submission.created_at), "MMMM d, yyyy")}
                       </div>
                     </div>
                     <div>
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Service Type</label>
-                      <div className="flex items-center gap-2 mt-1 text-slate-200">
+                      <label className="text-xs font-bold uppercase tracking-wider text-white/40">Service Type</label>
+                      <div className="flex items-center gap-2 mt-1 text-white/80">
                         <Music className="w-4 h-4 text-dem" />
                         {submission.slots?.name}
                       </div>
@@ -183,7 +183,7 @@ export default function OrderDetails() {
 
                   {submission.spotify_track_url && (
                     <div>
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Spotify Link</label>
+                      <label className="text-xs font-bold uppercase tracking-wider text-white/40">Spotify Link</label>
                       <div className="mt-1">
                         <a 
                           href={submission.spotify_track_url} 
@@ -200,8 +200,8 @@ export default function OrderDetails() {
 
                   {submission.notes_internal && (
                     <div>
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Additional Info</label>
-                      <div className="mt-1 text-sm text-slate-300 whitespace-pre-wrap">
+                      <label className="text-xs font-bold uppercase tracking-wider text-white/40">Additional Info</label>
+                      <div className="mt-1 text-sm text-white/60 whitespace-pre-wrap">
                         {submission.notes_internal}
                       </div>
                     </div>
@@ -211,22 +211,22 @@ export default function OrderDetails() {
 
               {/* Distribution/Placement Status */}
               {(submission.submission_distribution?.length > 0 || submission.placements?.length > 0) && (
-                <Card className="bg-slate-900/50 border-slate-800">
+                <Card className="bg-white/5 border-white/10">
                   <CardHeader>
-                    <CardTitle className="text-lg">Live Placements & Distribution</CardTitle>
-                    <CardDescription>Where your music is being featured</CardDescription>
+                    <CardTitle className="text-lg text-white">Live Placements & Distribution</CardTitle>
+                    <CardDescription className="text-white/40">Where your music is being featured</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Playlists */}
                     {submission.placements?.map((p) => (
-                      <div key={p.id} className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 flex items-center justify-between">
+                      <div key={p.id} className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded bg-dem/10 flex items-center justify-center">
                             <Music className="w-5 h-5 text-dem" />
                           </div>
                           <div>
-                            <p className="font-semibold text-slate-200">{p.playlists?.name}</p>
-                            <p className="text-xs text-slate-500">Active until {format(new Date(p.end_date), "MMM d, yyyy")}</p>
+                            <p className="font-semibold text-white/90">{p.playlists?.name}</p>
+                            <p className="text-xs text-white/40">Active until {format(new Date(p.end_date), "MMM d, yyyy")}</p>
                           </div>
                         </div>
                         {p.playlists?.spotify_playlist_url && (
@@ -247,13 +247,13 @@ export default function OrderDetails() {
 
                     {/* Media Outlets */}
                     {submission.submission_distribution?.map((dist) => (
-                      <div key={dist.id} className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 flex items-center justify-between">
+                      <div key={dist.id} className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded bg-dem/10 flex items-center justify-center">
                             <Globe className="w-5 h-5 text-dem" />
                           </div>
                           <div>
-                            <p className="font-semibold text-slate-200">{dist.media_outlets?.name}</p>
+                            <p className="font-semibold text-white/90">{dist.media_outlets?.name}</p>
                             <div className="mt-1">
                               {getStatusBadge(dist.status)}
                             </div>
@@ -282,18 +282,18 @@ export default function OrderDetails() {
             {/* Sidebar Controls */}
             <div className="space-y-8">
               {/* Communication Card (Placeholder for now) */}
-              <Card className="bg-slate-900/50 border-slate-800">
+              <Card className="bg-white/5 border-white/10">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
+                  <CardTitle className="text-lg flex items-center gap-2 text-white">
                     <MessageSquare className="w-4 h-4" />
                     Updates
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="text-sm text-slate-400 italic">
+                  <div className="text-sm text-white/40 italic">
                     No new updates for this request.
                   </div>
-                  <Button variant="outline" className="w-full text-xs" disabled>
+                  <Button variant="outline" className="w-full text-xs border-white/10 hover:bg-white/5" disabled>
                     Send Message
                   </Button>
                 </CardContent>
@@ -319,7 +319,7 @@ export default function OrderDetails() {
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="text-xs border-rep/30 hover:bg-rep/10"
+                          className="text-xs border-rep/30 hover:bg-rep/10 text-rep"
                           onClick={() => {
                             toast({ title: "Status Update", description: "Updating to Approved..." });
                           }}
@@ -329,7 +329,7 @@ export default function OrderDetails() {
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="text-xs border-rep/30 hover:bg-rep/10"
+                          className="text-xs border-rep/30 hover:bg-rep/10 text-rep"
                           onClick={() => {
                             toast({ title: "Status Update", description: "Updating to Rejected..." });
                           }}
@@ -354,17 +354,17 @@ export default function OrderDetails() {
               )}
 
               {/* User Account Info */}
-              <Card className="bg-slate-900/50 border-slate-800">
+              <Card className="bg-white/5 border-white/10">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
+                  <CardTitle className="text-lg flex items-center gap-2 text-white">
                     <User className="w-4 h-4" />
                     Requester
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-1">
-                    <p className="font-semibold text-slate-200">{submission.artists?.name}</p>
-                    <p className="text-sm text-slate-500">{submission.artists?.email}</p>
+                    <p className="font-semibold text-white/90">{submission.artists?.name}</p>
+                    <p className="text-sm text-white/40">{submission.artists?.email}</p>
                   </div>
                 </CardContent>
               </Card>

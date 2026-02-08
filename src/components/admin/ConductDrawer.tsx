@@ -136,13 +136,13 @@ export function ConductDrawer({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-md bg-slate-900 border-slate-800 text-white overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-md bg-black border-white/10 text-white overflow-y-auto">
         <SheetHeader className="mb-6">
           <Badge variant="outline" className="w-fit mb-2 border-dem text-dem">
             Conducting Slot
           </Badge>
           <SheetTitle className="text-2xl font-display text-white">{slotKey}</SheetTitle>
-          <SheetDescription className="text-slate-400 font-body">
+          <SheetDescription className="text-white/40 font-body">
             Assign content to this area of the site.
           </SheetDescription>
         </SheetHeader>
@@ -151,7 +151,7 @@ export function ConductDrawer({
           {/* Current Content Info */}
           <section>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold flex items-center gap-2">
+              <h3 className="text-xs uppercase tracking-widest text-white/40 font-bold flex items-center gap-2">
                 <Info className="w-3 h-3" /> Current Winner
               </h3>
               {currentPlacement && (
@@ -166,30 +166,30 @@ export function ConductDrawer({
                 </Button>
               )}
             </div>
-            <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+            <div className="p-4 bg-white/5 rounded-xl border border-white/10">
               {currentPlacement ? (
                 <div>
-                  <p className="text-sm font-body text-slate-300">
+                  <p className="text-sm font-body text-white/60">
                     Type: <span className="text-white font-bold">{currentPlacement.content_type}</span>
                   </p>
-                  <p className="text-sm font-body text-slate-300">
+                  <p className="text-sm font-body text-white/60">
                     ID: <span className="text-white font-mono">{currentPlacement.content_id}</span>
                   </p>
-                   <p className="text-xs text-slate-500 mt-2 font-mono">
+                   <p className="text-xs text-white/40 mt-2 font-mono">
                     Placed: {new Date(currentPlacement.created_at).toLocaleString()}
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-slate-500 italic">Static Fallback (No active placements)</p>
+                <p className="text-sm text-white/40 italic">Static Fallback (No active placements)</p>
               )}
             </div>
           </section>
 
-          <Separator className="bg-slate-800" />
+          <Separator className="bg-white/10" />
 
           {/* Content Picker */}
           <section>
-            <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-3">
+            <h3 className="text-xs uppercase tracking-widest text-white/40 font-bold mb-3">
               Swap Content
             </h3>
             {loadingPosts ? (
@@ -206,10 +206,10 @@ export function ConductDrawer({
                       "flex items-center gap-4 p-3 rounded-lg border transition-all text-left",
                       selectedContentId === post.id.toString()
                         ? "bg-dem/20 border-dem shadow-lg"
-                        : "bg-slate-800/30 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50"
+                        : "bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
                     )}
                   >
-                    <div className="w-12 h-12 rounded bg-slate-700 overflow-hidden flex-shrink-0">
+                    <div className="w-12 h-12 rounded bg-white/10 overflow-hidden flex-shrink-0">
                       {post.thumbnail_url && (
                         <img 
                           src={post.thumbnail_url} 
@@ -220,7 +220,7 @@ export function ConductDrawer({
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-display truncate leading-tight">{post.title}</p>
-                      <p className="text-[10px] text-slate-500 font-body uppercase mt-1">{post.content_type}</p>
+                      <p className="text-[10px] text-white/40 font-body uppercase mt-1">{post.content_type}</p>
                     </div>
                     {selectedContentId === post.id.toString() && (
                       <CheckCircle2 className="w-4 h-4 text-dem" />
@@ -233,26 +233,26 @@ export function ConductDrawer({
 
           {/* Intentionality Logging */}
           <section>
-            <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-3">
+            <h3 className="text-xs uppercase tracking-widest text-white/40 font-bold mb-3">
               Intentionality Log
             </h3>
             <Input
               placeholder="Reason for change (optional)..."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-600 focus:border-dem transition-colors"
+              className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-dem transition-colors"
             />
-            <p className="text-[10px] text-slate-500 mt-2 italic">
+            <p className="text-[10px] text-white/40 mt-2 italic">
               Adding a reason turns logs into institutional memory.
             </p>
           </section>
 
           {/* Advanced Targeting */}
           <section className="space-y-6 pt-2">
-            <Separator className="bg-slate-800" />
+            <Separator className="bg-white/10" />
             
             <div className="space-y-4">
-              <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold flex items-center gap-2">
+              <h3 className="text-xs uppercase tracking-widest text-white/40 font-bold flex items-center gap-2">
                 <Monitor className="w-3 h-3" /> Target Audience
               </h3>
               <div className="flex gap-2">
@@ -264,7 +264,7 @@ export function ConductDrawer({
                       "flex-1 flex items-center justify-center gap-2 p-2 rounded border transition-all text-[10px] font-bold uppercase",
                       deviceScope === scope
                         ? "bg-dem/20 border-dem text-dem"
-                        : "bg-slate-800/50 border-slate-700 text-slate-500 hover:text-slate-300"
+                        : "bg-white/5 border-white/10 text-white/40 hover:text-white"
                     )}
                   >
                     {scope === 'mobile' && <Smartphone className="w-3 h-3" />}
@@ -276,35 +276,35 @@ export function ConductDrawer({
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold flex items-center gap-2">
+              <h3 className="text-xs uppercase tracking-widest text-white/40 font-bold flex items-center gap-2">
                 <Calendar className="w-3 h-3" /> Temporal Scheduling
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Starts At</label>
+                  <label className="text-[10px] text-white/40 uppercase font-bold tracking-tighter">Starts At</label>
                   <Input 
                     type="datetime-local" 
                     value={startsAt}
                     onChange={(e) => setStartsAt(e.target.value)}
-                    className="bg-slate-800/50 border-slate-700 text-[10px] h-8"
+                    className="bg-white/5 border-white/10 text-[10px] h-8"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Ends At</label>
+                  <label className="text-[10px] text-white/40 uppercase font-bold tracking-tighter">Ends At</label>
                   <Input 
                     type="datetime-local" 
                     value={endsAt}
                     onChange={(e) => setEndsAt(e.target.value)}
-                    className="bg-slate-800/50 border-slate-700 text-[10px] h-8"
+                    className="bg-white/5 border-white/10 text-[10px] h-8"
                   />
                 </div>
               </div>
-              <p className="text-[9px] text-slate-600 italic">Leave empty for immediate / permanent placement.</p>
+              <p className="text-[9px] text-white/20 italic">Leave empty for immediate / permanent placement.</p>
             </div>
           </section>
 
           {/* Action Footer */}
-          <div className="sticky bottom-0 bg-slate-900 pt-4 pb-2">
+          <div className="sticky bottom-0 bg-black pt-4 pb-2">
             <Button 
               className="w-full bg-dem hover:bg-dem/90 text-white font-bold h-12"
               disabled={!selectedContentId || conductMutation.isPending}
@@ -317,7 +317,7 @@ export function ConductDrawer({
               )}
               Commit Change
             </Button>
-            <p className="text-[10px] text-center text-slate-500 mt-3 flex items-center justify-center gap-1 uppercase tracking-tighter">
+            <p className="text-[10px] text-center text-white/40 mt-3 flex items-center justify-center gap-1 uppercase tracking-tighter">
               <History className="w-3 h-3" /> This action will be logged.
             </p>
           </div>

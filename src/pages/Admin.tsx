@@ -191,8 +191,8 @@ const Admin = () => {
 
   if (authLoading || !user) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-slate-950">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="h-screen w-screen flex items-center justify-center bg-black">
+        <Loader2 className="h-8 w-8 animate-spin text-dem" />
       </div>
     );
   }
