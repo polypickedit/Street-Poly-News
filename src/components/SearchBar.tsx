@@ -42,7 +42,7 @@ export function SearchBar({ className, onClose }: SearchBarProps) {
   return (
     <div ref={containerRef} className={`relative flex justify-center ${className}`}>
       <form onSubmit={handleSubmit} className="relative w-full max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
         <Input
           ref={inputRef}
           type="text"
@@ -53,7 +53,7 @@ export function SearchBar({ className, onClose }: SearchBarProps) {
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          className="pl-10 pr-10 bg-card border-white/10 text-foreground placeholder:text-muted-foreground focus-visible:ring-dem text-center placeholder:text-center w-full"
+          className="pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-dem text-center placeholder:text-center w-full"
         />
         {query && (
           <button
@@ -62,7 +62,7 @@ export function SearchBar({ className, onClose }: SearchBarProps) {
               setQuery("");
               inputRef.current?.focus();
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
             title="Clear search"
           >
             <X className="w-4 h-4" />
@@ -72,9 +72,9 @@ export function SearchBar({ className, onClose }: SearchBarProps) {
 
       {/* Dropdown Results */}
       {isOpen && query.length > 2 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-white/10 rounded-lg shadow-lg overflow-hidden z-50 max-h-80 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-black border border-white/10 rounded-lg shadow-lg overflow-hidden z-50 max-h-80 overflow-y-auto">
           {isLoading ? (
-            <div className="p-4 text-center text-muted-foreground font-body text-sm">
+            <div className="p-4 text-center text-white/40 font-body text-sm">
               Searching...
             </div>
           ) : results?.length ? (
@@ -88,13 +88,13 @@ export function SearchBar({ className, onClose }: SearchBarProps) {
                     setQuery("");
                     onClose?.();
                   }}
-                  className="block p-3 hover:bg-dem/5 transition-colors border-b border-white/10 last:border-0 group"
+                  className="block p-3 hover:bg-white/5 transition-colors border-b border-white/10 last:border-0 group"
                 >
-                  <h4 className="font-display text-sm text-foreground line-clamp-1 group-hover:text-dem transition-colors">
+                  <h4 className="font-display text-sm text-white line-clamp-1 group-hover:text-dem transition-colors">
                     {post.title}
                   </h4>
                   {post.subtitle && (
-                    <p className="text-muted-foreground text-xs font-body line-clamp-1 mt-1">
+                    <p className="text-white/40 text-xs font-body line-clamp-1 mt-1">
                       {post.subtitle}
                     </p>
                   )}

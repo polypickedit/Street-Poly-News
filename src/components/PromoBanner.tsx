@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { SupabaseClient } from "@supabase/supabase-js";
 import donTripAd from "@/assets/Don Trip ad.jpeg";
 
 const SUPABASE_URL = "https://duldhllwapsjytdzpjfz.supabase.co";
@@ -21,7 +22,7 @@ const promos: Record<string, Promo> = {
   donTrip: {
     title: "DON TRIP - TRAUMA BOND",
     subtitle: "Listen now on all platforms",
-    bg: "from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
+    bg: "bg-white/5",
     text: "LISTEN NOW",
     link: "https://itunes.apple.com",
     isAlbum: false,
@@ -45,23 +46,20 @@ export const PromoBanner = ({ className = "", showLabel = true, type = "donTrip"
     queryFn: async () => {
       if (!currentPromo.affiliateName) return null;
       
-      // @ts-expect-error affiliate_links table might not be in the generated types yet
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as SupabaseClient)
         .from("affiliate_links")
         .select("id, click_count")
         .eq("name", currentPromo.affiliateName)
         .maybeSingle();
 
       if (error) return null;
-      return data;
+      return data as { id: string; click_count: number } | null;
     },
     enabled: !!currentPromo.affiliateName,
   });
 
   const getTrackedUrl = () => {
-    // @ts-expect-error data from affiliate_links query
     if (affiliateLink?.id) {
-      // @ts-expect-error data from affiliate_links query
       return `${SUPABASE_URL}/functions/v1/track-click?id=${affiliateLink.id}`;
     }
     return currentPromo.link || "#";
@@ -92,14 +90,14 @@ export const PromoBanner = ({ className = "", showLabel = true, type = "donTrip"
             )}
             <div>
               {currentPromo.isAlbum && (
-                <div className="text-foreground/60 font-body text-xs uppercase tracking-[0.2em] mb-2">
+                <div className="text-white/40 font-body text-xs uppercase tracking-[0.2em] mb-2">
                   New Album
                 </div>
               )}
-              <div className="text-foreground font-display text-2xl md:text-4xl leading-tight mb-2">
+              <div className="text-white font-display text-2xl md:text-4xl leading-tight mb-2">
                 {currentPromo.title}
               </div>
-              <div className="text-foreground/70 font-body text-base md:text-lg">
+              <div className="text-white/60 font-body text-base md:text-lg">
                 {currentPromo.subtitle}
               </div>
             </div>
@@ -115,7 +113,7 @@ export const PromoBanner = ({ className = "", showLabel = true, type = "donTrip"
   return (
     <div className={`relative ${className}`}>
       {showLabel && (
-        <span className="absolute -top-5 left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">
+        <span className="absolute -top-5 left-0 text-[10px] text-white/40 uppercase tracking-wider font-body">
           Promotion
         </span>
       )}
@@ -123,7 +121,7 @@ export const PromoBanner = ({ className = "", showLabel = true, type = "donTrip"
         <Link
           to={currentPromo.link || "#"}
           title={currentPromo.title}
-          className={`w-full ${currentPromo.image ? "h-auto bg-transparent p-0 border-0 shadow-none" : `h-32 md:h-40 bg-gradient-to-r ${currentPromo.bg} px-6 md:px-10 border-2 border-muted-foreground/30 shadow-2xl`} rounded-2xl flex items-start justify-center cursor-pointer hover:scale-[1.02] transition-all duration-300 hover:shadow-dem/20 relative overflow-hidden group`}
+          className={`w-full ${currentPromo.image ? "h-auto bg-transparent p-0 border-0 shadow-none" : `h-32 md:h-40 ${currentPromo.bg} px-6 md:px-10 border-2 border-white/10 shadow-2xl`} rounded-2xl flex items-start justify-center cursor-pointer hover:scale-[1.02] transition-all duration-300 hover:shadow-dem/20 relative overflow-hidden group`}
         >
           <PromoContent />
         </Link>
@@ -133,7 +131,7 @@ export const PromoBanner = ({ className = "", showLabel = true, type = "donTrip"
           target="_blank"
           rel="noopener noreferrer"
           title={currentPromo.title}
-          className={`w-full ${currentPromo.image ? "h-auto bg-transparent p-0 border-0 shadow-none" : `h-32 md:h-40 bg-gradient-to-r ${currentPromo.bg} px-6 md:px-10 border-2 border-muted-foreground/30 shadow-2xl`} rounded-2xl flex items-start justify-center cursor-pointer hover:scale-[1.02] transition-all duration-300 hover:shadow-dem/20 relative overflow-hidden group`}
+          className={`w-full ${currentPromo.image ? "h-auto bg-transparent p-0 border-0 shadow-none" : `h-32 md:h-40 ${currentPromo.bg} px-6 md:px-10 border-2 border-white/10 shadow-2xl`} rounded-2xl flex items-start justify-center cursor-pointer hover:scale-[1.02] transition-all duration-300 hover:shadow-dem/20 relative overflow-hidden group`}
         >
           <PromoContent />
         </a>

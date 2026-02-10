@@ -80,7 +80,7 @@ const Index = () => {
               <span className="text-dem">Street</span>
               <span className="text-rep">Poly</span>
             </span>
-            <span className="text-foreground sm:ml-2">News</span>
+            <span className="text-white sm:ml-2">News</span>
           </h1>
           <p className="mt-6 text-white/70 text-sm md:text-lg max-w-2xl mx-auto font-body leading-relaxed px-2">
             Unfiltered stories from the heart of the movement. <br className="hidden md:block" /> Real voices, real impact, real news.
@@ -169,7 +169,7 @@ const FallbackClips = ({ videoLinks }: { videoLinks: VideoLink[] }) => {
           href={video.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex flex-col rounded-2xl border border-white/10 bg-card transition-all hover:-translate-y-0.5 hover:border-dem/50 hover:shadow-lg"
+          className="group flex flex-col rounded-2xl border border-white/10 bg-white/5 transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg"
         >
           <div className="overflow-hidden rounded-t-2xl bg-white/5">
             <img

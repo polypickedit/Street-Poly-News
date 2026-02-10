@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { SupabaseClient } from "@supabase/supabase-js";
 import {
   Table,
   TableBody,
@@ -37,14 +38,13 @@ export function ContactSubmissions() {
 
   const fetchSubmissions = useCallback(async () => {
     try {
-      // @ts-expect-error - Table may not be in generated types yet
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as SupabaseClient)
         .from("contact_submissions")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setSubmissions(data || []);
+      setSubmissions((data as unknown as ContactSubmission[]) || []);
     } catch (error) {
       toast({
         title: "Error",
@@ -62,8 +62,7 @@ export function ContactSubmissions() {
 
   const updateStatus = async (id: string, newStatus: string) => {
     try {
-      // @ts-expect-error - Table may not be in generated types yet
-      const { error } = await supabase
+      const { error } = await (supabase as SupabaseClient)
         .from("contact_submissions")
         .update({ status: newStatus })
         .eq("id", id);
@@ -91,8 +90,7 @@ export function ContactSubmissions() {
     if (!confirm("Are you sure you want to delete this submission?")) return;
 
     try {
-      // @ts-expect-error - Table may not be in generated types yet
-      const { error } = await supabase
+      const { error } = await (supabase as SupabaseClient)
         .from("contact_submissions")
         .delete()
         .eq("id", id);
@@ -125,46 +123,46 @@ export function ContactSubmissions() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-display text-foreground">Contact Submissions</h2>
-        <span className="text-sm text-muted-foreground">
+        <h2 className="text-2xl font-display text-white">Contact Submissions</h2>
+        <span className="text-sm text-white/40">
           {submissions.length} total messages
         </span>
       </div>
 
-      <div className="border rounded-lg overflow-hidden bg-card">
+      <div className="border border-white/10 rounded-lg overflow-hidden bg-white/5">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>From</TableHead>
-              <TableHead>Subject</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+            <TableRow className="hover:bg-transparent border-white/10">
+              <TableHead className="text-white/60">Date</TableHead>
+              <TableHead className="text-white/60">From</TableHead>
+              <TableHead className="text-white/60">Subject</TableHead>
+              <TableHead className="text-white/60">Status</TableHead>
+              <TableHead className="text-right text-white/60">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {submissions.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+              <TableRow className="hover:bg-transparent border-white/10">
+                <TableCell colSpan={5} className="text-center py-8 text-white/40">
                   No messages found
                 </TableCell>
               </TableRow>
             ) : (
               submissions.map((submission) => (
-                <TableRow key={submission.id}>
-                  <TableCell className="whitespace-nowrap">
+                <TableRow key={submission.id} className="hover:bg-white/5 border-white/10">
+                  <TableCell className="whitespace-nowrap text-white">
                     {format(new Date(submission.created_at), "MMM d, yyyy")}
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-white/40">
                       {format(new Date(submission.created_at), "h:mm a")}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium">{submission.name}</div>
-                    <div className="text-sm text-muted-foreground">{submission.email}</div>
+                    <div className="font-medium text-white">{submission.name}</div>
+                    <div className="text-sm text-white/40">{submission.email}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium mb-1">{submission.subject}</div>
-                    <p className="text-sm text-muted-foreground line-clamp-2 max-w-[300px]">
+                    <div className="font-medium mb-1 text-white">{submission.subject}</div>
+                    <p className="text-sm text-white/40 line-clamp-2 max-w-[300px]">
                       {submission.message}
                     </p>
                   </TableCell>
@@ -173,10 +171,10 @@ export function ContactSubmissions() {
                       defaultValue={submission.status}
                       onValueChange={(value) => updateStatus(submission.id, value)}
                     >
-                      <SelectTrigger className="w-[120px] h-8">
+                      <SelectTrigger className="w-[120px] h-8 bg-black/40 border-white/10 text-white">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-zinc-900 border-white/10 text-white">
                         <SelectItem value="new">New</SelectItem>
                         <SelectItem value="read">Read</SelectItem>
                         <SelectItem value="replied">Replied</SelectItem>

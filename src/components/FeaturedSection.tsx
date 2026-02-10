@@ -63,8 +63,8 @@ export function FeaturedSection() {
       <div className="px-4">
         <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6 px-4">
           <Flame className="w-4 h-4 md:w-5 md:h-5 text-rep" />
-          <h2 className="font-display text-xl md:text-2xl text-foreground">Featured Stories</h2>
-          <div className="flex-1 h-px bg-border ml-2" />
+          <h2 className="font-display text-xl md:text-2xl text-white">Featured Stories</h2>
+          <div className="flex-1 h-px bg-white/10 ml-2" />
         </div>
         
         <div className="space-y-4 md:space-y-6">
@@ -117,7 +117,7 @@ function ResolvedHero({ id, getThumbnail, fallback }: { id: string | null | unde
     enabled: !!id,
   });
 
-  if (isLoading) return <div className="aspect-video w-full animate-pulse bg-muted rounded-2xl lg:aspect-[21/9] flex items-center justify-center"><Loader2 className="animate-spin text-dem" /></div>;
+  if (isLoading) return <div className="aspect-video w-full animate-pulse bg-white/5 rounded-2xl lg:aspect-[21/9] flex items-center justify-center"><Loader2 className="animate-spin text-dem" /></div>;
   if (!post) return <>{fallback}</>;
 
   return <HeroPost post={post} getThumbnail={getThumbnail} />;

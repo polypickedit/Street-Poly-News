@@ -68,7 +68,7 @@ export function PostCard({
     return (
       <Link
         to={`/post/${id}`}
-        className="group flex gap-4 bg-card/50 rounded-lg p-3 hover:bg-card transition-all duration-300 border border-transparent hover:border-dem/30"
+        className="group flex gap-4 bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-all duration-300 border border-transparent hover:border-dem/30"
       >
         <div className="relative w-28 h-20 flex-shrink-0 rounded-md overflow-hidden">
           <img
@@ -76,16 +76,16 @@ export function PostCard({
             alt={title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
-          <div className="absolute bottom-1 right-1 bg-background/80 text-foreground text-[10px] px-1.5 py-0.5 rounded font-body flex items-center gap-1">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-body flex items-center gap-1">
             {getContentIcon()}
           </div>
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="font-display text-base text-foreground leading-tight line-clamp-2 group-hover:text-dem transition-colors">
+          <h4 className="font-display text-base text-white leading-tight line-clamp-2 group-hover:text-dem transition-colors">
             {title}
           </h4>
-          <p className="text-muted-foreground text-xs font-body mt-1">{timeAgo}</p>
+          <p className="text-white/40 text-xs font-body mt-1">{timeAgo}</p>
         </div>
       </Link>
     );
@@ -94,7 +94,7 @@ export function PostCard({
   return (
     <Link
       to={`/post/${id}`}
-      className="group block bg-card rounded-xl overflow-hidden border border-white/10 hover:border-dem/50 transition-all duration-300 hover:shadow-xl hover:shadow-dem/10 hover:-translate-y-1"
+      className="group block bg-white/5 rounded-xl overflow-hidden border border-white/10 hover:border-dem/50 transition-all duration-300 hover:shadow-xl hover:shadow-dem/10 hover:-translate-y-1"
     >
       <div className="relative aspect-video overflow-hidden">
         <img
@@ -103,7 +103,7 @@ export function PostCard({
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         {/* Gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-60" />
         <div className="absolute inset-0 bg-gradient-to-br from-dem/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         
         {/* Play button */}
@@ -135,14 +135,14 @@ export function PostCard({
 
         {/* Content type badge */}
         <div className="absolute top-3 right-3">
-          <span className="px-2.5 py-1 bg-background/80 backdrop-blur-sm text-foreground text-[10px] font-body font-semibold uppercase tracking-wider rounded-full flex items-center gap-1.5 shadow-lg">
+          <span className="px-2.5 py-1 bg-black/80 backdrop-blur-sm text-white text-[10px] font-body font-semibold uppercase tracking-wider rounded-full flex items-center gap-1.5 shadow-lg">
             {getContentIcon()}
             {getContentLabel()}
           </span>
         </div>
 
         {/* Bottom info bar */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-background to-transparent">
+        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent">
           <div className="flex items-center justify-between text-white text-xs font-body font-medium">
             <span className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-dem" />
@@ -157,13 +157,13 @@ export function PostCard({
           </div>
         </div>
       </div>
-
-      <div className="p-5">
-        <h3 className="font-display text-xl md:text-2xl text-white leading-tight mb-2 group-hover:text-dem transition-colors line-clamp-2">
+      
+      <div className="p-5 space-y-3">
+        <h3 className="font-display text-xl text-white leading-tight line-clamp-2 group-hover:text-dem transition-colors duration-300">
           {title}
         </h3>
         {subtitle && (
-          <p className="text-white/70 font-body text-sm line-clamp-2 leading-relaxed">
+          <p className="font-body text-sm text-white/60 line-clamp-2 leading-relaxed">
             {subtitle}
           </p>
         )}

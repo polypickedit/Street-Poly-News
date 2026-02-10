@@ -57,9 +57,9 @@ export function ClipsGrid({ slotKey }: ClipsGridProps) {
           href={`https://www.youtube.com/watch?v=${post.youtube_id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex flex-col rounded-2xl border border-white/10 bg-card/80 transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg"
+          className="group flex flex-col rounded-2xl border border-white/10 bg-white/5 transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg"
         >
-          <div className="overflow-hidden rounded-t-2xl bg-muted/30 aspect-video">
+          <div className="overflow-hidden rounded-t-2xl bg-black/20 aspect-video">
             <img
               src={post.thumbnail_url || `https://i.ytimg.com/vi/${getYouTubeId(post.youtube_id)}/hqdefault.jpg`}
               alt={post.title}
@@ -67,10 +67,10 @@ export function ClipsGrid({ slotKey }: ClipsGridProps) {
             />
           </div>
           <div className="p-4 flex flex-col gap-2">
-            <h3 className="font-display text-lg text-foreground transition-colors group-hover:text-white line-clamp-2">
+            <h3 className="font-display text-lg text-white transition-colors group-hover:text-white line-clamp-2">
               {post.title}
             </h3>
-            <p className="text-sm text-muted-foreground font-body line-clamp-2">
+            <p className="text-sm text-white/40 font-body line-clamp-2">
               {post.subtitle || "Latest clips from the heart of the city."}
             </p>
             <span className="mt-3 text-xs font-semibold uppercase tracking-widest text-white/70">

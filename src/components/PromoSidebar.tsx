@@ -170,17 +170,17 @@ const SkyscraperRenderer = ({ promo }: { promo: Promo }) => {
           <div className="w-[130px] h-[130px] rounded-lg overflow-hidden mb-4 shadow-xl border-2 border-white/20">
             <img src={promo.albumArt} alt={promo.title} className="w-full h-full object-cover" />
           </div>
-          <div className="text-foreground/60 font-body text-xs uppercase tracking-wider mb-1">New Album</div>
-          <div className="text-foreground font-display text-3xl leading-tight mb-1">{promo.title}</div>
-          <div className="text-foreground/80 font-body text-sm mb-4">{promo.subtitle}</div>
+          <div className="text-white/40 font-body text-xs uppercase tracking-wider mb-1">New Album</div>
+          <div className="text-white font-display text-3xl leading-tight mb-1">{promo.title}</div>
+          <div className="text-white/60 font-body text-sm mb-4">{promo.subtitle}</div>
           <div className="flex items-center gap-2 bg-dem text-white font-display text-sm px-5 py-2.5 rounded-full">
             <Download className="w-4 h-4" /> {promo.text}
           </div>
         </div>
       ) : (
         <div className="flex flex-col items-center p-4 text-center">
-          <div className="text-foreground/90 font-display text-2xl leading-tight mb-2">{promo.title}</div>
-          <div className="text-foreground/70 font-body text-sm mb-6">{promo.subtitle}</div>
+          <div className="text-white font-display text-2xl leading-tight mb-2">{promo.title}</div>
+          <div className="text-white/40 font-body text-sm mb-6">{promo.subtitle}</div>
           <div className="bg-white text-black font-display text-sm px-6 py-2 rounded-full">{promo.text}</div>
         </div>
       )}
@@ -189,9 +189,9 @@ const SkyscraperRenderer = ({ promo }: { promo: Promo }) => {
 
   return (
     <div className="relative w-full flex flex-col items-center">
-      <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">Promotion</span>
+      <span className="absolute -top-4 w-full text-center text-[10px] text-white/40 uppercase tracking-wider font-body">Promotion</span>
       {isInternal ? (
-        <Link to={promo.link || "#"} className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-gradient-to-b from-zinc-800 to-zinc-900 shadow-lg p-4 text-center border-2 border-muted-foreground/20"}`}>
+        <Link to={promo.link || "#"} className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-white/5 shadow-lg p-4 text-center border-2 border-white/10"}`}>
           <Content />
         </Link>
       ) : (
@@ -200,7 +200,7 @@ const SkyscraperRenderer = ({ promo }: { promo: Promo }) => {
           target="_blank" 
           rel="noopener noreferrer" 
           aria-label={`Advertisement: ${promo.title}`}
-          className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-gradient-to-b from-zinc-800 to-zinc-900 shadow-lg p-4 text-center border-2 border-muted-foreground/20"}`}
+          className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-white/5 shadow-lg p-4 text-center border-2 border-white/10"}`}
         >
           <Content />
         </a>
@@ -218,8 +218,8 @@ const SquareRenderer = ({ promo }: { promo: Promo }) => {
         <img src={promo.image} alt={promo.title} className={`w-full h-auto block object-contain ${promo.scaleClass ?? 'scale-100'}`} />
       ) : (
         <div className="flex flex-col items-center p-4 text-center">
-          <div className="text-foreground/90 font-display text-4xl leading-tight mb-2">{promo.title}</div>
-          <div className="text-foreground/70 font-body text-sm mb-6">{promo.subtitle}</div>
+          <div className="text-white font-display text-4xl leading-tight mb-2">{promo.title}</div>
+          <div className="text-white/40 font-body text-sm mb-6">{promo.subtitle}</div>
           <div className="bg-white text-black font-display text-sm px-6 py-2 rounded-full">{promo.text}</div>
         </div>
       )}
@@ -228,9 +228,9 @@ const SquareRenderer = ({ promo }: { promo: Promo }) => {
 
   return (
     <div className="relative w-full flex flex-col items-center text-center">
-      <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">Promotion</span>
+      <span className="absolute -top-4 w-full text-center text-[10px] text-white/40 uppercase tracking-wider font-body">Promotion</span>
       {isInternal ? (
-        <Link to={promo.link || "#"} className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-gradient-to-b from-zinc-800 to-zinc-900 shadow-lg p-4 border-2 border-muted-foreground/20"}`}>
+        <Link to={promo.link || "#"} className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-white/5 shadow-lg p-4 border-2 border-white/10"}`}>
           <Content />
         </Link>
       ) : (
@@ -239,7 +239,7 @@ const SquareRenderer = ({ promo }: { promo: Promo }) => {
           target="_blank" 
           rel="noopener noreferrer" 
           aria-label={`Advertisement: ${promo.title}`}
-          className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-gradient-to-b from-zinc-800 to-zinc-900 shadow-lg p-4 border-2 border-muted-foreground/20"}`}
+          className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-white/5 shadow-lg p-4 border-2 border-white/10"}`}
         >
           <Content />
         </a>
@@ -254,15 +254,15 @@ export const MobilePromoBanner = () => {
   return (
     <div className="xl:hidden my-6">
       <div className="relative">
-        <span className="absolute top-[3%] left-0 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">Promotion</span>
+        <span className="absolute top-[3%] left-0 text-[10px] text-white/40 uppercase tracking-wider font-body">Promotion</span>
         {isInternal ? (
-          <Link to={bannerPromo.link || "#"} className={`w-full h-20 md:h-24 bg-gradient-to-r from-zinc-800 to-zinc-900 rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-muted-foreground/20`}>
-             <div className="text-foreground font-display text-xl md:text-2xl leading-tight">{bannerPromo.title}</div>
+          <Link to={bannerPromo.link || "#"} className={`w-full h-20 md:h-24 bg-white/5 rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-white/10`}>
+             <div className="text-white font-display text-xl md:text-2xl leading-tight">{bannerPromo.title}</div>
              <div className="bg-white text-black font-display text-xs px-4 py-2 rounded-full">{bannerPromo.text}</div>
           </Link>
         ) : (
-          <a href={bannerPromo.link || "#"} target="_blank" rel="noopener noreferrer" className={`w-full h-20 md:h-24 bg-gradient-to-r from-zinc-800 to-zinc-900 rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-muted-foreground/20`}>
-             <div className="text-foreground font-display text-xl md:text-2xl leading-tight">{bannerPromo.title}</div>
+          <a href={bannerPromo.link || "#"} target="_blank" rel="noopener noreferrer" className={`w-full h-20 md:h-24 bg-white/5 rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-white/10`}>
+             <div className="text-white font-display text-xl md:text-2xl leading-tight">{bannerPromo.title}</div>
              <div className="bg-white text-black font-display text-xs px-4 py-2 rounded-full">{bannerPromo.text}</div>
           </a>
         )}
@@ -276,8 +276,8 @@ export const MobileSkyscraperPromo = ({ index = 0 }: { index?: number }) => {
   return (
     <div className="lg:hidden w-full my-6 flex justify-center">
       <div className="relative w-full max-w-sm flex flex-col items-center">
-        <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">Promotion</span>
-        <div className={`rounded-lg flex flex-col items-center justify-center w-full ${skyPromo.image ? "h-auto border-0 bg-transparent" : "bg-gradient-to-b from-zinc-800 to-zinc-900 shadow-lg p-4 text-center border-2 border-muted-foreground/20"}`}>
+        <span className="absolute -top-4 w-full text-center text-[10px] text-white/40 uppercase tracking-wider font-body">Promotion</span>
+        <div className={`rounded-lg flex flex-col items-center justify-center w-full ${skyPromo.image ? "h-auto border-0 bg-transparent" : "bg-white/5 shadow-lg p-4 text-center border-2 border-white/10"}`}>
           {skyPromo.image ? <img src={skyPromo.image} alt={skyPromo.title} className="w-full h-auto object-contain" /> : <div className="text-white">{skyPromo.title}</div>}
         </div>
       </div>
@@ -290,8 +290,8 @@ export const MobileSquarePromo = () => {
   return (
     <div className="lg:hidden w-full my-6 flex justify-center">
       <div className="relative w-full max-w-sm flex flex-col items-center">
-        <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-body">Promotion</span>
-        <div className={`rounded-lg flex flex-col items-center justify-center w-full ${sqPromo.image ? "h-auto border-0 bg-transparent" : "aspect-square bg-gradient-to-b from-zinc-800 to-zinc-900 shadow-lg p-4 text-center border-2 border-muted-foreground/20"}`}>
+        <span className="absolute -top-4 w-full text-center text-[10px] text-white/40 uppercase tracking-wider font-body">Promotion</span>
+        <div className={`rounded-lg flex flex-col items-center justify-center w-full ${sqPromo.image ? "h-auto border-0 bg-transparent" : "aspect-square bg-white/5 shadow-lg p-4 text-center border-2 border-white/10"}`}>
           {sqPromo.image ? <img src={sqPromo.image} alt={sqPromo.title} className="w-full h-auto block" /> : <div className="text-white">{sqPromo.title}</div>}
         </div>
       </div>

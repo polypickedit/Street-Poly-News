@@ -47,7 +47,7 @@ export const SuggestionsCarousel = () => {
   if (loadingPlacements || loadingPosts) {
     return (
       <div className="py-6 sm:py-8">
-        <h2 className="text-lg sm:text-xl font-display font-bold mb-4 text-foreground">
+        <h2 className="text-lg sm:text-xl font-display font-bold mb-4 text-white">
           Suggested For You
         </h2>
         <div className="flex gap-4 overflow-hidden">
@@ -67,7 +67,7 @@ export const SuggestionsCarousel = () => {
       data-accepts="video,article"
       className="py-6 sm:py-8 border-t border-white/10"
     >
-      <h2 className="text-lg sm:text-xl font-display font-bold mb-4 text-foreground">
+      <h2 className="text-lg sm:text-xl font-display font-bold mb-4 text-white">
         Suggested For You
       </h2>
       <Carousel
@@ -107,8 +107,8 @@ export const SuggestionsCarousel = () => {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="hidden sm:flex -left-4 bg-background/80 backdrop-blur-sm border-white/10 text-foreground hover:bg-dem hover:text-white" />
-        <CarouselNext className="hidden sm:flex -right-4 bg-background/80 backdrop-blur-sm border-white/10 text-foreground hover:bg-dem hover:text-white" />
+        <CarouselPrevious className="hidden sm:flex -left-4 bg-black/80 backdrop-blur-sm border-white/10 text-white hover:bg-dem hover:text-white" />
+        <CarouselNext className="hidden sm:flex -right-4 bg-black/80 backdrop-blur-sm border-white/10 text-white hover:bg-dem hover:text-white" />
       </Carousel>
     </div>
   );

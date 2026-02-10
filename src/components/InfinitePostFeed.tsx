@@ -46,7 +46,7 @@ export function InfinitePostFeed({ category: propCategory, variant = "list" }: I
   if (error) {
     return (
       <div className="text-center py-20">
-        <p className="text-destructive font-body">Failed to load posts</p>
+        <p className="text-rep font-body">Failed to load posts</p>
       </div>
     );
   }
@@ -88,7 +88,7 @@ export function InfinitePostFeed({ category: propCategory, variant = "list" }: I
           <Loader2 className="w-6 h-6 text-dem animate-spin" />
         )}
         {!hasNextPage && posts.length > 0 && (
-          <p className="text-muted-foreground font-body text-sm">
+          <p className="text-white/40 font-body text-sm">
             You've reached the end
           </p>
         )}
