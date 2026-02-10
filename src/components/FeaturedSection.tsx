@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { Link, useLocation } from "react-router-dom";
-import { Play, Flame, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { Flame, Loader2 } from "lucide-react";
 import { Post } from "@/hooks/usePosts";
 import { PostCard } from "./PostCard";
 import { getYouTubeId } from "@/lib/utils";
@@ -15,34 +15,88 @@ export function FeaturedSection() {
 
   const { data: featuredPosts, isLoading } = useQuery({
     queryKey: ["featured-posts", currentCategory],
-    queryFn: async () => {
-      let query = supabase
-        .from("posts")
-        .select(`
-          *,
-          post_categories!inner (
-            category_id,
-            categories (
-              slug
-            )
-          )
-        `)
-        .eq("is_featured", true)
-        .order("created_at", { ascending: false })
-        .limit(7);
+    queryFn: async ({ signal }) => {
+      try {
+        const client = supabase as SupabaseClient;
+        
+        const baseQuery = currentCategory 
+          ? client
+            .from("posts")
+            .select(`
+              *,
+              post_categories!inner (
+                category_id,
+                categories (
+                  slug
+                )
+              )
+            `)
+            .eq("post_categories.categories.slug", currentCategory)
+          : client
+            .from("posts")
+            .select("*");
 
-      if (currentCategory) {
-        query = query.eq("post_categories.categories.slug", currentCategory);
+        // First try to get featured posts
+        const featuredQuery = baseQuery
+          .eq("is_featured", true)
+          .order("created_at", { ascending: false })
+          .limit(7) as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: Post[] | null; error: { code: string; message: string } | null }> };
+
+        const result = await featuredQuery.abortSignal(signal);
+        const featuredData = result.data;
+        const featuredError = result.error;
+
+        if (featuredError) throw featuredError;
+
+        // If we found featured posts, return them
+        if (featuredData && featuredData.length > 0) {
+          return featuredData as Post[];
+        }
+
+        // Fallback: If no featured posts, just get the latest posts
+        const fallbackQuery = currentCategory 
+          ? client
+            .from("posts")
+            .select(`
+              *,
+              post_categories!inner (
+                category_id,
+                categories (
+                  slug
+                )
+              )
+            `)
+            .eq("post_categories.categories.slug", currentCategory)
+          : client
+            .from("posts")
+            .select("*");
+
+        const finalFallbackQuery = fallbackQuery
+          .order("created_at", { ascending: false })
+          .limit(7) as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: Post[] | null; error: { code: string; message: string } | null }> };
+
+        const fallbackResult = await finalFallbackQuery.abortSignal(signal);
+        const fallbackData = fallbackResult.data;
+        const fallbackError = fallbackResult.error;
+
+        if (fallbackError) throw fallbackError;
+        return fallbackData as Post[];
+      } catch (err) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          return [];
+        }
+        throw err;
       }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data as Post[];
     },
   });
 
-  if (isLoading || !featuredPosts?.length) return null;
+  if (isLoading) return (
+    <div className="flex justify-center p-12">
+      <Loader2 className="w-8 h-8 animate-spin text-dem" />
+    </div>
+  );
+  
+  if (!featuredPosts?.length) return null;
 
   const mainFeaturedFallback = featuredPosts[0];
   const sideFeatured = featuredPosts.slice(1, 7); // Get 6 side videos for 2x3 grid
@@ -63,8 +117,8 @@ export function FeaturedSection() {
       <div className="px-4">
         <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6 px-4">
           <Flame className="w-4 h-4 md:w-5 md:h-5 text-rep" />
-          <h2 className="font-display text-xl md:text-2xl text-white">Featured Stories</h2>
-          <div className="flex-1 h-px bg-white/10 ml-2" />
+          <h2 className="font-display text-xl md:text-2xl text-foreground">Featured Stories</h2>
+          <div className="flex-1 h-px bg-foreground/10 ml-2" />
         </div>
         
         <div className="space-y-4 md:space-y-6">
@@ -104,15 +158,24 @@ export function FeaturedSection() {
 function ResolvedHero({ id, getThumbnail, fallback }: { id: string | null | undefined; getThumbnail: (post: Post) => string; fallback: React.ReactNode }) {
   const { data: post, isLoading } = useQuery({
     queryKey: ["post", id],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (!id) return null;
-      const { data, error } = await supabase
-        .from("posts")
-        .select("*")
-        .eq("id", parseInt(id))
-        .single();
-      if (error) throw error;
-      return data as Post;
+      try {
+        const query = supabase
+          .from("posts")
+          .select("*")
+          .eq("id", parseInt(id))
+          .single() as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: Post | null; error: { message: string; code: string } | null }> };
+        
+        const { data, error } = await query.abortSignal(signal);
+        if (error) throw error;
+        return data;
+      } catch (err) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          return null;
+        }
+        throw err;
+      }
     },
     enabled: !!id,
   });

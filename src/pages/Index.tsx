@@ -12,8 +12,6 @@ import { ClipsGrid } from "@/components/ClipsGrid";
 import { useSlotContents } from "@/hooks/usePlacements";
 
 const Index = () => {
-  const { data: clipPlacements } = useSlotContents("home.clips");
-  const hasDynamicClips = clipPlacements && clipPlacements.length > 0;
   const videoLinks = [
     {
       id: "3PXQSs-FsK4",
@@ -80,9 +78,9 @@ const Index = () => {
               <span className="text-dem">Street</span>
               <span className="text-rep">Poly</span>
             </span>
-            <span className="text-white sm:ml-2">News</span>
+            <span className="text-foreground sm:ml-2">News</span>
           </h1>
-          <p className="mt-6 text-white/70 text-sm md:text-lg max-w-2xl mx-auto font-body leading-relaxed px-2">
+          <p className="mt-6 text-foreground/70 text-sm md:text-lg max-w-2xl mx-auto font-body leading-relaxed px-2">
             Unfiltered stories from the heart of the movement. <br className="hidden md:block" /> Real voices, real impact, real news.
           </p>
         </div>
@@ -90,7 +88,7 @@ const Index = () => {
         {/* Divider */}
         <div className="flex items-center gap-3 md:gap-4 py-3 md:py-4 px-4">
           <Separator className="flex-1 opacity-20" />
-          <span className="text-white/40 text-[10px] md:text-xs font-body uppercase tracking-widest font-bold">Featured</span>
+          <span className="text-foreground/40 text-[10px] md:text-xs font-body uppercase tracking-widest font-bold">Featured</span>
           <Separator className="flex-1 opacity-20" />
         </div>
 
@@ -101,10 +99,10 @@ const Index = () => {
         <section className="mb-6 md:mb-10 px-4">
           <div className="flex items-center justify-between gap-4 mb-3">
             <div>
-              <p className="text-xs uppercase tracking-widest text-white/40 font-body">
+              <p className="text-xs uppercase tracking-widest text-foreground/40 font-body">
                 STREETPOLY NEWS
               </p>
-              <h2 className="font-display text-2xl md:text-3xl text-white">
+              <h2 className="font-display text-2xl md:text-3xl text-foreground">
                 Latest Clips
               </h2>
             </div>
@@ -112,7 +110,7 @@ const Index = () => {
               href="https://www.youtube.com/@STREETPOLYNEWS"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-widest text-white/70 hover:text-white transition-colors"
+              className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-widest text-foreground/70 hover:text-foreground transition-colors"
             >
               View channel
               <ExternalLink className="w-4 h-4" />
@@ -123,11 +121,10 @@ const Index = () => {
             data-slot="home.clips" 
             data-accepts="video"
           >
-            {hasDynamicClips ? (
-              <ClipsGrid slotKey="home.clips" />
-            ) : (
-              <FallbackClips videoLinks={videoLinks} />
-            )}
+            <ClipsGrid 
+              slotKey="home.clips" 
+              fallback={<FallbackClips videoLinks={videoLinks} />} 
+            />
           </div>
         </section>
 
@@ -135,7 +132,7 @@ const Index = () => {
         <section id="videos" className="pb-8 md:pb-12 px-4">
           <div className="flex items-center gap-3 md:gap-4 py-3 md:py-4 mb-6">
             <Separator className="flex-1 opacity-20" />
-            <span className="text-white/40 text-[10px] md:text-xs font-body uppercase tracking-widest font-bold">
+            <span className="text-foreground/40 text-[10px] md:text-xs font-body uppercase tracking-widest font-bold">
               Latest Stories
             </span>
             <Separator className="flex-1 opacity-20" />
@@ -179,13 +176,13 @@ const FallbackClips = ({ videoLinks }: { videoLinks: VideoLink[] }) => {
             />
           </div>
           <div className="p-4 flex flex-col gap-2">
-            <h3 className="font-display text-lg text-white transition-colors group-hover:text-white">
+            <h3 className="font-display text-xl text-white transition-colors group-hover:text-white">
               {video.title}
             </h3>
-            <p className="text-sm text-white/60 font-body mt-2 line-clamp-2">
+            <p className="text-base text-white/70 font-body mt-2 line-clamp-2">
               {video.description}
             </p>
-            <span className="mt-3 text-xs font-semibold uppercase tracking-widest text-white/70">
+            <span className="mt-3 text-sm font-semibold uppercase tracking-widest text-white/80">
               Watch on YouTube →
             </span>
           </div>

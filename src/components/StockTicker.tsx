@@ -51,14 +51,11 @@ const FALLBACK_TICKERS = [
 export function StockTicker() {
   const { data: tickers } = useQuery({
     queryKey: ["ticker-data"],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       // Use a shorter list of IDs to reduce URL length and potential for failure
       const SHORT_IDS = ["bitcoin", "ethereum", "solana"];
       
       const fetchWithRetry = async (retries = 1, delay = 1000): Promise<CoinGeckoResponse> => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-
         try {
           const response = await fetch(
             `https://api.coingecko.com/api/v3/simple/price?ids=${SHORT_IDS.join(
@@ -67,12 +64,10 @@ export function StockTicker() {
             {
               headers: { 'Accept': 'application/json' },
               mode: 'cors',
-              signal: controller.signal,
+              signal,
             }
           );
           
-          clearTimeout(timeoutId);
-
           if (!response.ok) {
             if (response.status === 429) {
               console.warn("StockTicker: Rate limited by CoinGecko");
@@ -82,10 +77,7 @@ export function StockTicker() {
           
           return (await response.json()) as CoinGeckoResponse;
         } catch (err) {
-          clearTimeout(timeoutId);
-
-          if (err instanceof Error && err.name === 'AbortError') {
-            console.log("StockTicker: API request timed out or aborted");
+          if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
             return {}; // Return empty object to trigger fallback
           }
 

@@ -37,8 +37,8 @@ export function PostTags({ categories, people }: PostTagsProps) {
   if (!categories?.length && !people?.length) return null;
 
   return (
-    <div className="border-t border-border pt-6 mt-8">
-      <h3 className="font-display text-lg text-foreground mb-4 uppercase tracking-wider">
+    <div className="border-t border-white/10 pt-6 mt-8">
+      <h3 className="font-display text-lg text-white mb-4 uppercase tracking-wider">
         Tags
       </h3>
       <div ref={containerRef} className="flex flex-wrap gap-2">
@@ -46,7 +46,7 @@ export function PostTags({ categories, people }: PostTagsProps) {
           <Link
             key={cat.id}
             to={`/category/${cat.slug}`}
-            data-tag-color={cat.color || 'hsl(var(--primary))'}
+            data-tag-color={cat.color || '#0047AB'}
             className="px-3 py-1.5 text-sm font-body font-semibold uppercase tracking-wider rounded transition-all hover:scale-105 text-white"
           >
             {cat.name}
@@ -56,7 +56,7 @@ export function PostTags({ categories, people }: PostTagsProps) {
           <Link
             key={person.id}
             to={`/person/${person.slug}`}
-            className="px-3 py-1.5 bg-muted text-muted-foreground text-sm font-body font-semibold uppercase tracking-wider rounded transition-all hover:bg-dem hover:text-dem-foreground"
+            className="px-3 py-1.5 bg-white/5 text-white/40 text-sm font-body font-semibold uppercase tracking-wider rounded transition-all hover:bg-dem hover:text-white"
           >
             {person.name}
           </Link>

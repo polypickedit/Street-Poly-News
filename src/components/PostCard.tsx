@@ -68,7 +68,7 @@ export function PostCard({
     return (
       <Link
         to={`/post/${id}`}
-        className="group flex gap-4 bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-all duration-300 border border-transparent hover:border-dem/30"
+        className="group flex gap-4 bg-card rounded-lg p-3 hover:bg-muted/50 transition-all duration-300 border border-border hover:border-dem/30"
       >
         <div className="relative w-28 h-20 flex-shrink-0 rounded-md overflow-hidden">
           <img
@@ -82,10 +82,10 @@ export function PostCard({
           </div>
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="font-display text-base text-white leading-tight line-clamp-2 group-hover:text-dem transition-colors">
+          <h4 className="font-display text-base text-dem font-black leading-tight line-clamp-2 group-hover:text-dem/80 transition-colors uppercase">
             {title}
           </h4>
-          <p className="text-white/40 text-xs font-body mt-1">{timeAgo}</p>
+          <p className="text-muted-foreground font-bold text-xs font-body mt-1">{timeAgo}</p>
         </div>
       </Link>
     );
@@ -94,7 +94,7 @@ export function PostCard({
   return (
     <Link
       to={`/post/${id}`}
-      className="group block bg-white/5 rounded-xl overflow-hidden border border-white/10 hover:border-dem/50 transition-all duration-300 hover:shadow-xl hover:shadow-dem/10 hover:-translate-y-1"
+      className="group block bg-card rounded-xl overflow-hidden border border-border hover:border-dem/50 transition-all duration-300 hover:shadow-xl hover:shadow-dem/10 hover:-translate-y-1"
     >
       <div className="relative aspect-video overflow-hidden">
         <img
@@ -159,11 +159,11 @@ export function PostCard({
       </div>
       
       <div className="p-5 space-y-3">
-        <h3 className="font-display text-xl text-white leading-tight line-clamp-2 group-hover:text-dem transition-colors duration-300">
+        <h3 className="font-display text-xl text-dem font-black leading-tight line-clamp-2 group-hover:text-dem/80 transition-colors duration-300 uppercase">
           {title}
         </h3>
         {subtitle && (
-          <p className="font-body text-sm text-white/60 line-clamp-2 leading-relaxed">
+          <p className="font-body text-sm text-muted-foreground font-bold line-clamp-2 leading-relaxed">
             {subtitle}
           </p>
         )}

@@ -151,21 +151,21 @@ const Login = () => {
 
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <Loader2 className="h-8 w-8 animate-spin text-dem" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-black p-4 relative overflow-hidden">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-dem/30 rounded-full blur-[120px]" />
         <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-rep/20 rounded-full blur-[120px]" />
       </div>
 
-      <Card className="w-full max-w-md bg-card border-white/10 backdrop-blur-xl relative z-10">
+      <Card className="w-full max-w-md bg-white/5 border-white/10 backdrop-blur-xl relative z-10">
         <CardHeader className="text-center space-y-1">
           <CardTitle className="text-3xl font-display text-white tracking-tight">
             {isSignUp ? "Join StreetPoly" : "Welcome Back"}
@@ -223,7 +223,7 @@ const Login = () => {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  Sign In
+                  {isSignUp ? "Sign Up" : "Sign In"}
                   <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
@@ -235,7 +235,7 @@ const Login = () => {
               <span className="w-full border-t border-white/10" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-white/40 font-medium">Or continue with</span>
+              <span className="bg-[#0A0A0A] px-2 text-white/40 font-medium">Or continue with</span>
             </div>
           </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -51,12 +51,17 @@ export const SubmissionDistributionDialog = ({
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const fetchDistributions = async () => {
+  const fetchDistributions = useCallback(async (signal?: AbortSignal) => {
     if (!submissionId) return;
     
     setLoading(true);
     try {
-      const { data, error } = await (supabase as unknown as { from: (t: string) => { select: (s: string) => { eq: (k: string, v: string) => Promise<{data: unknown, error: unknown}> } } })
+      type SupabaseQuery = {
+        abortSignal: (s: AbortSignal) => SupabaseQuery;
+        eq: (k: string, v: string) => Promise<{ data: unknown; error: unknown }>;
+      };
+
+      let query = (supabase as unknown as { from: (t: string) => { select: (s: string) => SupabaseQuery } })
         .from("submission_distribution")
         .select(`
           *,
@@ -64,12 +69,20 @@ export const SubmissionDistributionDialog = ({
             name,
             website_url
           )
-        `)
-        .eq("submission_id", submissionId);
+        `);
+
+      if (signal) {
+        query = query.abortSignal(signal);
+      }
+
+      const { data, error } = await query.eq("submission_id", submissionId);
 
       if (error) throw error;
       setDistributions((data as unknown as DistributionStatus[]) || []);
     } catch (error: unknown) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
       const message = error instanceof Error ? error.message : "Unknown error";
       toast({
         title: "Error fetching distribution",
@@ -79,13 +92,15 @@ export const SubmissionDistributionDialog = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [submissionId, toast]);
 
   useEffect(() => {
+    const controller = new AbortController();
     if (isOpen && submissionId) {
-      fetchDistributions();
+      fetchDistributions(controller.signal);
     }
-  }, [isOpen, submissionId]);
+    return () => controller.abort();
+  }, [isOpen, submissionId, fetchDistributions]);
 
   const updateStatus = async (distId: string, newStatus: DistributionStatus['status'], url?: string) => {
     try {
@@ -124,29 +139,29 @@ export const SubmissionDistributionDialog = ({
 
   const statusIcons = {
     pending: <Clock className="w-4 h-4 text-dem" />,
-    published: <CheckCircle2 className="w-4 h-4 text-white" />,
+    published: <CheckCircle2 className="w-4 h-4" />,
     rejected: <XCircle className="w-4 h-4 text-rep" />,
-    scheduled: <Clock className="w-4 h-4 text-dem/70" />,
+    scheduled: <Clock className="w-4 h-4 text-muted-foreground/70" />,
   };
 
   const statusColors = {
     pending: "bg-dem/10 text-dem border-dem/30",
     published: "bg-dem text-white border-dem/30",
     rejected: "bg-rep/10 text-rep border-rep/30",
-    scheduled: "bg-white/5 text-white/60 border-white/10",
+    scheduled: "bg-muted text-muted-foreground border-border",
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-card border-white/10 text-white">
+      <DialogContent className="max-w-2xl border-border bg-card text-foreground">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-full bg-dem/20 flex items-center justify-center">
               <Share2 className="w-5 h-5 text-dem" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold">{submissionTitle}</DialogTitle>
-              <DialogDescription className="text-white/40">
+              <DialogTitle className="text-xl font-bold text-foreground">{submissionTitle}</DialogTitle>
+              <DialogDescription className="text-muted-foreground">
                 Syndication & Distribution Status
               </DialogDescription>
             </div>
@@ -159,10 +174,10 @@ export const SubmissionDistributionDialog = ({
               <Loader2 className="w-8 h-8 animate-spin text-dem" />
             </div>
           ) : distributions.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed border-white/10 rounded-xl">
-              <Globe className="w-12 h-12 text-white/20 mx-auto mb-4" />
-              <p className="text-white/40">No distribution targets selected for this submission.</p>
-              <Button variant="outline" className="mt-4 border-white/10 hover:bg-white/5 text-white">
+            <div className="text-center py-12 border-2 border-dashed border-border rounded-xl">
+              <Globe className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
+              <p className="text-muted-foreground">No distribution targets selected for this submission.</p>
+              <Button variant="outline" className="mt-4 border-border hover:bg-muted text-foreground">
                 Assign Outlets
               </Button>
             </div>
@@ -171,18 +186,18 @@ export const SubmissionDistributionDialog = ({
               {distributions.map((dist) => (
                 <div 
                   key={dist.id} 
-                  className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-colors"
+                  className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border hover:border-muted-foreground/30 transition-colors"
                 >
                   <div className="flex items-center gap-4">
                     <div className="space-y-1">
-                      <p className="font-semibold text-white">{dist.media_outlets.name}</p>
+                      <p className="font-semibold text-foreground">{dist.media_outlets.name}</p>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className={`text-[10px] uppercase tracking-tighter gap-1 ${statusColors[dist.status]}`}>
+                        <Badge variant="outline" className={`text-xs uppercase tracking-tighter gap-1 ${statusColors[dist.status]}`}>
                           {statusIcons[dist.status]}
                           {dist.status}
                         </Badge>
                         {dist.published_at && (
-                          <span className="text-[10px] text-white/40">
+                          <span className="text-xs text-muted-foreground">
                             {format(new Date(dist.published_at), 'MMM d, yyyy')}
                           </span>
                         )}
@@ -213,7 +228,7 @@ export const SubmissionDistributionDialog = ({
                       </Button>
                     )}
 
-                    <Button variant="ghost" size="sm" className="text-white/40 hover:text-white hover:bg-white/5">
+                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted">
                       Manage
                     </Button>
                   </div>

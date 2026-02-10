@@ -22,10 +22,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log("Auth: Checking roles for", userId);
       
+      const controller = new AbortController();
       const rolePromise = (async () => {
         // 1. Try the optimized RPC first
         // We use the safe versions from MASTER_FIX
-        const { data: hasAccess, error: rpcError } = await supabase.rpc("is_admin_or_editor");
+        const rpcQuery = supabase.rpc("is_admin_or_editor") as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: boolean | null; error: unknown }> };
+        const { data: hasAccess, error: rpcError } = await rpcQuery.abortSignal(controller.signal);
         console.log("Auth: RPC 'is_admin_or_editor' result:", { hasAccess, rpcError });
 
         if (!rpcError && hasAccess === true) {
@@ -40,10 +42,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         // 2. If RPC says no or fails, do a more detailed check
-        const { data: roles, error: rolesError } = await supabase
+        const tableQuery = supabase
           .from("user_roles")
           .select("role_id, roles(name)")
-          .eq("user_id", userId);
+          .eq("user_id", userId) as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: Array<{ role_id: string, roles: { name: string } | null }> | null; error: unknown }> };
+
+        const { data: roles, error: rolesError } = await tableQuery.abortSignal(controller.signal);
 
         if (rolesError) {
           console.error("Auth: Error fetching roles from table:", rolesError);
@@ -51,9 +55,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         if (roles) {
-          const roleData = roles as unknown as Array<{ roles: { name: string } | null }>;
-          const admin = roleData?.some(r => r.roles?.name === "admin");
-          const editor = roleData?.some(r => r.roles?.name === "editor");
+          const admin = roles?.some(r => r.roles?.name === "admin");
+          const editor = roles?.some(r => r.roles?.name === "editor");
           
           console.log("Auth: Role results from table:", { admin, editor });
           setIsAdmin(admin);
@@ -65,15 +68,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       // 10 second timeout for role checks
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Role check timeout")), 10000)
+        setTimeout(() => {
+          controller.abort();
+          reject(new Error("Role check timeout"));
+        }, 10000)
       );
 
       await Promise.race([rolePromise, timeoutPromise]);
       console.log("Auth: Role check completed successfully");
     } catch (err) {
       // Don't log AbortError as a full error as it's often just HMR
-      if (err instanceof Error && err.name === 'AbortError') {
-        console.log("Auth: Role check aborted (likely page refresh)");
+      if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+        console.log("Auth: Role check aborted (likely page refresh or timeout)");
       } else {
         console.error("Auth: Error checking roles:", err);
       }

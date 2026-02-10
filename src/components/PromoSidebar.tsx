@@ -134,15 +134,25 @@ export const PromoSidebar = ({ position }: PromoSidebarProps) => {
 const SkyscraperRenderer = ({ promo }: { promo: Promo }) => {
   const { data: affiliateLink } = useQuery({
     queryKey: ["affiliate-link", promo.affiliateName],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (!promo.affiliateName) return null;
-      const { data, error } = await (supabase as SupabaseClient)
-        .from("affiliate_links")
-        .select("id, click_count")
-        .eq("name", promo.affiliateName)
-        .maybeSingle();
-      if (error) return null;
-      return data as unknown as { id: string; click_count: number } | null;
+      try {
+        const query = (supabase as SupabaseClient)
+          .from("affiliate_links")
+          .select("id, click_count")
+          .eq("name", promo.affiliateName)
+          .maybeSingle() as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: { id: string; click_count: number } | null; error: { code: string; message: string } | null }> };
+
+        const { data, error } = await query.abortSignal(signal);
+
+        if (error) return null;
+        return data;
+      } catch (err) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          return null;
+        }
+        return null;
+      }
     },
     enabled: !!promo.affiliateName,
   });

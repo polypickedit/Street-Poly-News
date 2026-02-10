@@ -136,6 +136,7 @@ export const BottomNav = () => {
 
             {isAdmin && (
               <button
+                type="button"
                 onClick={toggleAdminMode}
                 className={cn(
                   "relative flex flex-col items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all min-w-[80px]",
@@ -298,6 +299,7 @@ export const BottomNav = () => {
                       {isAdmin && (
                         <>
                           <button
+                            type="button"
                             onClick={() => {
                               toggleAdminMode();
                               setMenuOpen(false);

@@ -111,7 +111,8 @@ export function ConductWalkthrough() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-black/80 pointer-events-auto"
+        onClick={completeWalkthrough}
+        className="absolute inset-0 bg-black/80 pointer-events-auto cursor-pointer"
         style={{
           clipPath: targetRect 
             ? `inset(0 0 0 0 round 0) polygon(0% 0%, 0% 100%, ${targetRect.left}px 100%, ${targetRect.left}px ${targetRect.top}px, ${targetRect.right}px ${targetRect.top}px, ${targetRect.right}px ${targetRect.bottom}px, ${targetRect.left}px ${targetRect.bottom}px, ${targetRect.left}px 100%, 100% 100%, 100% 0%)`
@@ -139,6 +140,16 @@ export function ConductWalkthrough() {
         >
           {walkthroughStep === -1 ? (
             <div className="text-center space-y-6">
+              <div className="flex justify-end -mb-12">
+                <button 
+                  onClick={completeWalkthrough} 
+                  className="text-white/40 hover:text-white transition-colors p-1"
+                  aria-label="Close walkthrough"
+                  title="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
               <div className="w-20 h-20 bg-dem/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Play className="w-8 h-8 text-dem fill-current" />
               </div>
@@ -163,7 +174,7 @@ export function ConductWalkthrough() {
           ) : (
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-dem">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-dem">
                   Step {walkthroughStep + 1} of {steps.length}
                 </span>
                 <button 

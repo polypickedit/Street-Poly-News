@@ -14,9 +14,9 @@ const Person = () => {
 
   if (isLoading) {
     return (
-      <PageLayoutWithAds showCategoryNav={false}>
+      <PageLayoutWithAds>
         <div className="flex justify-center items-center py-20">
-          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          <Loader2 className="w-8 h-8 text-dem animate-spin" />
         </div>
       </PageLayoutWithAds>
     );
@@ -24,10 +24,10 @@ const Person = () => {
 
   if (!person) {
     return (
-      <PageLayoutWithAds showCategoryNav={false}>
+      <PageLayoutWithAds>
         <div className="text-center py-20">
-          <h1 className="font-display text-4xl text-foreground mb-4">Person Not Found</h1>
-          <Link to="/" className="text-primary hover:underline">
+          <h1 className="font-display text-4xl text-white mb-4">Person Not Found</h1>
+          <Link to="/" className="text-dem hover:underline">
             Return Home
           </Link>
         </div>
@@ -40,7 +40,7 @@ const Person = () => {
       <main className="w-full pb-20">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-white/40 hover:text-dem transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="font-body text-sm uppercase tracking-wider">Back to Home</span>
@@ -48,7 +48,7 @@ const Person = () => {
 
         {/* Person Header */}
         <div className="flex flex-col md:flex-row gap-6 mb-12">
-          <div className="w-32 h-32 rounded-full overflow-hidden bg-card border border-border shrink-0">
+          <div className="w-32 h-32 rounded-full overflow-hidden bg-white/5 border border-white/10 shrink-0">
             {person.image_url ? (
               <img
                 src={person.image_url}
@@ -57,16 +57,16 @@ const Person = () => {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <User className="w-16 h-16 text-muted-foreground" />
+                <User className="w-16 h-16 text-white/20" />
               </div>
             )}
           </div>
           <div>
-            <h1 className="font-display text-4xl md:text-5xl text-foreground mb-4">
+            <h1 className="font-display text-4xl md:text-5xl text-white mb-4">
               {person.name}
             </h1>
             {person.bio && (
-              <p className="text-muted-foreground font-body max-w-2xl">
+              <p className="text-white/40 font-body max-w-2xl">
                 {person.bio}
               </p>
             )}
@@ -74,8 +74,8 @@ const Person = () => {
         </div>
 
         {/* Person's Posts */}
-        <h2 className="font-display text-2xl text-foreground mb-6">
-          Stories featuring <span className="text-primary">{person.name}</span>
+        <h2 className="font-display text-2xl text-white mb-6">
+          Stories featuring <span className="text-dem">{person.name}</span>
         </h2>
 
         {posts?.length ? (
@@ -96,7 +96,7 @@ const Person = () => {
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground font-body">No stories found featuring this person.</p>
+          <p className="text-white/40 font-body">No stories found featuring this person.</p>
         )}
       </main>
     </PageLayoutWithAds>

@@ -29,17 +29,26 @@ const Admin = () => {
   const [userProfile, setUserProfile] = useState<{ full_name: string | null } | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchProfile = async () => {
       if (user) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", user.id)
-          .single();
-        setUserProfile(data);
+        try {
+          const query = supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", user.id)
+            .single() as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: { full_name: string | null } | null; error: unknown }> };
+            
+          const { data } = await query.abortSignal(controller.signal);
+          setUserProfile(data);
+        } catch (err) {
+          if (err instanceof Error && err.name === 'AbortError') return;
+          console.error("Error fetching profile:", err);
+        }
       }
     };
     fetchProfile();
+    return () => controller.abort();
   }, [user]);
 
   const handleSignOut = async () => {
@@ -241,7 +250,7 @@ const Admin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-black text-foreground">
       <BreakingNewsBanner />
       <Navbar />
 
@@ -249,33 +258,33 @@ const Admin = () => {
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-              <h1 className="font-display text-4xl md:text-5xl text-foreground">
-                {userProfile?.full_name ? `Welcome, ${userProfile.full_name}` : <>Admin <span className="text-primary">Dashboard</span></>}
+              <h1 className="font-display text-4xl md:text-5xl text-dem uppercase font-black">
+                {userProfile?.full_name ? `Welcome, ${userProfile.full_name}` : <>Admin <span className="text-white">Dashboard</span></>}
               </h1>
-              <p className="text-muted-foreground mt-1">Manage your content and platform settings</p>
+              <p className="text-muted-foreground font-medium mt-1">Manage your content and platform settings</p>
             </div>
             <Button 
               variant="outline" 
               onClick={handleSignOut}
-              className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive transition-all self-start md:self-center"
+              className="border-rep/50 text-rep hover:bg-rep/10 hover:text-rep font-black uppercase tracking-widest transition-all self-start md:self-center"
             >
               Sign Out
             </Button>
           </div>
 
           <Tabs defaultValue="posts" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
-              <TabsTrigger value="posts">Create Post</TabsTrigger>
-              <TabsTrigger value="messages">Messages</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 max-w-[400px] bg-muted border border-border">
+              <TabsTrigger value="posts" className="data-[state=active]:bg-dem data-[state=active]:text-white font-black uppercase tracking-widest text-xs">Create Post</TabsTrigger>
+              <TabsTrigger value="messages" className="data-[state=active]:bg-dem data-[state=active]:text-white font-black uppercase tracking-widest text-xs">Messages</TabsTrigger>
             </TabsList>
 
             <TabsContent value="posts">
               <div className="max-w-2xl mx-auto">
-                <h2 className="font-display text-2xl text-foreground mb-6">Create New Post</h2>
+                <h2 className="font-display text-2xl text-dem font-black uppercase mb-6">Create New Post</h2>
                 <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
             <div className="space-y-2">
-              <Label htmlFor="title" className="font-body text-foreground">
+              <Label htmlFor="title" className="font-body text-foreground font-black uppercase tracking-widest text-xs">
                 Title *
               </Label>
               <Input
@@ -284,13 +293,13 @@ const Admin = () => {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="Enter headline"
-                className="bg-card border-border text-foreground"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground font-bold"
               />
             </div>
 
             {/* Subtitle */}
             <div className="space-y-2">
-              <Label htmlFor="subtitle" className="font-body text-foreground">
+              <Label htmlFor="subtitle" className="font-body text-muted-foreground font-black uppercase tracking-widest text-xs">
                 Subtitle
               </Label>
               <Textarea
@@ -298,14 +307,14 @@ const Admin = () => {
                 value={formData.subtitle}
                 onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
                 placeholder="Brief description"
-                className="bg-card border-border text-foreground resize-none"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground resize-none font-medium"
                 rows={2}
               />
             </div>
 
             {/* Content Type */}
             <div className="space-y-2">
-              <Label className="font-body text-foreground">Content Type</Label>
+              <Label className="font-body text-muted-foreground font-black uppercase tracking-widest text-xs">Content Type</Label>
               <div className="flex gap-4">
                 {(["video", "article", "gallery"] as const).map((type) => (
                   <label key={type} className="flex items-center gap-2 cursor-pointer">
@@ -315,9 +324,9 @@ const Admin = () => {
                       value={type}
                       checked={formData.content_type === type}
                       onChange={() => setFormData({ ...formData, content_type: type })}
-                      className="accent-primary"
+                      className="accent-dem"
                     />
-                    <span className="font-body text-sm text-foreground capitalize">{type}</span>
+                    <span className="font-body text-sm text-foreground font-bold capitalize">{type}</span>
                   </label>
                 ))}
               </div>
@@ -326,7 +335,7 @@ const Admin = () => {
             {/* YouTube URL (for video) */}
             {formData.content_type === "video" && (
               <div className="space-y-2">
-                <Label htmlFor="youtube_url" className="font-body text-foreground">
+                <Label htmlFor="youtube_url" className="font-body text-muted-foreground font-black uppercase tracking-widest text-xs">
                   YouTube URL or Video ID *
                 </Label>
                 <Input
@@ -335,7 +344,7 @@ const Admin = () => {
                   value={formData.youtube_url}
                   onChange={(e) => setFormData({ ...formData, youtube_url: e.target.value })}
                   placeholder="https://youtube.com/watch?v=..."
-                  className="bg-card border-border text-foreground"
+                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground font-mono text-sm"
                 />
               </div>
             )}
@@ -343,7 +352,7 @@ const Admin = () => {
             {/* Body Content (for articles) */}
             {formData.content_type === "article" && (
               <div className="space-y-2">
-                <Label htmlFor="body_content" className="font-body text-foreground">
+                <Label htmlFor="body_content" className="font-body text-muted-foreground font-black uppercase tracking-widest text-xs">
                   Article Content
                 </Label>
                 <Textarea
@@ -351,7 +360,7 @@ const Admin = () => {
                   value={formData.body_content}
                   onChange={(e) => setFormData({ ...formData, body_content: e.target.value })}
                   placeholder="Write your article content here..."
-                  className="bg-card border-border text-foreground resize-none"
+                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground resize-none font-medium"
                   rows={10}
                 />
               </div>
@@ -359,7 +368,7 @@ const Admin = () => {
 
             {/* Thumbnail */}
             <div className="space-y-2">
-              <Label htmlFor="thumbnail_url" className="font-body text-foreground">
+              <Label htmlFor="thumbnail_url" className="font-body text-muted-foreground font-black uppercase tracking-widest text-xs">
                 Custom Thumbnail URL
               </Label>
               <Input
@@ -367,7 +376,7 @@ const Admin = () => {
                 value={formData.thumbnail_url}
                 onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
                 placeholder="Leave empty to use YouTube thumbnail"
-                className="bg-card border-border text-foreground"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground font-medium"
               />
             </div>
 
@@ -380,8 +389,9 @@ const Admin = () => {
                   onCheckedChange={(checked) =>
                     setFormData({ ...formData, is_breaking: checked as boolean })
                   }
+                  className="border-border data-[state=checked]:bg-dem data-[state=checked]:border-dem"
                 />
-                <Label htmlFor="is_breaking" className="font-body text-foreground cursor-pointer">
+                <Label htmlFor="is_breaking" className="font-body text-muted-foreground font-black uppercase tracking-widest text-xs cursor-pointer">
                   Breaking News
                 </Label>
               </div>
@@ -392,8 +402,9 @@ const Admin = () => {
                   onCheckedChange={(checked) =>
                     setFormData({ ...formData, is_featured: checked as boolean })
                   }
+                  className="border-border data-[state=checked]:bg-dem data-[state=checked]:border-dem"
                 />
-                <Label htmlFor="is_featured" className="font-body text-foreground cursor-pointer">
+                <Label htmlFor="is_featured" className="font-body text-muted-foreground font-black uppercase tracking-widest text-xs cursor-pointer">
                   Featured Story
                 </Label>
               </div>
@@ -402,7 +413,7 @@ const Admin = () => {
             {/* Categories */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="font-body text-foreground flex items-center gap-2">
+                <Label className="font-body text-muted-foreground font-black uppercase tracking-widest text-xs flex items-center gap-2">
                   <Tags className="w-4 h-4" />
                   Categories
                 </Label>
@@ -411,6 +422,7 @@ const Admin = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowNewCategory(!showNewCategory)}
+                  className="text-muted-foreground hover:text-dem hover:bg-muted font-black uppercase tracking-widest text-[10px]"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Add New
@@ -418,20 +430,20 @@ const Admin = () => {
               </div>
               
               {showNewCategory && (
-                <div className="flex gap-2 p-3 bg-muted rounded-lg">
+                <div className="flex gap-2 p-3 bg-muted border border-border rounded-lg">
                   <Input
                     placeholder="Category name"
                     value={newCategory.name}
                     onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-                    className="bg-card"
+                    className="bg-card border-border text-foreground placeholder:text-muted-foreground font-bold"
                   />
                   <Input
                     type="color"
                     value={newCategory.color}
                     onChange={(e) => setNewCategory({ ...newCategory, color: e.target.value })}
-                    className="w-14 p-1 bg-card"
+                    className="w-14 p-1 bg-card border-border h-10"
                   />
-                  <Button type="button" size="sm" onClick={handleCreateCategory}>
+                  <Button type="button" size="sm" onClick={handleCreateCategory} className="bg-dem hover:bg-dem/90 text-white font-black uppercase tracking-widest text-[10px]">
                     Create
                   </Button>
                 </div>
@@ -442,9 +454,9 @@ const Admin = () => {
                   <label
                     key={cat.id}
                     data-bg-color={cat.color}
-                    className={`px-3 py-1.5 rounded-full cursor-pointer transition-all text-sm font-body ${
+                    className={`px-3 py-1.5 rounded-full cursor-pointer transition-all text-xs font-black uppercase tracking-wider ${
                       selectedCategories.includes(cat.id)
-                        ? "ring-2 ring-primary"
+                        ? "ring-2 ring-dem shadow-[0_0_10px_rgba(0,71,171,0.3)]"
                         : "opacity-60 hover:opacity-100"
                     }`}
                   >
@@ -469,7 +481,7 @@ const Admin = () => {
             {/* People */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="font-body text-foreground flex items-center gap-2">
+                <Label className="font-body text-muted-foreground font-black uppercase tracking-widest text-xs flex items-center gap-2">
                   <Users className="w-4 h-4" />
                   People Tags
                 </Label>
@@ -478,6 +490,7 @@ const Admin = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowNewPerson(!showNewPerson)}
+                  className="text-muted-foreground hover:text-dem hover:bg-muted font-black uppercase tracking-widest text-[10px]"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Add New
@@ -485,27 +498,27 @@ const Admin = () => {
               </div>
               
               {showNewPerson && (
-                <div className="space-y-2 p-3 bg-muted rounded-lg">
+                <div className="space-y-2 p-3 bg-muted border border-border rounded-lg">
                   <Input
                     placeholder="Person name"
                     value={newPerson.name}
                     onChange={(e) => setNewPerson({ ...newPerson, name: e.target.value })}
-                    className="bg-card"
+                    className="bg-card border-border text-foreground placeholder:text-muted-foreground font-bold"
                   />
                   <Input
                     placeholder="Image URL (optional)"
                     value={newPerson.image_url}
                     onChange={(e) => setNewPerson({ ...newPerson, image_url: e.target.value })}
-                    className="bg-card"
+                    className="bg-card border-border text-foreground placeholder:text-muted-foreground font-medium"
                   />
                   <Textarea
                     placeholder="Bio (optional)"
                     value={newPerson.bio}
                     onChange={(e) => setNewPerson({ ...newPerson, bio: e.target.value })}
-                    className="bg-card resize-none"
+                    className="bg-card border-border text-foreground placeholder:text-muted-foreground resize-none font-medium"
                     rows={2}
                   />
-                  <Button type="button" size="sm" onClick={handleCreatePerson}>
+                  <Button type="button" size="sm" onClick={handleCreatePerson} className="bg-dem hover:bg-dem/90 text-white font-black uppercase tracking-widest text-[10px]">
                     Create Person
                   </Button>
                 </div>
@@ -515,9 +528,9 @@ const Admin = () => {
                 {people?.map((person) => (
                   <label
                     key={person.id}
-                    className={`px-3 py-1.5 rounded-full cursor-pointer transition-all text-sm font-body bg-secondary text-secondary-foreground ${
+                    className={`px-3 py-1.5 rounded-full cursor-pointer transition-all text-sm font-body bg-white/5 border border-white/10 text-white ${
                       selectedPeople.includes(person.id)
-                        ? "ring-2 ring-primary"
+                        ? "ring-2 ring-dem shadow-[0_0_10px_rgba(0,71,171,0.3)]"
                         : "opacity-60 hover:opacity-100"
                     }`}
                   >
@@ -542,7 +555,7 @@ const Admin = () => {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-body uppercase tracking-wider"
+              className="w-full bg-dem hover:bg-dem/90 text-white font-body uppercase tracking-wider h-12"
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

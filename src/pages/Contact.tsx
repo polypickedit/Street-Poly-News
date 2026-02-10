@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 const Contact = () => {
   const { toast } = useToast();
@@ -22,7 +23,7 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as SupabaseClient)
         .from('contact_submissions')
         .insert([
           {
@@ -62,28 +63,28 @@ const Contact = () => {
     <PageLayoutWithAds>
       <PageTransition>
         <div className="max-w-3xl mx-auto py-8 md:py-12 px-4">
-          <h1 className="font-display text-4xl md:text-6xl text-foreground mb-8">
+          <h1 className="font-display text-4xl md:text-6xl text-white mb-8">
             Contact <span className="text-dem">Us</span>
           </h1>
           
           <div className="grid gap-8 md:grid-cols-2">
             <div>
-              <p className="font-body text-muted-foreground text-base md:text-lg leading-relaxed mb-6">
+              <p className="font-body text-white/40 text-base md:text-lg leading-relaxed mb-6">
                 Have a story tip, question, or just want to say hello? Fill out the form or reach us directly via email.
               </p>
               
-              <div className="bg-card border border-border rounded-lg p-6 mb-6">
-                <h3 className="font-display text-xl text-foreground mb-2">Email Us</h3>
+              <div className="bg-white/5 border border-white/10 rounded-lg p-6 mb-6">
+                <h3 className="font-display text-xl text-white mb-2">Email Us</h3>
                 <a href="mailto:contact@streetpolynews.com" className="text-dem hover:underline transition-colors break-all">
                   contact@streetpolynews.com
                 </a>
               </div>
             </div>
 
-            <div className="bg-card/50 border border-border rounded-lg p-6">
+            <div className="bg-white/5 border border-white/10 rounded-lg p-6">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="name" className="text-sm font-medium mb-2 block">Name</label>
+                  <label htmlFor="name" className="text-sm font-medium mb-2 block text-white">Name</label>
                   <Input
                     id="name"
                     name="name"
@@ -91,48 +92,56 @@ const Contact = () => {
                     onChange={handleChange}
                     required
                     placeholder="Your name"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/20"
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="email" className="text-sm font-medium mb-2 block">Email</label>
+                  <label htmlFor="email" className="text-sm font-medium mb-2 block text-white">Email</label>
                   <Input
                     id="email"
                     name="email"
-                    type="email"
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    placeholder="your@email.com"
+                    type="email"
+                    placeholder="Your email"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/20"
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="subject" className="text-sm font-medium mb-2 block">Subject</label>
+                  <label htmlFor="subject" className="text-sm font-medium mb-2 block text-white">Subject</label>
                   <Input
                     id="subject"
                     name="subject"
                     value={formData.subject}
                     onChange={handleChange}
                     required
-                    placeholder="What is this about?"
+                    placeholder="Message subject"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/20"
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="message" className="text-sm font-medium mb-2 block">Message</label>
+                  <label htmlFor="message" className="text-sm font-medium mb-2 block text-white">Message</label>
                   <Textarea
                     id="message"
                     name="message"
                     value={formData.message}
                     onChange={handleChange}
                     required
-                    placeholder="Your message..."
-                    className="min-h-[120px]"
+                    placeholder="How can we help?"
+                    rows={4}
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/20"
                   />
                 </div>
                 
-                <Button type="submit" className="w-full bg-dem hover:bg-dem/90 text-white" disabled={isSubmitting}>
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="w-full bg-dem hover:bg-dem/90 text-white"
+                >
                   {isSubmitting ? "Sending..." : "Send Message"}
                 </Button>
               </form>

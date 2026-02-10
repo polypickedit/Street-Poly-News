@@ -31,7 +31,7 @@ export const PageLayoutWithAds = ({
   };
 
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className="min-h-screen bg-white pb-32">
       <BreakingNewsBanner />
       <Navbar />
 

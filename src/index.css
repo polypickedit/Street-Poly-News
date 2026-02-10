@@ -81,7 +81,8 @@
   }
 
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-background font-body;
+    color: hsl(var(--foreground));
   }
 
   h1, h2, h3, h4, h5, h6 {

@@ -64,7 +64,7 @@ export const MerchCard = ({ item }: MerchCardProps) => {
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden group hover:border-dem/50 transition-colors">
+    <div className="bg-white/5 border border-white/10 rounded-lg overflow-hidden group hover:border-dem/50 transition-colors">
       <div className="aspect-square overflow-hidden">
         <img
           src={item.image}
@@ -76,21 +76,21 @@ export const MerchCard = ({ item }: MerchCardProps) => {
         <span className="text-xs font-body uppercase tracking-wider text-dem">
           {item.type}
         </span>
-        <h3 className="font-display text-xl text-foreground mt-1">
+        <h3 className="font-display text-xl text-white mt-1">
           {item.name}
         </h3>
-        <p className="font-body text-lg text-foreground mt-2">
+        <p className="font-body text-lg text-white mt-2">
           ${item.price.toFixed(2)}
         </p>
 
         <div className="grid grid-cols-2 gap-2 mt-4">
           <Select value={selectedSize} onValueChange={setSelectedSize}>
-            <SelectTrigger className="bg-background border-border text-foreground">
+            <SelectTrigger className="bg-black/40 border-white/10 text-white">
               <SelectValue placeholder="Size" />
             </SelectTrigger>
-            <SelectContent className="bg-card border-border z-50">
+            <SelectContent className="bg-dem-dark border-white/10 z-50">
               {sizes.map((size) => (
-                <SelectItem key={size} value={size} className="text-foreground hover:bg-muted">
+                <SelectItem key={size} value={size} className="text-white hover:bg-white/10">
                   {size}
                 </SelectItem>
               ))}
@@ -98,16 +98,16 @@ export const MerchCard = ({ item }: MerchCardProps) => {
           </Select>
 
           <Select value={selectedColor} onValueChange={setSelectedColor}>
-            <SelectTrigger className="bg-background border-border text-foreground">
+            <SelectTrigger className="bg-black/40 border-white/10 text-white">
               <SelectValue placeholder="Color" />
             </SelectTrigger>
-            <SelectContent className="bg-card border-border z-50">
+            <SelectContent className="bg-dem-dark border-white/10 z-50">
               {colors.map((color) => (
-                <SelectItem key={color.value} value={color.value} className="text-foreground hover:bg-muted">
+                <SelectItem key={color.value} value={color.value} className="text-white hover:bg-white/10">
                   <div className="flex items-center gap-2">
                     <style>{`.color-swatch-${color.value.replace(/[^a-zA-Z0-9]/g, '-')} { background-color: ${color.hex}; }`}</style>
                     <span
-                      className={`w-4 h-4 rounded-full border border-border shrink-0 color-swatch-${color.value.replace(/[^a-zA-Z0-9]/g, '-')}`}
+                      className={`w-4 h-4 rounded-full border border-white/10 shrink-0 color-swatch-${color.value.replace(/[^a-zA-Z0-9]/g, '-')}`}
                     />
                     {color.name}
                   </div>

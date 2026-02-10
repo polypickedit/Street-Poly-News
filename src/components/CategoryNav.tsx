@@ -21,7 +21,7 @@ export function CategoryNav() {
         top: isVisible ? (isMobile ? 160 : 208) : 36 
       }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="fixed left-0 right-0 z-40 border-b border-border bg-card/95 backdrop-blur-sm"
+      className="fixed left-0 right-0 z-40 border-b border-white/10 bg-dem-dark/95 backdrop-blur-sm"
     >
       <div className="max-w-screen-2xl mx-auto">
         <div className="flex items-center gap-1 overflow-x-auto py-2 px-4 scrollbar-hide">
@@ -29,8 +29,8 @@ export function CategoryNav() {
             to="/"
             className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
               location.pathname === "/" && !location.search
-                ? "bg-dem text-dem-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                ? "bg-dem text-white shadow-sm"
+                : "text-white/40 hover:text-white hover:bg-white/5"
             }`}
           >
             All
@@ -41,8 +41,8 @@ export function CategoryNav() {
               to={`/?category=${category.slug}`}
               className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
                 currentCategory === category.slug
-                  ? "bg-dem text-dem-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  ? "bg-dem text-white shadow-sm"
+                  : "text-white/40 hover:text-white hover:bg-white/5"
               }`}
             >
               {category.name}
@@ -54,8 +54,8 @@ export function CategoryNav() {
                 to="/?category=politics"
                 className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
                   currentCategory === "politics"
-                    ? "bg-dem text-dem-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-dem text-white shadow-sm"
+                    : "text-white/40 hover:text-white hover:bg-white/5"
                 }`}
               >
                 Politics
@@ -64,8 +64,8 @@ export function CategoryNav() {
                 to="/?category=entertainment"
                 className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
                   currentCategory === "entertainment"
-                    ? "bg-dem text-dem-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-dem text-white shadow-sm"
+                    : "text-white/40 hover:text-white hover:bg-white/5"
                 }`}
               >
                 Entertainment
@@ -74,8 +74,8 @@ export function CategoryNav() {
                 to="/?category=business"
                 className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
                   currentCategory === "business"
-                    ? "bg-dem text-dem-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-dem text-white shadow-sm"
+                    : "text-white/40 hover:text-white hover:bg-white/5"
                 }`}
               >
                 Business
@@ -84,8 +84,8 @@ export function CategoryNav() {
                 to="/?category=exclusive"
                 className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
                   currentCategory === "exclusive"
-                    ? "bg-dem text-dem-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-dem text-white shadow-sm"
+                    : "text-white/40 hover:text-white hover:bg-white/5"
                 }`}
               >
                 Exclusives
@@ -96,8 +96,8 @@ export function CategoryNav() {
             to="/?category=health"
             className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
               currentCategory === "health"
-                ? "bg-dem text-dem-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                ? "bg-dem text-white shadow-sm"
+                : "text-white/40 hover:text-white hover:bg-white/5"
             }`}
           >
             Health
@@ -106,8 +106,8 @@ export function CategoryNav() {
             to="/?category=fashion"
             className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
               currentCategory === "fashion"
-                ? "bg-dem text-dem-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                ? "bg-dem text-white shadow-sm"
+                : "text-white/40 hover:text-white hover:bg-white/5"
             }`}
           >
             Fashion
@@ -116,8 +116,8 @@ export function CategoryNav() {
             to="/merch"
             className={`px-6 py-2 font-display text-sm uppercase tracking-widest whitespace-nowrap transition-all rounded-md ml-2 border-2 ${
               location.pathname === "/merch"
-                ? "bg-rep text-rep-foreground border-rep shadow-md scale-105"
-                : "border-rep text-rep hover:bg-rep hover:text-rep-foreground"
+                ? "bg-rep text-white border-rep shadow-md scale-105"
+                : "border-rep text-rep hover:bg-rep hover:text-white"
             }`}
           >
             Official Store

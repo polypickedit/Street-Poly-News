@@ -43,17 +43,26 @@ export const PromoBanner = ({ className = "", showLabel = true, type = "donTrip"
 
   const { data: affiliateLink } = useQuery({
     queryKey: ["affiliate-link", currentPromo.affiliateName],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (!currentPromo.affiliateName) return null;
       
-      const { data, error } = await (supabase as SupabaseClient)
-        .from("affiliate_links")
-        .select("id, click_count")
-        .eq("name", currentPromo.affiliateName)
-        .maybeSingle();
+      try {
+        const query = (supabase as SupabaseClient)
+          .from("affiliate_links")
+          .select("id, click_count")
+          .eq("name", currentPromo.affiliateName)
+          .maybeSingle() as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: { id: string; click_count: number } | null; error: { code: string; message: string } | null }> };
 
-      if (error) return null;
-      return data as { id: string; click_count: number } | null;
+        const { data, error } = await query.abortSignal(signal);
+
+        if (error) return null;
+        return data;
+      } catch (err) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          return null;
+        }
+        return null;
+      }
     },
     enabled: !!currentPromo.affiliateName,
   });

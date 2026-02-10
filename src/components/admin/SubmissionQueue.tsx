@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,16 +44,16 @@ type SubmissionRow = {
 type SubmissionFilter = "all" | SubmissionStatus;
 
 const statusBadgeColor: Record<SubmissionStatus, string> = {
-  pending: "text-dem bg-dem/10 border-dem/30",
-  approved: "text-white bg-dem border-dem/30",
-  declined: "text-rep bg-rep/10 border-rep/30",
-  archived: "text-white/40 bg-white/5 border-white/10",
+  pending: "text-dem bg-dem/10 border-dem/40 font-black",
+  approved: "text-white bg-dem border-dem/40 font-black",
+  declined: "text-rep bg-rep/10 border-rep/40 font-black",
+  archived: "text-foreground bg-muted border-border font-black",
 };
 
 const paymentBadgeColor: Record<PaymentStatus, string> = {
-  paid: "text-white bg-dem border-dem/30",
-  unpaid: "text-rep bg-rep/10 border-rep/30",
-  refunded: "text-white/60 bg-white/5 border-white/10",
+  paid: "text-white bg-dem border-dem/40 font-black",
+  unpaid: "text-rep bg-rep/10 border-rep/40 font-black",
+  refunded: "text-foreground bg-muted border-border font-black",
 };
 
 export const SubmissionQueue = () => {
@@ -68,19 +69,28 @@ export const SubmissionQueue = () => {
 
   const { data: submissions = [], isLoading } = useQuery<SubmissionRow[]>({
     queryKey: ["submissions", filter],
-    queryFn: async () => {
-      let query = supabase
-        .from("submissions")
-        .select("*, artists ( name, email ), slots ( name, price )")
-        .order("created_at", { ascending: false });
+    queryFn: async ({ signal }) => {
+      try {
+        let baseQuery = (supabase as SupabaseClient)
+          .from("submissions")
+          .select("*, artists ( name, email ), slots ( name, price )")
+          .order("created_at", { ascending: false });
 
-      if (filter !== "all") {
-        query = query.eq("status", filter);
+        if (filter !== "all") {
+          baseQuery = baseQuery.eq("status", filter);
+        }
+
+        const query = baseQuery as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: SubmissionRow[] | null; error: { code: string; message: string } | null }> };
+        const { data, error } = await query.abortSignal(signal);
+
+        if (error) throw error;
+        return data || [];
+      } catch (err) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          return [];
+        }
+        throw err;
       }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as SubmissionRow[];
     },
   });
 
@@ -140,35 +150,35 @@ export const SubmissionQueue = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-foreground">
       <div className="flex flex-wrap items-center gap-3 justify-between">
         <div className="flex gap-2">
           {["all", "pending", "approved", "declined", "archived"].map((status) => (
             <Button
               key={status}
               variant={filter === status ? "secondary" : "ghost"}
-              className="text-xs uppercase tracking-[0.3em]"
+              className="text-xs uppercase tracking-[0.3em] text-foreground"
               onClick={() => setFilter(status as SubmissionFilter)}
             >
               {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
             </Button>
           ))}
         </div>
-        <div className="text-sm text-white/40 italic">
+        <div className="text-sm text-muted-foreground font-black italic">
           Showing {submissions.length} results
         </div>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-card overflow-hidden">
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
         <Table>
-          <TableHeader className="bg-card/80">
-            <TableRow className="border-white/10 hover:bg-transparent">
-              <TableHead className="text-white/40">Submission</TableHead>
-              <TableHead className="text-white/40">Slot</TableHead>
-              <TableHead className="text-white/40">Payment</TableHead>
-              <TableHead className="text-white/40">Status</TableHead>
-              <TableHead className="text-white/40">Submitted</TableHead>
-              <TableHead className="text-right text-white/40">Actions</TableHead>
+          <TableHeader className="bg-muted">
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="text-muted-foreground font-black uppercase tracking-wider">Submission</TableHead>
+              <TableHead className="text-muted-foreground font-black uppercase tracking-wider">Slot</TableHead>
+              <TableHead className="text-muted-foreground font-black uppercase tracking-wider">Payment</TableHead>
+              <TableHead className="text-muted-foreground font-black uppercase tracking-wider">Status</TableHead>
+              <TableHead className="text-muted-foreground font-black uppercase tracking-wider">Submitted</TableHead>
+              <TableHead className="text-right text-muted-foreground font-black uppercase tracking-wider">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -188,17 +198,17 @@ export const SubmissionQueue = () => {
               </TableRow>
             ) : (
               submissions.map((submission) => (
-                <TableRow key={submission.id} className="border-white/10 hover:bg-white/5 transition-colors">
+                <TableRow key={submission.id} className="border-border hover:bg-muted transition-colors">
                   <TableCell className="py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded bg-white/5 flex items-center justify-center">
-                        <ExternalLink className="w-4 h-4 text-white/40" />
+                      <div className="w-12 h-12 rounded bg-muted flex items-center justify-center">
+                        <ExternalLink className="w-4 h-4 text-muted-foreground" />
                       </div>
                       <div>
-                        <div className="font-medium text-white">{submission.track_title}</div>
-                        <div className="text-xs text-white/40">{submission.artist_name}</div>
+                        <div className="font-medium text-foreground">{submission.track_title}</div>
+                        <div className="text-xs text-muted-foreground">{submission.artist_name}</div>
                         {submission.artists && (
-                          <div className="text-xs text-white/30">
+                          <div className="text-xs text-muted-foreground/60">
                             {submission.artists.email}
                           </div>
                         )}
@@ -207,7 +217,7 @@ export const SubmissionQueue = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1">
-                      <span className="text-sm font-semibold text-white">{submission.slots?.name || submission.genre}</span>
+                      <span className="text-sm font-semibold text-foreground">{submission.slots?.name || submission.genre}</span>
                       <span className="text-xs text-dem font-mono">
                         ${submission.slots?.price ? submission.slots.price.toFixed(2) : "0.00"}
                       </span>
@@ -215,9 +225,9 @@ export const SubmissionQueue = () => {
                   </TableCell>
                   <TableCell>{renderPaymentBadge(submission.payment_status)}</TableCell>
                   <TableCell>{renderStatusBadge(submission.status)}</TableCell>
-                  <TableCell className="text-right text-sm text-white/40">
+                  <TableCell className="text-right text-sm text-muted-foreground">
                     {format(new Date(submission.created_at), "MMM d, yyyy")}
-                    <div className="text-xs text-white/30">
+                    <div className="text-xs text-muted-foreground/60">
                       {format(new Date(submission.created_at), "h:mm a")}
                     </div>
                   </TableCell>
@@ -268,12 +278,12 @@ export const SubmissionQueue = () => {
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-white/40 hover:text-white">
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                             <Clock className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-card border-white/10 text-white">
-                          <DropdownMenuItem asChild className="hover:bg-white/5">
+                        <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
+                          <DropdownMenuItem asChild className="hover:bg-muted">
                             <a
                               href={submission.spotify_track_url}
                               target="_blank"
@@ -282,9 +292,9 @@ export const SubmissionQueue = () => {
                               View Track
                             </a>
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="hover:bg-white/5">Add internal note</DropdownMenuItem>
+                          <DropdownMenuItem className="hover:bg-muted">Add internal note</DropdownMenuItem>
                           <DropdownMenuItem
-                            className="hover:bg-white/5 text-rep"
+                            className="hover:bg-muted text-rep"
                             onClick={() => updateStatus(submission.id, "archived")}
                           >
                             Archive submission

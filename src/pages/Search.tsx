@@ -25,20 +25,20 @@ const Search = () => {
   return (
     <PageLayoutWithAds>
       <main className="w-full pb-20">
-        <h1 className="font-display text-4xl md:text-5xl text-foreground mb-8 text-center">
-          Search <span className="text-primary">Results</span>
+        <h1 className="font-display text-4xl md:text-5xl text-white mb-8 text-center">
+          Search <span className="text-dem">Results</span>
         </h1>
 
         <div className="flex justify-center w-full mb-12">
           <form onSubmit={handleSubmit} className="w-full max-w-xl">
             <div className="relative">
-              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <Input
                 type="text"
                 placeholder="Search stories, people, topics..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="pl-12 pr-12 py-8 text-xl bg-card border-border text-center placeholder:text-center rounded-2xl shadow-lg focus:ring-2 focus:ring-primary/20 transition-all"
+                className="pl-12 pr-12 py-8 text-xl bg-white/5 border-white/10 text-white text-center placeholder:text-center rounded-2xl shadow-lg focus:ring-2 focus:ring-dem/20 transition-all"
               />
             </div>
           </form>
@@ -46,15 +46,15 @@ const Search = () => {
 
         {isLoading ? (
           <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <Loader2 className="w-8 h-8 text-dem animate-spin" />
           </div>
         ) : query.length < 3 ? (
-          <p className="text-muted-foreground font-body">
+          <p className="text-white/40 font-body text-center">
             Enter at least 3 characters to search
           </p>
         ) : results?.length ? (
           <>
-            <p className="text-muted-foreground font-body mb-6">
+            <p className="text-white/40 font-body mb-6">
               Found {results.length} result{results.length !== 1 ? "s" : ""} for "{query}"
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -76,10 +76,10 @@ const Search = () => {
           </>
         ) : (
           <div className="text-center py-12">
-            <p className="text-muted-foreground font-body text-lg mb-4">
+            <p className="text-white/40 font-body text-lg mb-4">
               No results found for "{query}"
             </p>
-            <Link to="/" className="text-primary hover:underline font-body">
+            <Link to="/" className="text-dem hover:underline font-body">
               Back to Home
             </Link>
           </div>

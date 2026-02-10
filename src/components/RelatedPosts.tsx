@@ -13,30 +13,40 @@ export function RelatedPosts({ currentPostId }: RelatedPostsProps) {
 
   const { data: posts, isLoading: loadingPosts } = useQuery({
     queryKey: ["related-posts", currentPostId, placements?.map(p => p.content_id)],
-    queryFn: async () => {
-      // If we have specific placements for this slot, fetch them
-      if (placements && placements.length > 0) {
-        const ids = placements.map(p => parseInt(p.content_id!)).filter(id => !isNaN(id));
-        if (ids.length > 0) {
-          const { data, error } = await supabase
-            .from("posts")
-            .select("*")
-            .in("id", ids);
-          if (error) throw error;
-          return data as Post[];
+    queryFn: async ({ signal }) => {
+      try {
+        // If we have specific placements for this slot, fetch them
+        if (placements && placements.length > 0) {
+          const ids = placements.map(p => parseInt(p.content_id!)).filter(id => !isNaN(id));
+          if (ids.length > 0) {
+            const query = supabase
+              .from("posts")
+              .select("*")
+              .in("id", ids) as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: Post[] | null; error: { code: string; message: string } | null }> };
+
+            const result = await query.abortSignal(signal);
+            if (result.error) throw result.error;
+            return result.data || [];
+          }
         }
+
+        // Fallback: Latest stories excluding current
+        const query = supabase
+          .from("posts")
+          .select("*")
+          .neq("id", currentPostId)
+          .order("created_at", { ascending: false })
+          .limit(4) as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: Post[] | null; error: { code: string; message: string } | null }> };
+
+        const result = await query.abortSignal(signal);
+        if (result.error) throw result.error;
+        return result.data || [];
+      } catch (err) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          return [];
+        }
+        throw err;
       }
-
-      // Fallback: Latest stories excluding current
-      const { data, error } = await supabase
-        .from("posts")
-        .select("*")
-        .neq("id", currentPostId)
-        .order("created_at", { ascending: false })
-        .limit(4);
-
-      if (error) throw error;
-      return data as Post[];
     },
     enabled: !loadingPlacements,
   });
@@ -47,9 +57,9 @@ export function RelatedPosts({ currentPostId }: RelatedPostsProps) {
     <div 
       data-slot="post.related" 
       data-accepts="video,article"
-      className="bg-card rounded-2xl p-6 border border-border"
+      className="bg-white/5 rounded-2xl p-6 border border-white/10"
     >
-      <h3 className="font-display text-xl text-foreground mb-4">More Stories</h3>
+      <h3 className="font-display text-xl text-white mb-4">More Stories</h3>
       <div className="space-y-2">
         {posts.map((post) => (
           <PostCard

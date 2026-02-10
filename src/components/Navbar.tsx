@@ -103,11 +103,12 @@ export function Navbar() {
                     {isAdmin && (
                       <div className="flex items-center gap-2">
                         <button
+                          type="button"
                           onClick={toggleAdminMode}
                           className={cn(
                             "hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all group mr-2",
                             isAdminMode 
-                              ? "bg-dem text-white border-dem shadow-[0_0_15px_rgba(20,184,166,0.3)] animate-pulse" 
+                              ? "bg-dem text-white border-dem shadow-[0_0_15px_rgba(0,71,171,0.3)] animate-pulse" 
                               : "bg-dem/10 border-dem/20 text-dem hover:bg-dem/20"
                           )}
                           title={isAdminMode ? "Exit Conduction Mode" : "Enter Conduction Mode"}
@@ -129,11 +130,32 @@ export function Navbar() {
                       </div>
                     )}
 
-                    {/* Temporary Debug Indicator (Visible if logged in) */}
+                    {/* User Info & Debug Indicator */}
                     {session?.user && (
-                      <div className="flex flex-col items-end mr-2 px-2 py-1 bg-white/5 rounded text-[8px] text-white/50 uppercase leading-tight">
-                        <span>{isAdmin ? "Admin Access: OK" : `Role: ${authLoading ? "Checking..." : "Standard User"}`}</span>
-                        <span className="opacity-50 text-[6px]">{session.user.email}</span>
+                      <div className="flex flex-col items-end mr-2 px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] text-white/70 uppercase leading-tight backdrop-blur-sm">
+                        <div className="flex items-center gap-2">
+                          {!isAdmin && (
+                            <div className="flex gap-1.5">
+                              <span className={cn(
+                                "px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider",
+                                capabilities.length > 0 ? "bg-dem/20 text-dem border border-dem/30" : "bg-white/5 text-white/40 border border-white/10"
+                              )}>
+                                {capabilities.length > 0 ? "PARTNER" : "VIEWER"}
+                              </span>
+                              {capabilities.length > 0 && (
+                                <span className="bg-white/5 text-white/40 border border-white/10 px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider">
+                                  VIEWER
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {isAdmin && (
+                            <span className="bg-rep/20 text-rep border border-rep/30 px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider">
+                              ADMIN
+                            </span>
+                          )}
+                        </div>
+                        <span className="opacity-50 text-[8px] font-medium mt-1 lowercase tracking-normal">{session.user.email}</span>
                       </div>
                     )}
 
@@ -322,6 +344,7 @@ export function Navbar() {
                             )}
 
                             <button
+                              type="button"
                               onClick={handleSignOut}
                               className="text-xs uppercase tracking-[0.3em] text-rep hover:text-rep/80 font-bold transition-colors mt-4"
                             >

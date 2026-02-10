@@ -80,35 +80,35 @@ export const OutletEditDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] bg-card border-white/10 text-white">
+      <DialogContent className="sm:max-w-[425px] bg-card border-border text-foreground">
         <DialogHeader>
-          <DialogTitle>Edit Outlet: {outlet?.name}</DialogTitle>
+          <DialogTitle className="text-foreground">Edit Outlet: {outlet?.name}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="price" className="text-white/60">Price (USD)</Label>
+            <Label htmlFor="price" className="text-muted-foreground">Price (USD)</Label>
             <Input
               id="price"
               type="number"
               step="0.01"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              className="bg-white/5 border-white/10 text-white focus:border-dem"
+              className="bg-muted border-border text-foreground focus:border-dem"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="wordCount" className="text-white/60">Preferred Word Count</Label>
+            <Label htmlFor="wordCount" className="text-muted-foreground">Preferred Word Count</Label>
             <Input
               id="wordCount"
               type="number"
               value={wordCount}
               onChange={(e) => setWordCount(e.target.value)}
-              className="bg-white/5 border-white/10 text-white focus:border-dem"
+              className="bg-muted border-border text-foreground focus:border-dem"
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+          <Button variant="outline" onClick={onClose} className="bg-muted border-border text-foreground hover:bg-muted/80">
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={loading} className="bg-dem hover:bg-dem/90 text-white">

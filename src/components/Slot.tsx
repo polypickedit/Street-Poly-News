@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 import { useSlotContent } from "@/hooks/usePlacements";
-import { ContentType } from "@/types/cms";
+import { ContentType, PlacementMetadata } from "@/types/cms";
 
 interface SlotProps {
   /** The unique key for this slot (e.g. "home.hero") */
@@ -12,7 +12,7 @@ interface SlotProps {
   /** Optional wrapper class for the slot */
   className?: string;
   /** Function to render the resolved content */
-  children: (content: { type: ContentType; id: string | null; metadata: Record<string, any> } | null) => ReactNode;
+  children: (content: { type: ContentType; id: string | null; metadata: PlacementMetadata } | null) => ReactNode;
 }
 
 /**

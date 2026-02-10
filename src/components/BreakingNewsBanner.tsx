@@ -3,37 +3,48 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { useSlotContents } from "@/hooks/usePlacements";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export function BreakingNewsBanner() {
   const { data: placements, isLoading: loadingPlacements } = useSlotContents("home.breaking");
 
   const { data: breakingPosts, isLoading: loadingPosts } = useQuery({
     queryKey: ["breaking-posts", placements?.map(p => p.content_id)],
-    queryFn: async () => {
-      // If we have specific placements, fetch them
-      if (placements && placements.length > 0) {
-        const ids = placements.map(p => parseInt(p.content_id!)).filter(id => !isNaN(id));
-        if (ids.length > 0) {
-          const { data, error } = await supabase
-            .from("posts")
-            .select("*")
-            .in("id", ids);
-          if (error) throw error;
-          // Sort by placement priority if possible, or just keep original
-          return data;
+    queryFn: async ({ signal }) => {
+      try {
+        // If we have specific placements, fetch them
+        if (placements && placements.length > 0) {
+          const ids = placements.map(p => parseInt(p.content_id!)).filter(id => !isNaN(id));
+          if (ids.length > 0) {
+            const query = (supabase as SupabaseClient)
+               .from("posts")
+               .select("*")
+               .in("id", ids) as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: { id: string; title: string }[] | null; error: { code: string; message: string } | null }> };
+ 
+             const { data, error } = await query.abortSignal(signal);
+             if (error) throw error;
+             return data || [];
+           }
+         }
+ 
+         // Fallback: Latest breaking posts
+         const fallbackQuery = (supabase as SupabaseClient)
+           .from("posts")
+           .select("*")
+           .eq("is_breaking", true)
+           .order("created_at", { ascending: false })
+           .limit(10) as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: { id: string; title: string }[] | null; error: { code: string; message: string } | null }> };
+ 
+         const { data, error } = await fallbackQuery.abortSignal(signal);
+ 
+         if (error) throw error;
+         return data || [];
+      } catch (err) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          return [];
         }
+        throw err;
       }
-
-      // Fallback: Latest breaking posts
-      const { data, error } = await supabase
-        .from("posts")
-        .select("*")
-        .eq("is_breaking", true)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      return data;
     },
     enabled: !loadingPlacements,
   });

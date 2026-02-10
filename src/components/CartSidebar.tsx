@@ -24,9 +24,9 @@ export const CartSidebar = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetContent className="bg-card border-border w-[85vw] sm:max-w-md flex flex-col">
+      <SheetContent className="bg-dem-dark border-white/10 w-[85vw] sm:max-w-md flex flex-col">
         <SheetHeader>
-          <SheetTitle className="font-display text-2xl text-foreground flex items-center gap-2">
+          <SheetTitle className="font-display text-2xl text-white flex items-center gap-2">
             <ShoppingBag className="w-6 h-6 text-dem" />
             YOUR CART
           </SheetTitle>
@@ -43,7 +43,7 @@ export const CartSidebar = () => {
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-4 p-3 bg-background/50 rounded-lg border border-border"
+                  className="flex gap-4 p-3 bg-white/5 rounded-lg border border-white/10"
                 >
                   <img
                     src={item.image}
@@ -54,7 +54,7 @@ export const CartSidebar = () => {
                     <span className="text-xs font-body uppercase tracking-wider text-dem">
                       {item.type}
                     </span>
-                    <h4 className="font-display text-sm text-foreground truncate">
+                    <h4 className="font-display text-sm text-white truncate">
                       {item.name}
                     </h4>
                     {(item.size || item.color) && (
@@ -62,25 +62,25 @@ export const CartSidebar = () => {
                         {item.size}{item.size && item.color && " / "}{item.color}
                       </p>
                     )}
-                    <p className="font-body text-foreground mt-1">
+                    <p className="font-body text-white mt-1">
                       ${item.price.toFixed(2)}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                       <Button
                         size="icon"
                         variant="outline"
-                        className="h-7 w-7 border-border"
+                        className="h-7 w-7 border-white/10 text-white hover:bg-white/10"
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       >
                         <Minus className="w-3 h-3" />
                       </Button>
-                      <span className="font-body text-sm w-6 text-center text-foreground">
+                      <span className="font-body text-sm w-6 text-center text-white">
                         {item.quantity}
                       </span>
                       <Button
                         size="icon"
                         variant="outline"
-                        className="h-7 w-7 border-border"
+                        className="h-7 w-7 border-white/10 text-white hover:bg-white/10"
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       >
                         <Plus className="w-3 h-3" />
@@ -88,7 +88,7 @@ export const CartSidebar = () => {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-7 w-7 ml-auto text-destructive hover:text-destructive"
+                        className="h-7 w-7 ml-auto text-rep hover:text-rep/80 hover:bg-rep/10"
                         onClick={() => removeItem(item.id)}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -99,15 +99,15 @@ export const CartSidebar = () => {
               ))}
             </div>
 
-            <div className="border-t border-border pt-4 space-y-4">
+            <div className="border-t border-white/10 pt-4 space-y-4">
               <div className="flex justify-between items-center">
-                <span className="font-body text-muted-foreground">Subtotal</span>
-                <span className="font-display text-2xl text-foreground">
+                <span className="font-body text-white/40">Subtotal</span>
+                <span className="font-display text-2xl text-white">
                   ${totalPrice.toFixed(2)}
                 </span>
               </div>
               <Button
-                className="w-full bg-dem hover:bg-dem/90 text-dem-foreground font-body uppercase tracking-wider"
+                className="w-full bg-dem hover:bg-dem/90 text-white font-body uppercase tracking-wider"
                 size="lg"
                 onClick={handleCheckout}
                 disabled={isCheckingOut || items.length === 0}
@@ -123,7 +123,7 @@ export const CartSidebar = () => {
               </Button>
               <Button
                 variant="ghost"
-                className="w-full text-muted-foreground hover:text-foreground font-body"
+                className="w-full text-white/40 hover:text-white hover:bg-white/5 font-body"
                 onClick={clearCart}
               >
                 Clear Cart

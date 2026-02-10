@@ -13,6 +13,7 @@ export interface AdminContextType {
   walkthroughStep: number;
   setWalkthroughStep: (step: number) => void;
   activeAdmins: ActiveAdmin[];
+  hasDismissedWalkthrough: boolean;
 }
 
 export const AdminContext = createContext<AdminContextType | undefined>(undefined);

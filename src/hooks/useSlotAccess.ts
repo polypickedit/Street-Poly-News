@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Slot, SlotAccess, Entitlement } from '@/types/slots';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export const useSlotAccess = (slotSlug: string) => {
   const { session, isAdmin } = useAuth();
@@ -9,6 +10,7 @@ export const useSlotAccess = (slotSlug: string) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
     const checkAccess = async () => {
       // Mock data for development when database records are missing
       const MOCK_SLOTS: Record<string, Slot> = {
@@ -46,11 +48,13 @@ export const useSlotAccess = (slotSlug: string) => {
         setLoading(true);
         
         // 1. Get the slot
-        const { data: slot, error: slotError } = await (supabase as unknown as { from: (t: string) => { select: (p: string) => { eq: (k: string, v: string) => { single: () => Promise<{ data: unknown; error: unknown }> } } } })
+        const query = (supabase
           .from('slots')
           .select('*')
           .eq('slug', slotSlug)
-          .single();
+          .single()) as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: unknown; error: unknown }> };
+
+        const { data: slot, error: slotError } = await query.abortSignal(controller.signal);
 
         if (slotError || !slot) {
           // Check if we have a mock fallback for this slug
@@ -98,13 +102,15 @@ export const useSlotAccess = (slotSlug: string) => {
         }
 
         // 4. Check entitlements for 'paid' visibility
-        const { data: entitlement, error: entError } = await (supabase as unknown as { from: (t: string) => { select: (p: string) => { eq: (k1: string, v1: string) => { eq: (k2: string, v2: string) => { eq: (k3: string, v3: boolean) => { maybeSingle: () => Promise<{ data: unknown; error: unknown }> } } } } } })
+        const entQuery = ((supabase as SupabaseClient)
           .from('entitlements')
           .select('*')
           .eq('user_id', session.user.id)
           .eq('slot_id', typedSlot.id)
           .eq('is_active', true)
-          .maybeSingle();
+          .maybeSingle()) as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: unknown; error: unknown }> };
+
+        const { data: entitlement, error: entError } = await entQuery.abortSignal(controller.signal);
 
         if (entError || !entitlement) {
           setAccess({ 
@@ -129,6 +135,7 @@ export const useSlotAccess = (slotSlug: string) => {
 
         setAccess({ hasAccess: true, slot: typedSlot });
       } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
         console.error('Error checking slot access:', err);
         setAccess({ hasAccess: true }); // Fallback on error
       } finally {
@@ -137,6 +144,7 @@ export const useSlotAccess = (slotSlug: string) => {
     };
 
     checkAccess();
+    return () => controller.abort();
   }, [slotSlug, session, isAdmin]);
 
   return { ...access, loading };

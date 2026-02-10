@@ -82,74 +82,79 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
     }
   }, [canUseCapability]);
 
-  const checkPaymentStatus = useCallback(async () => {
+  const checkPaymentStatus = useCallback(async (signal?: AbortSignal) => {
     setPaymentStatus('confirming');
     
     let attempts = 0;
     const maxAttempts = 15;
     
     const poll = async () => {
+      if (signal?.aborted) return;
       try {
         const { data: { session: authSession } } = await supabase.auth.getSession();
         if (!authSession) return;
 
-        const { data: submissions, error } = await supabase
+        const query = supabase
           .from("submissions")
           .select("id, payment_status")
           .eq("user_id", authSession.user.id)
-          .eq("payment_status", "paid")
-          .order("created_at", { ascending: false })
-          .limit(1);
+          .eq("payment_status", "paid") as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: { id: string, payment_status: string }[] | null, error: unknown }> };
+
+        const { data: submissions, error } = await query.abortSignal(signal);
 
         if (error) throw error;
 
         if (submissions && submissions.length > 0) {
           setPaymentStatus('paid');
           toast.success("Payment confirmed!");
-          setSearchParams({});
-          return true;
+          onSuccess?.();
+          return;
         }
-      } catch (err) {
-        console.error("Error polling payment status:", err);
+
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 2000);
+        } else {
+          setPaymentStatus('failed');
+          toast.error("Payment confirmation timed out. Please check your dashboard later.");
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return;
+        console.error("Polling error:", error);
       }
-      return false;
     };
 
-    const interval = setInterval(async () => {
-      attempts++;
-      const success = await poll();
-      if (success || attempts >= maxAttempts) {
-        clearInterval(interval);
-        if (!success) {
-          setPaymentStatus('failed');
-          toast.error("Payment confirmation taking longer than expected. Please check your dashboard.");
-        }
-      }
-    }, 2000);
-
     poll();
-  }, [setSearchParams]);
+  }, [onSuccess]);
 
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
-    if (sessionId && paymentStatus === 'idle') {
-      checkPaymentStatus();
+    if (sessionId) {
+      const controller = new AbortController();
+      checkPaymentStatus(controller.signal);
+      return () => controller.abort();
     }
-  }, [searchParams, paymentStatus, checkPaymentStatus]);
+  }, [searchParams, checkPaymentStatus]);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchSlots = async () => {
-      const { data } = await supabase.from("slots").select("*").eq("is_active", true);
+      const query = supabase.from("slots").select("*").eq("is_active", true) as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: Slot[] | null; error: unknown }> };
+      const { data } = await query.abortSignal(controller.signal);
       if (data) setSlots(data);
     };
 
     const fetchOutlets = async () => {
-      const { data } = await supabase.from("media_outlets").select("id, name, price_cents, outlet_type").eq("active", true);
+      const query = supabase.from("media_outlets").select("id, name, price_cents, outlet_type").eq("active", true) as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: Outlet[] | null; error: unknown }> };
+      const { data } = await query.abortSignal(controller.signal);
       if (data) setOutlets(data as unknown as Outlet[]);
     };
 
     fetchSlots();
     fetchOutlets();
+
+    return () => controller.abort();
   }, []);
 
   const defaultValues: BookingFormData = {
@@ -319,16 +324,16 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
           
           <div className="flex items-end justify-between mb-4">
             <div>
-              <p className="text-xs text-white/40">
-                Service: <span className="text-white font-medium">{selectedSlot?.name || "Loading..."}</span>
+              <p className="text-xs text-muted-foreground font-medium">
+                Service: <span className="text-foreground font-black">{selectedSlot?.name || "Loading..."}</span>
               </p>
               {watchOutlets.length > 0 && (
-                <p className="text-xs text-white/40">
+                <p className="text-xs text-muted-foreground font-medium">
                   + {watchOutlets.length} Syndication Outlets
                 </p>
               )}
             </div>
-            <p className="text-2xl font-bold text-white">
+            <p className="text-2xl font-black text-foreground">
               {paymentMethod === 'capability' ? "FREE" : `$${totalPrice.toFixed(2)}`}
             </p>
           </div>
@@ -360,7 +365,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
             <Share2 className="w-4 h-4" />
             <h4 className="text-sm font-semibold uppercase tracking-wider">Syndication Network & Promotional Opportunities (Optional)</h4>
           </div>
-          <p className="text-xs text-white/50 mb-4">Select outlets to distribute your content or other promotional opportunities. One click, maximum reach.</p>
+          <p className="text-xs text-muted-foreground font-medium mb-4">Select outlets to distribute your content or other promotional opportunities. One click, maximum reach.</p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {outlets.map((outlet) => (
@@ -372,7 +377,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
                   return (
                     <FormItem
                       key={outlet.id}
-                      className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border border-white/10 p-4 hover:bg-white/5 transition-colors"
+                      className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border border-border p-4 hover:bg-muted/50 transition-colors"
                     >
                       <FormControl>
                         <Checkbox

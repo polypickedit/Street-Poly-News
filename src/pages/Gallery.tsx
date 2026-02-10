@@ -40,15 +40,27 @@ function ResolvedGallery({ id }: { id: string | null | undefined }) {
   
   const { data: post, isLoading } = useQuery({
     queryKey: ["post", id],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (!id) return null;
-      const { data, error } = await supabase
-        .from("posts")
-        .select("*")
-        .eq("id", parseInt(id))
-        .single();
-      if (error) throw error;
-      return data as Post;
+      try {
+        const query = supabase
+          .from("posts")
+          .select("*")
+          .eq("id", parseInt(id))
+          .single() as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: Post | null; error: { code: string; message: string } | null }> };
+
+        const result = await query.abortSignal(signal);
+        const data = result.data;
+        const error = result.error;
+
+        if (error) throw error;
+        return data as Post;
+      } catch (err) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          return null;
+        }
+        throw err;
+      }
     },
     enabled: !!id,
   });
@@ -61,7 +73,7 @@ function ResolvedGallery({ id }: { id: string | null | undefined }) {
       <div className="bg-white/5 rounded-3xl overflow-hidden border border-white/10 p-4 md:p-8">
         <PostCard {...post} variant="featured" />
       </div>
-      <div className="pt-12 border-t border-white/5">
+      <div className="pt-12 border-t border-white/10">
         <h2 className="font-display text-2xl text-white/60 mb-8 uppercase tracking-widest">More from the Gallery</h2>
         <InfinitePostFeed category="gallery" variant="grid" />
       </div>

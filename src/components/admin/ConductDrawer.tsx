@@ -43,7 +43,7 @@ export function ConductDrawer({
   // 1. Fetch current placement
   const { data: currentPlacement } = useQuery({
     queryKey: ["slot-content", slotKey],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       // Use SupabaseClient cast to bypass deep type recursion
       const { data } = await (supabase as SupabaseClient)
         .from("content_placements")
@@ -52,6 +52,7 @@ export function ConductDrawer({
         .eq("active", true)
         .order("priority", { ascending: false })
         .limit(1)
+        .abortSignal(signal)
         .maybeSingle();
       return data as unknown as ContentPlacement | null;
     },
@@ -61,13 +62,14 @@ export function ConductDrawer({
   // 2. Fetch available content (Featured Posts)
   const { data: availablePosts, isLoading: loadingPosts } = useQuery({
     queryKey: ["available-posts", accepts],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const query = supabase
         .from("posts")
         .select("*")
         .eq("is_featured", true)
         .order("created_at", { ascending: false })
-        .limit(20);
+        .limit(20)
+        .abortSignal(signal);
 
       const { data, error } = await query;
       if (error) throw error;
@@ -136,13 +138,13 @@ export function ConductDrawer({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-md bg-black border-white/10 text-white overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-md border-border text-foreground overflow-y-auto">
         <SheetHeader className="mb-6">
           <Badge variant="outline" className="w-fit mb-2 border-dem text-dem">
             Conducting Slot
           </Badge>
-          <SheetTitle className="text-2xl font-display text-white">{slotKey}</SheetTitle>
-          <SheetDescription className="text-white/40 font-body">
+          <SheetTitle className="text-2xl font-display">{slotKey}</SheetTitle>
+          <SheetDescription className="text-muted-foreground font-body">
             Assign content to this area of the site.
           </SheetDescription>
         </SheetHeader>
@@ -151,14 +153,14 @@ export function ConductDrawer({
           {/* Current Content Info */}
           <section>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs uppercase tracking-widest text-white/40 font-bold flex items-center gap-2">
+              <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-2">
                 <Info className="w-3 h-3" /> Current Winner
               </h3>
               {currentPlacement && (
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-7 text-[10px] text-rep hover:text-rep hover:bg-rep/10 uppercase tracking-widest"
+                  className="h-7 text-xs text-rep hover:text-rep hover:bg-rep/10 uppercase tracking-widest"
                   onClick={() => revertMutation.mutate()}
                   disabled={revertMutation.isPending}
                 >
@@ -166,30 +168,30 @@ export function ConductDrawer({
                 </Button>
               )}
             </div>
-            <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+            <div className="p-4 bg-muted/50 rounded-xl border border-border">
               {currentPlacement ? (
                 <div>
-                  <p className="text-sm font-body text-white/60">
-                    Type: <span className="text-white font-bold">{currentPlacement.content_type}</span>
+                  <p className="text-sm font-body text-muted-foreground">
+                    Type: <span className="text-foreground font-bold">{currentPlacement.content_type}</span>
                   </p>
-                  <p className="text-sm font-body text-white/60">
-                    ID: <span className="text-white font-mono">{currentPlacement.content_id}</span>
+                  <p className="text-sm font-body text-muted-foreground">
+                    ID: <span className="text-foreground font-mono">{currentPlacement.content_id}</span>
                   </p>
-                   <p className="text-xs text-white/40 mt-2 font-mono">
+                   <p className="text-xs text-muted-foreground mt-2 font-mono">
                     Placed: {new Date(currentPlacement.created_at).toLocaleString()}
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-white/40 italic">Static Fallback (No active placements)</p>
+                <p className="text-sm text-muted-foreground italic">Static Fallback (No active placements)</p>
               )}
             </div>
           </section>
 
-          <Separator className="bg-white/10" />
+          <Separator className="bg-border" />
 
           {/* Content Picker */}
           <section>
-            <h3 className="text-xs uppercase tracking-widest text-white/40 font-bold mb-3">
+            <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-3">
               Swap Content
             </h3>
             {loadingPosts ? (
@@ -205,11 +207,11 @@ export function ConductDrawer({
                     className={cn(
                       "flex items-center gap-4 p-3 rounded-lg border transition-all text-left",
                       selectedContentId === post.id.toString()
-                        ? "bg-dem/20 border-dem shadow-lg"
-                        : "bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
+                        ? "bg-dem/10 border-dem shadow-sm"
+                        : "bg-muted/50 border-border hover:border-muted-foreground/30 hover:bg-muted"
                     )}
                   >
-                    <div className="w-12 h-12 rounded bg-white/10 overflow-hidden flex-shrink-0">
+                    <div className="w-12 h-12 rounded bg-muted overflow-hidden flex-shrink-0">
                       {post.thumbnail_url && (
                         <img 
                           src={post.thumbnail_url} 
@@ -220,7 +222,7 @@ export function ConductDrawer({
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-display truncate leading-tight">{post.title}</p>
-                      <p className="text-[10px] text-white/40 font-body uppercase mt-1">{post.content_type}</p>
+                      <p className="text-xs text-muted-foreground font-body uppercase mt-1">{post.content_type}</p>
                     </div>
                     {selectedContentId === post.id.toString() && (
                       <CheckCircle2 className="w-4 h-4 text-dem" />
@@ -233,26 +235,26 @@ export function ConductDrawer({
 
           {/* Intentionality Logging */}
           <section>
-            <h3 className="text-xs uppercase tracking-widest text-white/40 font-bold mb-3">
+            <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-3">
               Intentionality Log
             </h3>
             <Input
               placeholder="Reason for change (optional)..."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-dem transition-colors"
+              className="bg-background border-input text-foreground placeholder:text-muted-foreground/50 focus:border-dem transition-colors"
             />
-            <p className="text-[10px] text-white/40 mt-2 italic">
+            <p className="text-xs text-muted-foreground mt-2 italic">
               Adding a reason turns logs into institutional memory.
             </p>
           </section>
 
           {/* Advanced Targeting */}
           <section className="space-y-6 pt-2">
-            <Separator className="bg-white/10" />
+            <Separator className="bg-border" />
             
             <div className="space-y-4">
-              <h3 className="text-xs uppercase tracking-widest text-white/40 font-bold flex items-center gap-2">
+              <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-2">
                 <Monitor className="w-3 h-3" /> Target Audience
               </h3>
               <div className="flex gap-2">
@@ -261,10 +263,10 @@ export function ConductDrawer({
                     key={scope}
                     onClick={() => setDeviceScope(scope)}
                     className={cn(
-                      "flex-1 flex items-center justify-center gap-2 p-2 rounded border transition-all text-[10px] font-bold uppercase",
+                      "flex-1 flex items-center justify-center gap-2 p-2 rounded border transition-all text-xs font-bold uppercase",
                       deviceScope === scope
-                        ? "bg-dem/20 border-dem text-dem"
-                        : "bg-white/5 border-white/10 text-white/40 hover:text-white"
+                        ? "bg-dem/10 border-dem text-dem"
+                        : "bg-muted/50 border-border text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {scope === 'mobile' && <Smartphone className="w-3 h-3" />}
@@ -276,35 +278,35 @@ export function ConductDrawer({
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-xs uppercase tracking-widest text-white/40 font-bold flex items-center gap-2">
+              <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-2">
                 <Calendar className="w-3 h-3" /> Temporal Scheduling
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-white/40 uppercase font-bold tracking-tighter">Starts At</label>
+                  <label className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">Starts At</label>
                   <Input 
                     type="datetime-local" 
                     value={startsAt}
                     onChange={(e) => setStartsAt(e.target.value)}
-                    className="bg-white/5 border-white/10 text-[10px] h-8"
+                    className="bg-background border-input text-xs h-8"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-white/40 uppercase font-bold tracking-tighter">Ends At</label>
+                  <label className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">Ends At</label>
                   <Input 
                     type="datetime-local" 
                     value={endsAt}
                     onChange={(e) => setEndsAt(e.target.value)}
-                    className="bg-white/5 border-white/10 text-[10px] h-8"
+                    className="bg-background border-input text-xs h-8"
                   />
                 </div>
               </div>
-              <p className="text-[9px] text-white/20 italic">Leave empty for immediate / permanent placement.</p>
+              <p className="text-[9px] text-muted-foreground/40 italic">Leave empty for immediate / permanent placement.</p>
             </div>
           </section>
 
           {/* Action Footer */}
-          <div className="sticky bottom-0 bg-black pt-4 pb-2">
+          <div className="sticky bottom-0 bg-background pt-4 pb-2">
             <Button 
               className="w-full bg-dem hover:bg-dem/90 text-white font-bold h-12"
               disabled={!selectedContentId || conductMutation.isPending}
@@ -317,7 +319,7 @@ export function ConductDrawer({
               )}
               Commit Change
             </Button>
-            <p className="text-[10px] text-center text-white/40 mt-3 flex items-center justify-center gap-1 uppercase tracking-tighter">
+            <p className="text-xs text-center text-muted-foreground mt-3 flex items-center justify-center gap-1 uppercase tracking-tighter">
               <History className="w-3 h-3" /> This action will be logged.
             </p>
           </div>

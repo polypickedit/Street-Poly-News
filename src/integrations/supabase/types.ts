@@ -76,6 +76,51 @@ export interface Database {
         }
         Relationships: []
       }
+      content_placements: {
+        Row: {
+          id: string
+          slot_key: string
+          content_type: "video" | "article" | "ad" | "gallery"
+          content_id: string | null
+          priority: number
+          starts_at: string | null
+          ends_at: string | null
+          device_scope: "all" | "mobile" | "desktop"
+          metadata: Json
+          active: boolean
+          updated_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          slot_key: string
+          content_type: "video" | "article" | "ad" | "gallery"
+          content_id?: string | null
+          priority?: number
+          starts_at?: string | null
+          ends_at?: string | null
+          device_scope?: "all" | "mobile" | "desktop"
+          metadata?: Json
+          active?: boolean
+          updated_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          slot_key?: string
+          content_type?: "video" | "article" | "ad" | "gallery"
+          content_id?: string | null
+          priority?: number
+          starts_at?: string | null
+          ends_at?: string | null
+          device_scope?: "all" | "mobile" | "desktop"
+          metadata?: Json
+          active?: boolean
+          updated_by?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       people: {
         Row: {
           id: string

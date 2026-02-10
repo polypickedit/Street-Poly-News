@@ -3,17 +3,18 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ActiveAdmin } from "@/types/admin";
 import { AdminContext } from "@/contexts/AdminContext";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 // Temporary types for schema extensions not yet in generated definitions
 type SupabaseRPCOverride = {
-  rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
+  rpc: (name: string, args: Record<string, unknown>) => { abortSignal: (s?: AbortSignal) => Promise<{ data: unknown; error: unknown }> };
 };
 
 type SupabaseTableOverride = {
   from: (table: string) => {
     select: (cols: string) => {
       eq: (col: string, val: string) => {
-        single: () => Promise<{ data: unknown; error: unknown }>;
+        single: () => { abortSignal: (s?: AbortSignal) => Promise<{ data: unknown; error: unknown }> };
       };
     };
     update: (data: Record<string, unknown>) => {
@@ -28,44 +29,69 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [isWalkthroughActive, setIsWalkthroughActive] = useState(false);
   const [walkthroughStep, setWalkthroughStep] = useState(-1);
   const [activeAdmins, setActiveAdmins] = useState<ActiveAdmin[]>([]);
+  const [hasDismissedWalkthrough, setHasDismissedWalkthrough] = useState(false);
 
   // Check if current user is an admin
   const { data: isAdmin } = useQuery({
     queryKey: ["is-admin"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
-      
-      // Cast to unknown then to specific rpc type to avoid 'any' lint error
-      const { data, error } = await (supabase as unknown as SupabaseRPCOverride)
-        .rpc("is_admin_or_editor_safe", {
-          target_user_id: user.id
-        });
-      
-      if (error) {
-        console.error("Error checking admin status:", error);
-        return false;
+    queryFn: async ({ signal }) => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
+        
+        // Cast to unknown then to specific rpc type to avoid 'any' lint error
+        const { data, error } = await (supabase as unknown as SupabaseRPCOverride)
+          .rpc("is_admin_or_editor_safe", {
+            target_user_id: user.id
+          })
+          .abortSignal(signal);
+        
+        if (error) {
+          console.error("Error checking admin status:", error);
+          return false;
+        }
+        return !!data;
+      } catch (err) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          return false;
+        }
+        throw err;
       }
-      return !!data;
     },
   });
 
   // Check if walkthrough is completed
   const { data: profile } = useQuery({
     queryKey: ["admin-profile"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-      // Using casting to bypass missing property in generated types
-      const { data } = await (supabase as unknown as SupabaseTableOverride)
-        .from("profiles")
-        .select("admin_walkthrough_completed_at")
-        .eq("id", user.id)
-        .single();
-      return data as { admin_walkthrough_completed_at: string | null } | null;
+    queryFn: async ({ signal }) => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return null;
+        // Using casting to bypass missing property in generated types
+        const { data } = await (supabase as unknown as SupabaseTableOverride)
+          .from("profiles")
+          .select("admin_walkthrough_completed_at")
+          .eq("id", user.id)
+          .single()
+          .abortSignal(signal);
+        return data as { admin_walkthrough_completed_at: string | null } | null;
+      } catch (err) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          return null;
+        }
+        throw err;
+      }
     },
     enabled: !!isAdmin,
   });
+
+  const hasCompletedWalkthrough = !!profile?.admin_walkthrough_completed_at;
+
+  useEffect(() => {
+    if (hasCompletedWalkthrough) {
+      setHasDismissedWalkthrough(true);
+    }
+  }, [hasCompletedWalkthrough]);
 
   const completeWalkthroughMutation = useMutation({
     mutationFn: async () => {
@@ -84,12 +110,19 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const toggleAdminMode = useCallback(() => {
     if (isAdmin) {
-      setIsAdminMode((prev) => !prev);
+      setIsAdminMode((prev) => {
+        const next = !prev;
+        if (!next) {
+          setIsWalkthroughActive(false);
+        }
+        return next;
+      });
     }
   }, [isAdmin]);
 
   const completeWalkthrough = () => {
     setIsWalkthroughActive(false);
+    setHasDismissedWalkthrough(true);
     completeWalkthroughMutation.mutate();
   };
 
@@ -145,7 +178,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         toggleAdminMode,
         isWalkthroughActive,
         setIsWalkthroughActive,
-        hasCompletedWalkthrough: !!profile?.admin_walkthrough_completed_at,
+        hasCompletedWalkthrough,
+        hasDismissedWalkthrough,
         completeWalkthrough,
         walkthroughStep,
         setWalkthroughStep,
@@ -156,4 +190,3 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     </AdminContext.Provider>
   );
 }
-

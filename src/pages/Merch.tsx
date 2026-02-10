@@ -63,7 +63,7 @@ const Merch = () => {
               STREETPOLY <span className="text-rep">MERCH</span>
             </h1>
             
-            <p className="text-muted-foreground font-body max-w-xl mx-auto px-4">
+            <p className="text-white/40 font-body max-w-xl mx-auto px-4">
               Support independent journalism and wear the message. High-quality apparel 
               for the voices of the street.
             </p>
@@ -80,7 +80,7 @@ const Merch = () => {
               asChild
               size="lg"
               variant="outline"
-              className="border-dem text-dem hover:bg-dem hover:text-dem-foreground font-body uppercase tracking-wider"
+              className="border-white/10 text-white hover:bg-white/5 font-body uppercase tracking-wider"
             >
               <a
                 href="https://yourstore.com"

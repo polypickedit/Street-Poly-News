@@ -1,5 +1,17 @@
 export type ContentType = 'video' | 'article' | 'ad' | 'gallery';
 
+export interface PlacementMetadata {
+  imageUrl?: string;
+  targetUrl?: string;
+  altText?: string;
+  backgroundColor?: string;
+  title?: string;
+  description?: string;
+  videoId?: string;
+  autoplay?: boolean;
+  [key: string]: unknown;
+}
+
 export interface ContentPlacement {
   id: string;
   slot_key: string;
@@ -9,7 +21,7 @@ export interface ContentPlacement {
   starts_at: string | null;
   ends_at: string | null;
   device_scope: 'all' | 'mobile' | 'desktop';
-  metadata: Record<string, unknown>;
+  metadata: PlacementMetadata;
   active: boolean;
   created_at: string;
 }

@@ -28,8 +28,8 @@ export function DisqusComments({ postId, title }: DisqusCommentsProps) {
   }, [postId, title]);
 
   return (
-    <div className="bg-card rounded-lg p-6 border border-border">
-      <h3 className="font-display text-2xl text-foreground mb-4">Comments</h3>
+    <div className="bg-white/5 rounded-lg p-6 border border-white/10">
+      <h3 className="font-display text-2xl text-white mb-4">Comments</h3>
       <div id="disqus_thread"></div>
       <noscript>
         Please enable JavaScript to view the comments powered by Disqus.

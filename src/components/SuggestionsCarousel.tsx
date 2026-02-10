@@ -17,29 +17,50 @@ export const SuggestionsCarousel = () => {
 
   const { data: posts, isLoading: loadingPosts } = useQuery({
     queryKey: ["suggested-posts", placements?.map(p => p.content_id)],
-    queryFn: async () => {
-      // If we have specific placements, fetch them
-      if (placements && placements.length > 0) {
-        const ids = placements.map(p => parseInt(p.content_id!)).filter(id => !isNaN(id));
-        if (ids.length > 0) {
-          const { data, error } = await supabase
-            .from("posts")
-            .select("id, title, youtube_id, thumbnail_url")
-            .in("id", ids);
-          if (error) throw error;
-          return data;
+    queryFn: async ({ signal }) => {
+      try {
+        // If we have specific placements, fetch them
+        if (placements && placements.length > 0) {
+          const ids = placements.map(p => parseInt(p.content_id!)).filter(id => !isNaN(id));
+          if (ids.length > 0) {
+            const query = supabase
+              .from("posts")
+              .select("id, title, youtube_id, thumbnail_url")
+              .in("id", ids) as unknown as { 
+                abortSignal: (s: AbortSignal) => Promise<{ 
+                  data: { id: number; title: string; youtube_id: string | null; thumbnail_url: string | null }[] | null; 
+                  error: { message: string; code: string } | null 
+                }> 
+              };
+            
+            const { data, error } = await query.abortSignal(signal);
+            if (error) throw error;
+            return data;
+          }
         }
+
+        // Fallback: Top 10 by views
+        const query = supabase
+          .from("posts")
+          .select("id, title, youtube_id, thumbnail_url")
+          .order("view_count", { ascending: false })
+          .limit(10) as unknown as { 
+            abortSignal: (s: AbortSignal) => Promise<{ 
+              data: { id: number; title: string; youtube_id: string | null; thumbnail_url: string | null }[] | null; 
+              error: { message: string; code: string } | null 
+            }> 
+          };
+
+        const { data, error } = await query.abortSignal(signal);
+
+        if (error) throw error;
+        return data;
+      } catch (err) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          return null;
+        }
+        throw err;
       }
-
-      // Fallback: Top 10 by views
-      const { data, error } = await supabase
-        .from("posts")
-        .select("id, title, youtube_id, thumbnail_url")
-        .order("view_count", { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      return data;
     },
     enabled: !loadingPlacements,
   });
@@ -67,7 +88,7 @@ export const SuggestionsCarousel = () => {
       data-accepts="video,article"
       className="py-6 sm:py-8 border-t border-white/10"
     >
-      <h2 className="text-lg sm:text-xl font-display font-bold mb-4 text-white">
+      <h2 className="text-lg sm:text-xl font-display font-bold mb-4 text-black">
         Suggested For You
       </h2>
       <Carousel
@@ -97,9 +118,9 @@ export const SuggestionsCarousel = () => {
                   alt={post.title}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-dem/90 via-dem/20 to-transparent opacity-80" />
+                <div className="absolute inset-0 bg-white/40 group-hover:bg-white/20 transition-colors" />
                 <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <h3 className="text-sm font-medium text-white line-clamp-2 leading-tight group-hover:underline">
+                  <h3 className="text-sm font-medium text-black line-clamp-2 leading-tight group-hover:underline drop-shadow-sm">
                     {post.title}
                   </h3>
                 </div>
@@ -107,8 +128,8 @@ export const SuggestionsCarousel = () => {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="hidden sm:flex -left-4 bg-black/80 backdrop-blur-sm border-white/10 text-white hover:bg-dem hover:text-white" />
-        <CarouselNext className="hidden sm:flex -right-4 bg-black/80 backdrop-blur-sm border-white/10 text-white hover:bg-dem hover:text-white" />
+        <CarouselPrevious className="hidden sm:flex -left-4 bg-white/80 backdrop-blur-sm border-black/10 text-black hover:bg-dem hover:text-white" />
+        <CarouselNext className="hidden sm:flex -right-4 bg-white/80 backdrop-blur-sm border-black/10 text-black hover:bg-dem hover:text-white" />
       </Carousel>
     </div>
   );
