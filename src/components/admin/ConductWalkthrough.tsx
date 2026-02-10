@@ -153,10 +153,10 @@ export function ConductWalkthrough() {
               <div className="w-20 h-20 bg-dem/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Play className="w-8 h-8 text-dem fill-current" />
               </div>
-              <h2 className="text-3xl font-display text-white">Welcome to the Control Room</h2>
-              <p className="text-white/40 font-body text-lg">
+              <h2 className="text-3xl font-display text-dem font-black uppercase">Welcome to the Control Room</h2>
+              <p className="text-muted-foreground font-body text-lg">
                 You don’t edit pages here. <br />
-                <span className="text-white font-bold">You conduct them.</span>
+                <span className="text-dem font-black uppercase">You conduct them.</span>
               </p>
               <Button 
                 onClick={() => setWalkthroughStep(0)}
@@ -186,10 +186,10 @@ export function ConductWalkthrough() {
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <h3 className="text-xl font-display text-white">{currentStep.title}</h3>
-              <p className="text-white/60 font-body leading-relaxed">{currentStep.content}</p>
+              <h3 className="text-xl font-display text-dem font-black uppercase">{currentStep.title}</h3>
+              <p className="text-muted-foreground font-body leading-relaxed">{currentStep.content}</p>
               {currentStep.subContent && (
-                <p className="text-white/40 text-sm font-body italic border-l-2 border-dem/30 pl-3">
+                <p className="text-muted-foreground/60 text-sm font-body italic border-l-2 border-dem/30 pl-3">
                   {currentStep.subContent}
                 </p>
               )}

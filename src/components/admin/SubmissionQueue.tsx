@@ -69,7 +69,7 @@ export const SubmissionQueue = () => {
 
   const { data: submissions = [], isLoading } = useQuery<SubmissionRow[]>({
     queryKey: ["submissions", filter],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       try {
         let baseQuery = (supabase as SupabaseClient)
           .from("submissions")
@@ -80,15 +80,12 @@ export const SubmissionQueue = () => {
           baseQuery = baseQuery.eq("status", filter);
         }
 
-        const query = baseQuery as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: SubmissionRow[] | null; error: { code: string; message: string } | null }> };
-        const { data, error } = await query.abortSignal(signal);
+        const { data, error } = await baseQuery;
 
         if (error) throw error;
-        return data || [];
+        return data as unknown as SubmissionRow[] || [];
       } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return [];
-        }
+        console.error("SubmissionQueue: Error fetching submissions:", err);
         throw err;
       }
     },

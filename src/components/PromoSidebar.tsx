@@ -177,21 +177,21 @@ const SkyscraperRenderer = ({ promo }: { promo: Promo }) => {
         />
       ) : promo.isAlbum ? (
         <div className="flex flex-col items-center p-4 text-center">
-          <div className="w-[130px] h-[130px] rounded-lg overflow-hidden mb-4 shadow-xl border-2 border-white/20">
+          <div className="w-[130px] h-[130px] rounded-lg overflow-hidden mb-4 shadow-xl border-2 border-border">
             <img src={promo.albumArt} alt={promo.title} className="w-full h-full object-cover" />
           </div>
-          <div className="text-white/40 font-body text-xs uppercase tracking-wider mb-1">New Album</div>
-          <div className="text-white font-display text-3xl leading-tight mb-1">{promo.title}</div>
-          <div className="text-white/60 font-body text-sm mb-4">{promo.subtitle}</div>
-          <div className="flex items-center gap-2 bg-dem text-white font-display text-sm px-5 py-2.5 rounded-full">
+          <div className="text-muted-foreground font-black uppercase tracking-widest text-[10px] mb-1">New Album</div>
+          <div className="text-dem font-display text-3xl font-black leading-tight uppercase mb-1">{promo.title}</div>
+          <div className="text-muted-foreground font-medium text-sm mb-4">{promo.subtitle}</div>
+          <div className="flex items-center gap-2 bg-dem text-white font-display font-black uppercase tracking-widest text-xs px-5 py-2.5 rounded-full hover:bg-dem/90 transition-colors">
             <Download className="w-4 h-4" /> {promo.text}
           </div>
         </div>
       ) : (
         <div className="flex flex-col items-center p-4 text-center">
-          <div className="text-white font-display text-2xl leading-tight mb-2">{promo.title}</div>
-          <div className="text-white/40 font-body text-sm mb-6">{promo.subtitle}</div>
-          <div className="bg-white text-black font-display text-sm px-6 py-2 rounded-full">{promo.text}</div>
+          <div className="text-dem font-display text-2xl font-black uppercase leading-tight mb-2">{promo.title}</div>
+          <div className="text-muted-foreground font-medium text-sm mb-6">{promo.subtitle}</div>
+          <div className="bg-dem text-white font-display font-black uppercase tracking-widest text-xs px-6 py-2 rounded-full hover:bg-dem/90 transition-colors">{promo.text}</div>
         </div>
       )}
     </>
@@ -199,9 +199,9 @@ const SkyscraperRenderer = ({ promo }: { promo: Promo }) => {
 
   return (
     <div className="relative w-full flex flex-col items-center">
-      <span className="absolute -top-4 w-full text-center text-[10px] text-white/40 uppercase tracking-wider font-body">Promotion</span>
+      <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground font-black uppercase tracking-widest">Promotion</span>
       {isInternal ? (
-        <Link to={promo.link || "#"} className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-white/5 shadow-lg p-4 text-center border-2 border-white/10"}`}>
+        <Link to={promo.link || "#"} className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-card shadow-lg p-4 text-center border-2 border-border"}`}>
           <Content />
         </Link>
       ) : (
@@ -210,7 +210,7 @@ const SkyscraperRenderer = ({ promo }: { promo: Promo }) => {
           target="_blank" 
           rel="noopener noreferrer" 
           aria-label={`Advertisement: ${promo.title}`}
-          className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-white/5 shadow-lg p-4 text-center border-2 border-white/10"}`}
+          className={`h-[600px] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-card shadow-lg p-4 text-center border-2 border-border"}`}
         >
           <Content />
         </a>
@@ -228,9 +228,9 @@ const SquareRenderer = ({ promo }: { promo: Promo }) => {
         <img src={promo.image} alt={promo.title} className={`w-full h-auto block object-contain ${promo.scaleClass ?? 'scale-100'}`} />
       ) : (
         <div className="flex flex-col items-center p-4 text-center">
-          <div className="text-white font-display text-4xl leading-tight mb-2">{promo.title}</div>
-          <div className="text-white/40 font-body text-sm mb-6">{promo.subtitle}</div>
-          <div className="bg-white text-black font-display text-sm px-6 py-2 rounded-full">{promo.text}</div>
+          <div className="text-dem font-display text-4xl font-black uppercase leading-tight mb-2">{promo.title}</div>
+          <div className="text-muted-foreground font-medium text-sm mb-6">{promo.subtitle}</div>
+          <div className="bg-dem text-white font-display font-black uppercase tracking-widest text-xs px-6 py-2 rounded-full hover:bg-dem/90 transition-colors">{promo.text}</div>
         </div>
       )}
     </>
@@ -238,9 +238,9 @@ const SquareRenderer = ({ promo }: { promo: Promo }) => {
 
   return (
     <div className="relative w-full flex flex-col items-center text-center">
-      <span className="absolute -top-4 w-full text-center text-[10px] text-white/40 uppercase tracking-wider font-body">Promotion</span>
+      <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground font-black uppercase tracking-widest">Promotion</span>
       {isInternal ? (
-        <Link to={promo.link || "#"} className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-white/5 shadow-lg p-4 border-2 border-white/10"}`}>
+        <Link to={promo.link || "#"} className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-card shadow-lg p-4 border-2 border-border"}`}>
           <Content />
         </Link>
       ) : (
@@ -249,7 +249,7 @@ const SquareRenderer = ({ promo }: { promo: Promo }) => {
           target="_blank" 
           rel="noopener noreferrer" 
           aria-label={`Advertisement: ${promo.title}`}
-          className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-white/5 shadow-lg p-4 border-2 border-white/10"}`}
+          className={`h-auto rounded-lg flex flex-col items-center justify-center cursor-pointer hover:scale-[1.02] transition-transform w-full ${promo.image ? "p-0 overflow-hidden border-0 bg-transparent" : "bg-card shadow-lg p-4 border-2 border-border"}`}
         >
           <Content />
         </a>
@@ -264,16 +264,16 @@ export const MobilePromoBanner = () => {
   return (
     <div className="xl:hidden my-6">
       <div className="relative">
-        <span className="absolute top-[3%] left-0 text-[10px] text-white/40 uppercase tracking-wider font-body">Promotion</span>
+        <span className="absolute top-[3%] left-0 text-[10px] text-muted-foreground font-black uppercase tracking-widest">Promotion</span>
         {isInternal ? (
-          <Link to={bannerPromo.link || "#"} className={`w-full h-20 md:h-24 bg-white/5 rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-white/10`}>
-             <div className="text-white font-display text-xl md:text-2xl leading-tight">{bannerPromo.title}</div>
-             <div className="bg-white text-black font-display text-xs px-4 py-2 rounded-full">{bannerPromo.text}</div>
+          <Link to={bannerPromo.link || "#"} className={`w-full h-20 md:h-24 bg-card rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-border`}>
+             <div className="text-dem font-display text-xl md:text-2xl font-black uppercase leading-tight">{bannerPromo.title}</div>
+             <div className="bg-dem text-white font-display font-black uppercase tracking-widest text-xs px-4 py-2 rounded-full">{bannerPromo.text}</div>
           </Link>
         ) : (
-          <a href={bannerPromo.link || "#"} target="_blank" rel="noopener noreferrer" className={`w-full h-20 md:h-24 bg-white/5 rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-white/10`}>
-             <div className="text-white font-display text-xl md:text-2xl leading-tight">{bannerPromo.title}</div>
-             <div className="bg-white text-black font-display text-xs px-4 py-2 rounded-full">{bannerPromo.text}</div>
+          <a href={bannerPromo.link || "#"} target="_blank" rel="noopener noreferrer" className={`w-full h-20 md:h-24 bg-card rounded-lg flex items-center justify-between px-4 md:px-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-lg border-2 border-border`}>
+             <div className="text-dem font-display text-xl md:text-2xl font-black uppercase leading-tight">{bannerPromo.title}</div>
+             <div className="bg-dem text-white font-display font-black uppercase tracking-widest text-xs px-4 py-2 rounded-full">{bannerPromo.text}</div>
           </a>
         )}
       </div>
@@ -286,9 +286,9 @@ export const MobileSkyscraperPromo = ({ index = 0 }: { index?: number }) => {
   return (
     <div className="lg:hidden w-full my-6 flex justify-center">
       <div className="relative w-full max-w-sm flex flex-col items-center">
-        <span className="absolute -top-4 w-full text-center text-[10px] text-white/40 uppercase tracking-wider font-body">Promotion</span>
-        <div className={`rounded-lg flex flex-col items-center justify-center w-full ${skyPromo.image ? "h-auto border-0 bg-transparent" : "bg-white/5 shadow-lg p-4 text-center border-2 border-white/10"}`}>
-          {skyPromo.image ? <img src={skyPromo.image} alt={skyPromo.title} className="w-full h-auto object-contain" /> : <div className="text-white">{skyPromo.title}</div>}
+        <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground font-black uppercase tracking-widest">Promotion</span>
+        <div className={`rounded-lg flex flex-col items-center justify-center w-full ${skyPromo.image ? "h-auto border-0 bg-transparent" : "bg-card shadow-lg p-4 text-center border-2 border-border"}`}>
+          {skyPromo.image ? <img src={skyPromo.image} alt={skyPromo.title} className="w-full h-auto object-contain" /> : <div className="text-dem font-black uppercase">{skyPromo.title}</div>}
         </div>
       </div>
     </div>
@@ -300,9 +300,9 @@ export const MobileSquarePromo = () => {
   return (
     <div className="lg:hidden w-full my-6 flex justify-center">
       <div className="relative w-full max-w-sm flex flex-col items-center">
-        <span className="absolute -top-4 w-full text-center text-[10px] text-white/40 uppercase tracking-wider font-body">Promotion</span>
-        <div className={`rounded-lg flex flex-col items-center justify-center w-full ${sqPromo.image ? "h-auto border-0 bg-transparent" : "aspect-square bg-white/5 shadow-lg p-4 text-center border-2 border-white/10"}`}>
-          {sqPromo.image ? <img src={sqPromo.image} alt={sqPromo.title} className="w-full h-auto block" /> : <div className="text-white">{sqPromo.title}</div>}
+        <span className="absolute -top-4 w-full text-center text-[10px] text-muted-foreground font-black uppercase tracking-widest">Promotion</span>
+        <div className={`rounded-lg flex flex-col items-center justify-center w-full ${sqPromo.image ? "h-auto border-0 bg-transparent" : "aspect-square bg-card shadow-lg p-4 text-center border-2 border-border"}`}>
+          {sqPromo.image ? <img src={sqPromo.image} alt={sqPromo.title} className="w-full h-auto block" /> : <div className="text-dem font-black uppercase">{sqPromo.title}</div>}
         </div>
       </div>
     </div>

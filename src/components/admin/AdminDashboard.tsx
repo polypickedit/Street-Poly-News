@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListMusic, History, AlertCircle, TrendingUp, Loader2, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useAdminStats, useAdminActivities } from "@/hooks/useAdminStats";
 import { Zap } from "lucide-react";
 
 interface ActivityLog {
@@ -18,100 +18,15 @@ export const AdminDashboard = () => {
   const navigate = useNavigate();
   const { setIsAdminMode } = useAdmin();
 
-  // Use React Query for stats to handle lifecycle and aborts automatically
   const { data: stats = {
     pendingSubmissions: 0,
     activePlacements: 0,
     endingSoon: 0,
     failedPayments: 0
-  }, isLoading: isLoadingStats } = useQuery({
-    queryKey: ["admin-dashboard-stats"],
-    queryFn: async ({ signal }) => {
-      console.log("AdminDashboard: Fetching stats...");
-      try {
-        interface CountResponse {
-          count: number | null;
-          error: { message: string; code: string } | null;
-        }
-
-        const queryWrapper = (q: unknown) => (q as { abortSignal: (s: AbortSignal) => Promise<CountResponse> });
-
-        const [
-          pendingRes,
-          activeRes,
-          endingSoonRes,
-          failedPaymentsRes
-        ] = await Promise.all([
-          queryWrapper(supabase.from("submissions").select("*", { count: 'exact', head: true }).eq('status', 'pending')).abortSignal(signal),
-          queryWrapper(supabase.from("placements").select("*", { count: 'exact', head: true }).gt('end_date', new Date().toISOString())).abortSignal(signal),
-          queryWrapper(supabase.from("placements").select("*", { count: 'exact', head: true })
-            .gt('end_date', new Date().toISOString())
-            .lt('end_date', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString())).abortSignal(signal),
-          queryWrapper(supabase.from("payments").select("*", { count: 'exact', head: true }).eq('status', 'failed')).abortSignal(signal)
-        ]);
-
-        // Check for individual errors but don't throw unless it's a critical connection failure
-        if (pendingRes.error) console.warn("Pending submissions fetch returned error:", pendingRes.error);
-        if (activeRes.error) console.warn("Active placements fetch returned error:", activeRes.error);
-        if (endingSoonRes.error) console.warn("Ending soon placements fetch returned error:", endingSoonRes.error);
-        if (failedPaymentsRes.error) console.warn("Failed payments fetch returned error:", failedPaymentsRes.error);
-
-        return {
-          pendingSubmissions: pendingRes.count || 0,
-          activePlacements: activeRes.count || 0,
-          endingSoon: endingSoonRes.count || 0,
-          failedPayments: failedPaymentsRes.count || 0
-        };
-      } catch (err) {
-        // Handle abort error silently
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          console.log("AdminDashboard: Stats fetch aborted");
-          return {
-            pendingSubmissions: 0,
-            activePlacements: 0,
-            endingSoon: 0,
-            failedPayments: 0
-          };
-        }
-        console.error("Error fetching dashboard stats:", err);
-        throw err;
-      }
-    },
-    staleTime: 30000,
-    retry: 1,
-  });
+  }, isLoading: isLoadingStats } = useAdminStats(true);
 
   // Use React Query for activities
-  const { data: activities = [], isLoading: isLoadingActivities } = useQuery({
-    queryKey: ["admin-dashboard-activities"],
-    queryFn: async ({ signal }) => {
-      try {
-        const query = supabase
-          .from("admin_actions")
-          .select(`
-            id,
-            action_type,
-            target_type,
-            created_at,
-            profiles:admin_user_id (full_name)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(5) as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: ActivityLog[] | null; error: { message: string; code: string } | null }> };
-
-        const { data, error } = await query.abortSignal(signal);
-
-        if (error) throw error;
-        return data || [];
-      } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return [];
-        }
-        throw err;
-      }
-    },
-    staleTime: 60000, // Cache for 1 minute
-    retry: 1,
-  });
+  const { data: activities = [], isLoading: isLoadingActivities } = useAdminActivities(true);
 
   const loading = isLoadingStats || isLoadingActivities;
 

@@ -140,7 +140,7 @@ const PostDetail = () => {
       <PageLayoutWithAds showAds={false}>
         <div className="flex flex-col justify-center items-center pt-40 gap-4">
           <Loader2 className="w-10 h-10 text-dem animate-spin" />
-          <p className="text-white/40 font-body text-sm">Loading story...</p>
+          <p className="text-dem/60 font-body text-sm uppercase font-black">Loading story...</p>
         </div>
       </PageLayoutWithAds>
     );
@@ -150,10 +150,10 @@ const PostDetail = () => {
     return (
       <PageLayoutWithAds showAds={false}>
         <div className="container mx-auto px-4 pt-40 text-center">
-          <h1 className="font-display text-5xl text-white mb-4">Story Not Found</h1>
-          <p className="text-white/40 font-body mb-6">The story you're looking for doesn't exist or has been removed.</p>
+          <h1 className="font-display text-5xl text-dem font-black uppercase mb-4">Story Not Found</h1>
+          <p className="text-muted-foreground font-body mb-6">The story you're looking for doesn't exist or has been removed.</p>
           <Link to="/">
-            <Button variant="outline" size="lg" className="border-dem text-dem hover:bg-dem hover:text-white">
+            <Button variant="outline" size="lg" className="border-dem text-dem hover:bg-dem hover:text-white font-black uppercase">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Return Home
             </Button>
@@ -189,7 +189,7 @@ const PostDetail = () => {
       {/* Back button */}
       <Link
         to="/"
-        className="absolute top-8 left-4 md:left-8 inline-flex items-center gap-2 text-white/80 hover:text-dem transition-colors bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full"
+        className="absolute top-8 left-4 md:left-8 inline-flex items-center gap-2 text-dem hover:text-white transition-colors bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full border border-dem/20 font-black uppercase"
       >
         <ArrowLeft className="w-4 h-4" />
         <span className="font-body text-sm">Back</span>
@@ -215,9 +215,9 @@ const PostDetail = () => {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Content Card */}
-            <div className="bg-white/5 rounded-2xl p-6 md:p-10 border border-white/10 shadow-xl">
+            <div className="bg-card rounded-2xl p-6 md:p-10 border border-border shadow-xl">
               {/* Meta info */}
-              <div className="flex flex-wrap items-center gap-4 mb-6 text-white/40 font-body text-sm">
+              <div className="flex flex-wrap items-center gap-4 mb-6 text-muted-foreground font-body text-sm">
                 <span className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   {format(new Date(post.created_at), "MMMM d, yyyy")}
@@ -235,24 +235,24 @@ const PostDetail = () => {
               </div>
 
               {/* Title */}
-              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-white leading-tight mb-6">
+              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-dem font-black uppercase leading-tight mb-6">
                 {post.title}
               </h1>
               
               {post.subtitle && (
-                <p className="text-white/40 font-body text-xl md:text-2xl leading-relaxed border-l-4 border-dem pl-6 mb-8">
+                <p className="text-muted-foreground font-body text-xl md:text-2xl leading-relaxed border-l-4 border-dem pl-6 mb-8">
                   {post.subtitle}
                 </p>
               )}
 
               {/* Share buttons */}
-              <div className="flex items-center gap-3 mb-8 pb-8 border-b border-white/10">
-                <span className="text-white/40 font-body text-sm mr-2">Share:</span>
+              <div className="flex items-center gap-3 mb-8 pb-8 border-b border-border">
+                <span className="text-muted-foreground font-body text-sm mr-2">Share:</span>
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => handleShare('twitter')}
-                  className="rounded-full bg-white/5 border-white/10 text-white hover:bg-[#1DA1F2] hover:text-white hover:border-[#1DA1F2]"
+                  className="rounded-full bg-muted border-border text-foreground hover:bg-[#1DA1F2] hover:text-white hover:border-[#1DA1F2]"
                 >
                   <Twitter className="w-4 h-4" />
                 </Button>
@@ -260,7 +260,7 @@ const PostDetail = () => {
                   variant="outline"
                   size="icon"
                   onClick={() => handleShare('facebook')}
-                  className="rounded-full bg-white/5 border-white/10 text-white hover:bg-[#4267B2] hover:text-white hover:border-[#4267B2]"
+                  className="rounded-full bg-muted border-border text-foreground hover:bg-[#4267B2] hover:text-white hover:border-[#4267B2]"
                 >
                   <Facebook className="w-4 h-4" />
                 </Button>
@@ -268,7 +268,7 @@ const PostDetail = () => {
                   variant="outline"
                   size="icon"
                   onClick={() => handleShare()}
-                  className="rounded-full bg-white/5 border-white/10 text-white hover:bg-dem hover:text-white hover:border-dem"
+                  className="rounded-full bg-muted border-border text-foreground hover:bg-dem hover:text-white hover:border-dem"
                 >
                   <Link2 className="w-4 h-4" />
                 </Button>
@@ -291,7 +291,7 @@ const PostDetail = () => {
               {post.body_content && (
                 <div className="prose prose-invert prose-lg max-w-none">
                   <div 
-                    className="font-body text-white/90 leading-relaxed space-y-4 text-lg"
+                    className="font-body text-foreground leading-relaxed space-y-4 text-lg"
                     dangerouslySetInnerHTML={{ __html: post.body_content.replace(/\n/g, '<br/>') }} 
                   />
                 </div>
@@ -302,8 +302,8 @@ const PostDetail = () => {
             </div>
 
             {/* Comments Section */}
-            <div className="bg-white/5 rounded-2xl p-6 md:p-10 border border-white/10">
-              <h2 className="font-display text-2xl text-white mb-6">Comments</h2>
+            <div className="bg-card rounded-2xl p-6 md:p-10 border border-border">
+              <h2 className="font-display text-2xl text-dem font-black uppercase mb-6">Comments</h2>
               <DisqusComments postId={String(post.id)} title={post.title} />
             </div>
 
@@ -311,7 +311,7 @@ const PostDetail = () => {
             <Slot
               slotKey="post.detail.ad"
               accepts={["ad"]}
-              fallback={<div className="h-32 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center text-white/20 uppercase tracking-[0.5em] text-[10px]">Advertisement</div>}
+              fallback={<div className="h-32 bg-muted rounded-xl border border-border flex items-center justify-center text-muted-foreground/20 uppercase tracking-[0.5em] text-[10px]">Advertisement</div>}
               className="mt-8"
             >
               {() => null}
@@ -323,11 +323,11 @@ const PostDetail = () => {
             {/* Watch Now Card */}
             {!isPlaying && (
               <div className="bg-gradient-to-br from-dem/20 to-dem/5 rounded-2xl p-6 border border-dem/30">
-                <h3 className="font-display text-xl text-white mb-3">Watch Now</h3>
-                <p className="text-white/40 text-sm mb-4 font-body">Click to start watching this video</p>
+                <h3 className="font-display text-xl text-dem font-black uppercase mb-3">Watch Now</h3>
+                <p className="text-muted-foreground text-sm mb-4 font-body">Click to start watching this video</p>
                 <Button 
                   onClick={() => setIsPlaying(true)} 
-                  className="w-full bg-dem hover:bg-dem/90 text-white"
+                  className="w-full bg-dem hover:bg-dem/90 text-white font-bold"
                   size="lg"
                 >
                   <Play className="w-5 h-5 mr-2" fill="currentColor" />
@@ -340,32 +340,32 @@ const PostDetail = () => {
             <RelatedPosts currentPostId={post.id} />
 
             {/* Tip Button in Sidebar */}
-            <div className="bg-white/5 rounded-2xl p-6 border border-white/10 text-center">
+            <div className="bg-card rounded-2xl p-6 border border-border text-center">
               <div className="w-16 h-16 bg-dem/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">💡</span>
               </div>
-              <h3 className="font-display text-xl text-white mb-2">Tell us your story</h3>
-              <p className="text-white/40 text-sm mb-4 font-body">
+              <h3 className="font-display text-xl text-dem font-black uppercase mb-2">Tell us your story</h3>
+              <p className="text-muted-foreground text-sm mb-4 font-body">
                 Send us your story tips and exclusive scoops
               </p>
               <Link to="/about">
-                <Button variant="outline" className="w-full border-dem text-dem hover:bg-dem hover:text-white">Submit Your Story</Button>
+                <Button variant="outline" className="w-full border-dem text-dem hover:bg-dem hover:text-white font-bold">Submit Your Story</Button>
               </Link>
             </div>
 
             {/* Newsletter Signup */}
-            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-              <h3 className="font-display text-xl text-white mb-2">Stay Updated</h3>
-              <p className="text-white/40 text-sm mb-4 font-body">
+            <div className="bg-card rounded-2xl p-6 border border-border">
+              <h3 className="font-display text-xl text-dem font-black uppercase mb-2">Stay Updated</h3>
+              <p className="text-muted-foreground text-sm mb-4 font-body">
                 Get the latest stories delivered to your inbox
               </p>
               <div className="space-y-3">
                 <input 
                   type="email" 
                   placeholder="Enter your email"
-                  className="w-full px-4 py-3 bg-black border border-white/10 rounded-lg text-white placeholder:text-white/40 font-body text-sm focus:outline-none focus:border-dem"
+                  className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground placeholder:text-muted-foreground/40 font-body text-sm focus:outline-none focus:border-dem"
                 />
-                <Button className="w-full bg-dem hover:bg-dem/90 text-white">Subscribe</Button>
+                <Button className="w-full bg-dem hover:bg-dem/90 text-white font-bold">Subscribe</Button>
               </div>
             </div>
           </div>

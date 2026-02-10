@@ -76,13 +76,13 @@ export function ClipsGrid({ slotKey, fallback }: ClipsGridProps) {
             />
           </div>
           <div className="p-4 flex flex-col gap-2">
-            <h3 className="font-display text-xl text-white transition-colors group-hover:text-white line-clamp-2">
+            <h3 className="font-display text-xl text-dem font-black uppercase transition-colors group-hover:text-dem/80 line-clamp-2">
               {post.title}
             </h3>
-            <p className="text-base text-white/70 font-body line-clamp-2">
+            <p className="text-base text-muted-foreground font-body line-clamp-2">
               {post.subtitle || "Latest clips from the heart of the city."}
             </p>
-            <span className="mt-3 text-sm font-semibold uppercase tracking-widest text-white/80">
+            <span className="mt-3 text-sm font-black uppercase tracking-widest text-dem">
               Watch on YouTube →
             </span>
           </div>

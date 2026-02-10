@@ -60,27 +60,19 @@ export const UnifiedQueue = () => {
   // Query for "Paid and awaiting approval"
   const { data: awaitingApproval, isLoading: loadingApproval, error: errorApproval, refetch: refetchApproval } = useQuery({
     queryKey: ["admin-awaiting-approval"],
-    queryFn: async ({ signal }) => {
-      try {
-        const { data, error } = await supabase
-          .from("submissions")
-          .select("*, artists ( name, email ), slots ( name )")
-          .eq("status", "pending")
-          .eq("payment_status", "paid")
-          .order("created_at", { ascending: true })
-          .abortSignal(signal);
-        
-        if (error) {
-          console.error("UnifiedQueue: Error fetching awaiting approval:", error);
-          throw error;
-        }
-        return data as unknown as Submission[];
-      } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return [];
-        }
-        throw err;
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("submissions")
+        .select("*, artists ( name, email ), slots ( name )")
+        .eq("status", "pending")
+        .eq("payment_status", "paid")
+        .order("created_at", { ascending: true });
+      
+      if (error) {
+        console.error("UnifiedQueue: Error fetching awaiting approval:", error);
+        throw error;
       }
+      return data as unknown as Submission[];
     }
   });
 
@@ -110,59 +102,70 @@ export const UnifiedQueue = () => {
   // Query for "Approved but not scheduled (Paid but not scheduled)"
   const { data: awaitingSchedule, isLoading: loadingSchedule, error: errorSchedule } = useQuery({
     queryKey: ["admin-awaiting-schedule"],
-    queryFn: async ({ signal }) => {
-      try {
-        // Find approved submissions that don't have a placement yet
-        const { data, error } = await supabase
-          .from("submissions")
-          .select(`
-            *,
-            artists ( name ),
-            slots ( name ),
-            placements ( id )
-          `)
-          .eq("status", "approved")
-          .eq("payment_status", "paid")
-          .abortSignal(signal);
-        
-        if (error) {
-          console.error("UnifiedQueue: Error fetching awaiting schedule:", error);
-          throw error;
-        }
-        // Filter out those with placements manually if join isn't perfect
-        return (data as unknown as Submission[]).filter((s) => !s.placements || s.placements.length === 0);
-      } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return [];
-        }
-        throw err;
+    queryFn: async () => {
+      // Find approved submissions that don't have a placement yet
+      const { data, error } = await supabase
+        .from("submissions")
+        .select(`
+          *,
+          artists ( name ),
+          slots ( name ),
+          placements ( id )
+        `)
+        .eq("status", "approved")
+        .eq("payment_status", "paid");
+      
+      if (error) {
+        console.error("UnifiedQueue: Error fetching awaiting schedule:", error);
+        throw error;
       }
+      // Filter out those with placements manually if join isn't perfect
+      return (data as unknown as Submission[]).filter((s) => !s.placements || s.placements.length === 0);
     }
   });
 
   // Query for "Active Placements"
   const { data: activePlacements, isLoading: loadingActive, error: errorActive } = useQuery({
     queryKey: ["admin-active-placements"],
-    queryFn: async ({ signal }) => {
-      try {
-        const { data, error } = await supabase
-          .from("placements")
-          .select("*, playlists ( name ), submissions ( track_title, artist_name )")
-          .lte("start_date", new Date().toISOString())
-          .gte("end_date", new Date().toISOString())
-          .order("end_date", { ascending: true })
-          .abortSignal(signal);
-        if (error) {
-          console.error("UnifiedQueue: Error fetching active placements:", error);
-          throw error;
-        }
-        return data as unknown as Placement[];
-      } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return [];
-        }
-        throw err;
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("placements")
+        .select(`
+          *,
+          playlists ( name, spotify_playlist_url ),
+          submissions ( track_title, artist_name )
+        `)
+        .gt("end_date", new Date().toISOString())
+        .order("end_date", { ascending: true });
+      
+      if (error) {
+        console.error("UnifiedQueue: Error fetching active placements:", error);
+        throw error;
       }
+      return data as unknown as Placement[];
+    }
+  });
+
+  // Query for "Completed Placements"
+  const { data: completedPlacements, isLoading: loadingCompleted, error: errorCompleted } = useQuery({
+    queryKey: ["admin-completed-placements"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("placements")
+        .select(`
+          *,
+          playlists ( name ),
+          submissions ( track_title, artist_name )
+        `)
+        .lt("end_date", new Date().toISOString())
+        .order("end_date", { ascending: false })
+        .limit(20);
+      
+      if (error) {
+        console.error("UnifiedQueue: Error fetching completed placements:", error);
+        throw error;
+      }
+      return data as unknown as Placement[];
     }
   });
 
@@ -266,7 +269,7 @@ export const UnifiedQueue = () => {
               <TableBody>
                 {awaitingApproval.map((s) => (
                   <TableRow key={s.id} className="border-border hover:bg-muted">
-                    <TableCell className="font-bold text-foreground">{s.track_title}</TableCell>
+                    <TableCell className="font-black text-dem uppercase">{s.track_title}</TableCell>
                     <TableCell className="text-foreground font-medium">{s.artist_name}</TableCell>
                     <TableCell>
                       <Badge variant="secondary" className="bg-dem/10 text-dem border-none font-bold">
@@ -299,7 +302,7 @@ export const UnifiedQueue = () => {
               <TableBody>
                 {awaitingSchedule.map((s) => (
                   <TableRow key={s.id} className="border-border hover:bg-muted">
-                    <TableCell className="font-bold text-foreground">{s.track_title}</TableCell>
+                    <TableCell className="font-black text-dem uppercase">{s.track_title}</TableCell>
                     <TableCell className="text-foreground font-medium">{s.artist_name}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-white bg-dem border-dem/30 font-bold">Approved</Badge>
@@ -330,7 +333,7 @@ export const UnifiedQueue = () => {
               <TableBody>
                 {activePlacements.map((p) => (
                   <TableRow key={p.id} className="border-border hover:bg-muted">
-                    <TableCell className="font-bold text-foreground">{p.submissions?.track_title}</TableCell>
+                    <TableCell className="font-black text-dem uppercase">{p.submissions?.track_title}</TableCell>
                     <TableCell className="text-foreground font-medium">{p.playlists?.name}</TableCell>
                     <TableCell className="text-foreground font-bold">
                       {format(new Date(p.end_date), "MMM d")}
@@ -363,7 +366,7 @@ export const UnifiedQueue = () => {
               <TableBody>
                 {expiringSoon.map((p) => (
                   <TableRow key={p.id} className="border-border hover:bg-muted">
-                    <TableCell className="font-bold text-foreground">{p.submissions?.track_title}</TableCell>
+                    <TableCell className="font-black text-dem uppercase">{p.submissions?.track_title}</TableCell>
                     <TableCell className="text-foreground font-medium">{p.playlists?.name}</TableCell>
                     <TableCell className="text-rep font-bold">
                       {format(new Date(p.end_date), "MMM d, yyyy")}

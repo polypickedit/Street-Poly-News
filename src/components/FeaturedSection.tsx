@@ -209,7 +209,7 @@ function HeroPost({ post, getThumbnail }: { post: Post; getThumbnail: (post: Pos
             {post.content_type}
           </span>
         </div>
-        <h2 className="mt-2 font-display text-xl text-white sm:text-2xl md:text-4xl">
+        <h2 className="mt-2 font-display text-xl text-dem sm:text-2xl md:text-4xl">
           {post.title}
         </h2>
       </div>

@@ -103,7 +103,7 @@ export const PromoBanner = ({ className = "", showLabel = true, type = "donTrip"
                   New Album
                 </div>
               )}
-              <div className="text-white font-display text-2xl md:text-4xl leading-tight mb-2">
+              <div className="text-dem font-display text-2xl md:text-4xl leading-tight mb-2">
                 {currentPromo.title}
               </div>
               <div className="text-white/60 font-body text-base md:text-lg">

@@ -250,7 +250,7 @@ export const AdminSettings = () => {
           <CardContent>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-sm font-medium">Live</span>
+              <span className="text-sm font-black text-dem uppercase">Live</span>
             </div>
           </CardContent>
         </Card>
@@ -263,7 +263,7 @@ export const AdminSettings = () => {
           <CardContent>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="text-sm font-medium">Healthy</span>
+              <span className="text-sm font-black text-dem uppercase">Healthy</span>
             </div>
           </CardContent>
         </Card>
@@ -286,7 +286,7 @@ export const AdminSettings = () => {
         <CardHeader>
           <div className="flex items-center gap-2 mb-1">
             <Music className="w-5 h-5 text-dem" />
-            <CardTitle className="text-xl">Campaign & Slot Pricing</CardTitle>
+            <CardTitle className="text-xl font-black text-dem uppercase">Campaign & Slot Pricing</CardTitle>
           </div>
           <CardDescription className="text-sm text-muted-foreground">Configure pricing for different submission slots and campaign types.</CardDescription>
         </CardHeader>
@@ -333,7 +333,7 @@ export const AdminSettings = () => {
         <CardHeader>
           <div className="flex items-center gap-2 mb-1">
             <Share2 className="w-5 h-5 text-dem" />
-            <CardTitle className="text-xl">Syndication Network Fees</CardTitle>
+            <CardTitle className="text-xl font-black text-dem uppercase">Syndication Network Fees</CardTitle>
           </div>
           <CardDescription className="text-muted-foreground">Manage fees for distributing content to external media outlets.</CardDescription>
         </CardHeader>
@@ -380,7 +380,7 @@ export const AdminSettings = () => {
         <CardHeader>
           <div className="flex items-center gap-2 mb-1">
             <ShieldCheck className="w-5 h-5 text-dem" />
-            <CardTitle className="text-xl">Team & Permissions</CardTitle>
+            <CardTitle className="text-xl font-black text-dem uppercase">Team & Permissions</CardTitle>
           </div>
           <CardDescription className="text-muted-foreground">Manage who has access to this dashboard.</CardDescription>
         </CardHeader>
@@ -424,7 +424,7 @@ export const AdminSettings = () => {
           </div>
           <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
             <DialogTrigger asChild>
-              <Button type="button" variant="secondary" className="gap-2">
+              <Button type="button" variant="secondary" className="gap-2 bg-dem hover:bg-dem/90 text-white font-black uppercase">
                 <UserPlus className="w-4 h-4" />
                 Add Team Member
               </Button>
@@ -476,7 +476,7 @@ export const AdminSettings = () => {
                   type="button"
                   onClick={() => addAdminMutation.mutate({ userId: inviteUserId, roleId: inviteRoleId })}
                   disabled={!inviteUserId || !inviteRoleId || addAdminMutation.isPending}
-                  className="bg-dem hover:bg-dem/90 text-white"
+                  className="bg-dem hover:bg-dem/90 text-white font-black uppercase"
                 >
                   {addAdminMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add Member"}
                 </Button>

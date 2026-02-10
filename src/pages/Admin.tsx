@@ -29,31 +29,33 @@ const Admin = () => {
   const [userProfile, setUserProfile] = useState<{ full_name: string | null } | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController();
     const fetchProfile = async () => {
       if (user) {
         try {
-          const query = supabase
+          const { data, error } = await supabase
             .from("profiles")
             .select("full_name")
             .eq("id", user.id)
-            .single() as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: { full_name: string | null } | null; error: unknown }> };
+            .single();
             
-          const { data } = await query.abortSignal(controller.signal);
+          if (error) throw error;
           setUserProfile(data);
         } catch (err) {
-          if (err instanceof Error && err.name === 'AbortError') return;
           console.error("Error fetching profile:", err);
         }
       }
     };
     fetchProfile();
-    return () => controller.abort();
   }, [user]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
+      navigate("/login");
+    }
   };
 
   const getPaddingTop = () => {
@@ -200,7 +202,7 @@ const Admin = () => {
 
   if (authLoading || !user) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-black">
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-dem" />
       </div>
     );
@@ -250,7 +252,7 @@ const Admin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
       <BreakingNewsBanner />
       <Navbar />
 
@@ -259,7 +261,7 @@ const Admin = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
               <h1 className="font-display text-4xl md:text-5xl text-dem uppercase font-black">
-                {userProfile?.full_name ? `Welcome, ${userProfile.full_name}` : <>Admin <span className="text-white">Dashboard</span></>}
+                {userProfile?.full_name ? `Welcome, ${userProfile.full_name}` : <>Admin <span className="text-dem">Dashboard</span></>}
               </h1>
               <p className="text-muted-foreground font-medium mt-1">Manage your content and platform settings</p>
             </div>
@@ -274,8 +276,8 @@ const Admin = () => {
 
           <Tabs defaultValue="posts" className="space-y-6">
             <TabsList className="grid w-full grid-cols-2 max-w-[400px] bg-muted border border-border">
-              <TabsTrigger value="posts" className="data-[state=active]:bg-dem data-[state=active]:text-white font-black uppercase tracking-widest text-xs">Create Post</TabsTrigger>
-              <TabsTrigger value="messages" className="data-[state=active]:bg-dem data-[state=active]:text-white font-black uppercase tracking-widest text-xs">Messages</TabsTrigger>
+              <TabsTrigger value="posts" className="data-[state=active]:bg-dem data-[state=active]:text-foreground font-black uppercase tracking-widest text-xs">Create Post</TabsTrigger>
+              <TabsTrigger value="messages" className="data-[state=active]:bg-dem data-[state=active]:text-foreground font-black uppercase tracking-widest text-xs">Messages</TabsTrigger>
             </TabsList>
 
             <TabsContent value="posts">
@@ -443,7 +445,7 @@ const Admin = () => {
                     onChange={(e) => setNewCategory({ ...newCategory, color: e.target.value })}
                     className="w-14 p-1 bg-card border-border h-10"
                   />
-                  <Button type="button" size="sm" onClick={handleCreateCategory} className="bg-dem hover:bg-dem/90 text-white font-black uppercase tracking-widest text-[10px]">
+                  <Button type="button" size="sm" onClick={handleCreateCategory} className="bg-dem hover:bg-dem/90 text-foreground font-black uppercase tracking-widest text-[10px]">
                     Create
                   </Button>
                 </div>
@@ -518,7 +520,7 @@ const Admin = () => {
                     className="bg-card border-border text-foreground placeholder:text-muted-foreground resize-none font-medium"
                     rows={2}
                   />
-                  <Button type="button" size="sm" onClick={handleCreatePerson} className="bg-dem hover:bg-dem/90 text-white font-black uppercase tracking-widest text-[10px]">
+                  <Button type="button" size="sm" onClick={handleCreatePerson} className="bg-dem hover:bg-dem/90 text-foreground font-black uppercase tracking-widest text-[10px]">
                     Create Person
                   </Button>
                 </div>
@@ -528,7 +530,7 @@ const Admin = () => {
                 {people?.map((person) => (
                   <label
                     key={person.id}
-                    className={`px-3 py-1.5 rounded-full cursor-pointer transition-all text-sm font-body bg-white/5 border border-white/10 text-white ${
+                    className={`px-3 py-1.5 rounded-full cursor-pointer transition-all text-sm font-body bg-muted border border-border text-foreground ${
                       selectedPeople.includes(person.id)
                         ? "ring-2 ring-dem shadow-[0_0_10px_rgba(0,71,171,0.3)]"
                         : "opacity-60 hover:opacity-100"
@@ -555,7 +557,7 @@ const Admin = () => {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-dem hover:bg-dem/90 text-white font-body uppercase tracking-wider h-12"
+              className="w-full bg-dem hover:bg-dem/90 text-foreground font-body uppercase tracking-wider h-12"
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

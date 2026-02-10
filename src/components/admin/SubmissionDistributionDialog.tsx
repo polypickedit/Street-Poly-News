@@ -146,7 +146,7 @@ export const SubmissionDistributionDialog = ({
 
   const statusColors = {
     pending: "bg-dem/10 text-dem border-dem/30",
-    published: "bg-dem text-white border-dem/30",
+    published: "bg-dem text-white border-dem/30 font-bold",
     rejected: "bg-rep/10 text-rep border-rep/30",
     scheduled: "bg-muted text-muted-foreground border-border",
   };
@@ -160,7 +160,7 @@ export const SubmissionDistributionDialog = ({
               <Share2 className="w-5 h-5 text-dem" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold text-foreground">{submissionTitle}</DialogTitle>
+              <DialogTitle className="text-xl font-black text-dem uppercase">{submissionTitle}</DialogTitle>
               <DialogDescription className="text-muted-foreground">
                 Syndication & Distribution Status
               </DialogDescription>
@@ -190,7 +190,7 @@ export const SubmissionDistributionDialog = ({
                 >
                   <div className="flex items-center gap-4">
                     <div className="space-y-1">
-                      <p className="font-semibold text-foreground">{dist.media_outlets.name}</p>
+                      <p className="font-black text-dem uppercase">{dist.media_outlets.name}</p>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className={`text-xs uppercase tracking-tighter gap-1 ${statusColors[dist.status]}`}>
                           {statusIcons[dist.status]}
@@ -221,14 +221,22 @@ export const SubmissionDistributionDialog = ({
                       <Button 
                         variant="secondary" 
                         size="sm" 
-                        className="bg-dem hover:bg-dem/90 text-white gap-2"
+                        className="bg-dem hover:bg-dem/90 text-white gap-2 font-black uppercase"
                         onClick={() => updateStatus(dist.id, 'published', 'https://streetpoly.com/news/demo')}
                       >
                         <Send className="w-3 h-3" /> Publish
                       </Button>
                     )}
 
-                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-muted-foreground hover:text-foreground hover:bg-muted font-black uppercase tracking-widest text-[10px]"
+                      onClick={() => toast({
+                        title: "Coming Soon",
+                        description: "Detailed distribution management is currently under development.",
+                      })}
+                    >
                       Manage
                     </Button>
                   </div>

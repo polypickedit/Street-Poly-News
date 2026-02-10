@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useAdminStats, useAdminActivities } from "@/hooks/useAdminStats";
 import { Zap } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -42,9 +43,18 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { isAdminMode, toggleAdminMode } = useAdmin();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  // Keep admin stats and activities alive at the layout level to prevent aborts during navigation
+  useAdminStats(true);
+  useAdminActivities(true);
+
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
+      navigate("/login");
+    }
   };
 
   return (

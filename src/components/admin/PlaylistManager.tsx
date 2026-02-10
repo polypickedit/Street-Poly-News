@@ -10,7 +10,7 @@ export const PlaylistManager = () => {
     <div className="space-y-6 text-foreground">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Editorial Assets</h3>
-        <Button className="bg-dem hover:bg-dem/90 text-white gap-2">
+        <Button className="bg-dem hover:bg-dem/90 text-white gap-2 font-black uppercase">
           <Plus className="w-4 h-4" />
           Add Playlist
         </Button>
@@ -29,7 +29,7 @@ export const PlaylistManager = () => {
                   <Switch checked={true} />
                 </div>
               </div>
-              <CardTitle className="mt-4 text-lg font-bold text-foreground">Midnight Tech House</CardTitle>
+              <CardTitle className="mt-4 text-lg font-black text-dem uppercase">Midnight Tech House</CardTitle>
               <div className="flex gap-2 mt-1">
                 <Badge variant="outline" className="text-xs bg-muted border-border text-muted-foreground">HOUSE</Badge>
                 <Badge variant="outline" className="text-xs bg-muted border-border text-muted-foreground">ENERGETIC</Badge>
@@ -38,24 +38,24 @@ export const PlaylistManager = () => {
             <CardContent>
               <div className="grid grid-cols-2 gap-4 border-t border-border pt-4 mt-2">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="flex items-center gap-2 text-dem/70">
                     <Users className="w-3 h-3" />
                     <span className="text-xs uppercase font-bold tracking-tight">Followers</span>
                   </div>
-                  <p className="text-sm font-semibold text-foreground">12.4k</p>
+                  <p className="text-sm font-black text-dem uppercase">12.4k</p>
                 </div>
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="flex items-center gap-2 text-dem/70">
                     <Music className="w-3 h-3" />
                     <span className="text-xs uppercase font-bold tracking-tight">Cap/Max</span>
                   </div>
-                  <p className="text-sm font-semibold text-foreground">42 / 100</p>
+                  <p className="text-sm font-black text-dem uppercase">42 / 100</p>
                 </div>
               </div>
               
               <div className="flex gap-2 mt-6">
-                <Button variant="secondary" className="flex-1 text-xs bg-muted border-border text-foreground hover:bg-muted/80">Edit Details</Button>
-                <Button variant="ghost" className="text-xs text-dem hover:text-dem/80 hover:bg-dem/10">View on Spotify</Button>
+                <Button variant="secondary" className="flex-1 text-xs bg-muted border-border text-dem hover:bg-muted/80 font-black uppercase">Edit Details</Button>
+                <Button variant="ghost" className="text-xs text-dem hover:text-dem/80 hover:bg-dem/10 font-black uppercase">View on Spotify</Button>
               </div>
             </CardContent>
           </Card>

@@ -78,9 +78,9 @@ const Index = () => {
               <span className="text-dem">Street</span>
               <span className="text-rep">Poly</span>
             </span>
-            <span className="text-foreground sm:ml-2">News</span>
+            <span className="text-dem sm:ml-2 font-black">News</span>
           </h1>
-          <p className="mt-6 text-foreground/70 text-sm md:text-lg max-w-2xl mx-auto font-body leading-relaxed px-2">
+          <p className="mt-6 text-muted-foreground text-sm md:text-lg max-w-2xl mx-auto font-body leading-relaxed px-2">
             Unfiltered stories from the heart of the movement. <br className="hidden md:block" /> Real voices, real impact, real news.
           </p>
         </div>
@@ -88,7 +88,7 @@ const Index = () => {
         {/* Divider */}
         <div className="flex items-center gap-3 md:gap-4 py-3 md:py-4 px-4">
           <Separator className="flex-1 opacity-20" />
-          <span className="text-foreground/40 text-[10px] md:text-xs font-body uppercase tracking-widest font-bold">Featured</span>
+          <span className="text-dem text-[10px] md:text-xs font-body uppercase tracking-widest font-black">Featured</span>
           <Separator className="flex-1 opacity-20" />
         </div>
 
@@ -99,10 +99,10 @@ const Index = () => {
         <section className="mb-6 md:mb-10 px-4">
           <div className="flex items-center justify-between gap-4 mb-3">
             <div>
-              <p className="text-xs uppercase tracking-widest text-foreground/40 font-body">
+              <p className="text-xs uppercase tracking-widest text-dem/60 font-body font-black">
                 STREETPOLY NEWS
               </p>
-              <h2 className="font-display text-2xl md:text-3xl text-foreground">
+              <h2 className="font-display text-2xl md:text-3xl text-dem font-black uppercase">
                 Latest Clips
               </h2>
             </div>
@@ -110,7 +110,7 @@ const Index = () => {
               href="https://www.youtube.com/@STREETPOLYNEWS"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-widest text-foreground/70 hover:text-foreground transition-colors"
+              className="inline-flex items-center gap-1 text-xs font-black uppercase tracking-widest text-dem hover:text-dem/80 transition-colors"
             >
               View channel
               <ExternalLink className="w-4 h-4" />
@@ -132,7 +132,7 @@ const Index = () => {
         <section id="videos" className="pb-8 md:pb-12 px-4">
           <div className="flex items-center gap-3 md:gap-4 py-3 md:py-4 mb-6">
             <Separator className="flex-1 opacity-20" />
-            <span className="text-foreground/40 text-[10px] md:text-xs font-body uppercase tracking-widest font-bold">
+            <span className="text-dem text-[10px] md:text-xs font-body uppercase tracking-widest font-black">
               Latest Stories
             </span>
             <Separator className="flex-1 opacity-20" />
@@ -166,9 +166,9 @@ const FallbackClips = ({ videoLinks }: { videoLinks: VideoLink[] }) => {
           href={video.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex flex-col rounded-2xl border border-white/10 bg-white/5 transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg"
+          className="group flex flex-col rounded-2xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg"
         >
-          <div className="overflow-hidden rounded-t-2xl bg-white/5">
+          <div className="overflow-hidden rounded-t-2xl bg-muted">
             <img
               src={video.thumbnail}
               alt={video.title}
@@ -176,13 +176,13 @@ const FallbackClips = ({ videoLinks }: { videoLinks: VideoLink[] }) => {
             />
           </div>
           <div className="p-4 flex flex-col gap-2">
-            <h3 className="font-display text-xl text-white transition-colors group-hover:text-white">
+            <h3 className="font-display text-xl text-dem font-black uppercase transition-colors group-hover:text-dem">
               {video.title}
             </h3>
-            <p className="text-base text-white/70 font-body mt-2 line-clamp-2">
+            <p className="text-base text-muted-foreground font-body mt-2 line-clamp-2">
               {video.description}
             </p>
-            <span className="mt-3 text-sm font-semibold uppercase tracking-widest text-white/80">
+            <span className="mt-3 text-sm font-black uppercase tracking-widest text-dem">
               Watch on YouTube →
             </span>
           </div>

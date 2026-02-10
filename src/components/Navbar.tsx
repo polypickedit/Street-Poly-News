@@ -40,8 +40,13 @@ export function Navbar() {
   const { isAdminMode, toggleAdminMode } = useAdmin();
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setIsOpen(false);
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
+      setIsOpen(false);
+    }
   };
 
   const { activeAccount, isLoading: isLoadingAccount } = useAccount();
@@ -132,18 +137,18 @@ export function Navbar() {
 
                     {/* User Info & Debug Indicator */}
                     {session?.user && (
-                      <div className="flex flex-col items-end mr-2 px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] text-white/70 uppercase leading-tight backdrop-blur-sm">
+                      <div className="flex flex-col items-end mr-2 px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] text-dem uppercase leading-tight backdrop-blur-sm">
                         <div className="flex items-center gap-2">
                           {!isAdmin && (
                             <div className="flex gap-1.5">
                               <span className={cn(
                                 "px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider",
-                                capabilities.length > 0 ? "bg-dem/20 text-dem border border-dem/30" : "bg-white/5 text-white/40 border border-white/10"
+                                capabilities.length > 0 ? "bg-dem/20 text-dem border border-dem/30" : "bg-white/5 text-dem/40 border border-white/10"
                               )}>
                                 {capabilities.length > 0 ? "PARTNER" : "VIEWER"}
                               </span>
                               {capabilities.length > 0 && (
-                                <span className="bg-white/5 text-white/40 border border-white/10 px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider">
+                                <span className="bg-white/5 text-dem/40 border border-white/10 px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider">
                                   VIEWER
                                 </span>
                               )}
@@ -155,7 +160,7 @@ export function Navbar() {
                             </span>
                           )}
                         </div>
-                        <span className="opacity-50 text-[8px] font-medium mt-1 lowercase tracking-normal">{session.user.email}</span>
+                        <span className="opacity-70 text-[8px] font-black mt-1 lowercase tracking-normal text-dem">{session.user.email}</span>
                       </div>
                     )}
 

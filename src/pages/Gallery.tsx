@@ -14,8 +14,8 @@ const Gallery = () => {
       <PageTransition>
         <div className="px-4 py-12">
           <div className="flex items-center justify-between mb-8">
-            <h1 className="font-display text-4xl md:text-6xl text-white">Gallery Hub</h1>
-            <p className="text-xs uppercase tracking-[0.3em] text-white/40 font-body">Visual Stories</p>
+            <h1 className="font-display text-4xl md:text-6xl text-dem font-black uppercase">Gallery Hub</h1>
+            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground font-body">Visual Stories</p>
           </div>
 
           <Slot
@@ -74,7 +74,7 @@ function ResolvedGallery({ id }: { id: string | null | undefined }) {
         <PostCard {...post} variant="featured" />
       </div>
       <div className="pt-12 border-t border-white/10">
-        <h2 className="font-display text-2xl text-white/60 mb-8 uppercase tracking-widest">More from the Gallery</h2>
+        <h2 className="font-display text-2xl text-dem font-black mb-8 uppercase tracking-widest">More from the Gallery</h2>
         <InfinitePostFeed category="gallery" variant="grid" />
       </div>
     </div>

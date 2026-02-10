@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { User } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
 import { 
   Music, 
@@ -13,29 +12,20 @@ import {
   CheckCircle2, 
   AlertCircle,
   ExternalLink,
-  ChevronRight,
   User as UserIcon,
   Share2,
   Globe,
   Loader2,
   Zap,
-  Plus,
-  Coins
+  Plus
 } from "lucide-react";
 import { useAccount } from "../hooks/useAccount";
 import { useCapabilities } from "../hooks/useCapabilities";
 import { useAuth } from "../hooks/useAuth";
+import { useAdminStats, useAdminActivities } from "../hooks/useAdminStats";
 import { createCreditPackCheckoutSession } from "../lib/stripe";
 import { useToast } from "../hooks/use-toast";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
-
-interface CreditPack {
-  id: string;
-  name: string;
-  description: string | null;
-  credit_amount: number;
-  price_cents: number;
-}
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -66,28 +56,6 @@ interface Submission {
   submission_distribution?: DistributionStatus[];
 }
 
-interface Placement {
-  id: string;
-  start_date: string;
-  end_date: string;
-  playlists?: {
-    name: string;
-    spotify_playlist_url: string;
-  };
-  submissions?: {
-    track_title: string;
-    artist_name: string;
-  };
-}
-
-interface Payment {
-  id: string;
-  amount: number;
-  status: string;
-  created_at: string;
-  submission_id: string;
-}
-
 import { PageLayoutWithAds } from "@/components/PageLayoutWithAds";
 import { PageTransition } from "@/components/PageTransition";
 
@@ -105,8 +73,10 @@ export default function Dashboard() {
   const capabilities = capabilityQuery.capabilities;
   const isLoadingCapabilities = capabilityQuery.isLoading;
   
-  const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
-
+  // Keep admin stats and activities alive at the dashboard level to prevent aborts on tab switch
+  useAdminStats(isAdmin);
+  useAdminActivities(isAdmin);
+  
   // Debug logs to identify loading hang
   useEffect(() => {
     console.log("Dashboard Loading State:", {
@@ -119,82 +89,50 @@ export default function Dashboard() {
     });
   }, [authLoading, isLoadingAccount, isLoadingCapabilities, user, activeAccount]);
 
-  // Ensure we don't return null or block the entire page for sub-queries
-  const creditPacksQuery = useQuery({
-    queryKey: ["credit-packs"],
-    queryFn: async ({ signal }) => {
-      try {
-        const query = supabase
-          .from("credit_packs")
-          .select("*")
-          .order("price_cents", { ascending: true }) as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: CreditPack[] | null; error: unknown }> };
-        
-        const { data, error } = await query.abortSignal(signal);
-        if (error) throw error;
-        return data || [];
-      } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return [];
-        }
-        console.error("Error fetching credit packs:", err);
-        return [];
-      }
-    },
-    enabled: !!user,
-  });
-  const creditPacks = creditPacksQuery.data || [];
-
-  const handlePurchaseCredits = async (packId: string) => {
-    try {
-      setIsPurchasing(packId);
-      await createCreditPackCheckoutSession(packId);
-    } catch (error) {
-      console.error("Purchase error:", error);
-      toast({
-        title: "Purchase failed",
-        description: "Could not initialize checkout. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsPurchasing(null);
-    }
-  };
-
   const submissionsQuery = useQuery({
     queryKey: ["user-submissions"],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return [];
-  
-        const query = supabase
+
+        const { data, error } = await supabase
           .from("submissions")
           .select(`
-            *,
-            artists(name),
-            slots(name, price, display_category),
-            submission_distribution(
+            id,
+            track_title,
+            artist_name,
+            status,
+            payment_status,
+            created_at,
+            slots (
+              name,
+              price,
+              display_category
+            ),
+            submission_distribution (
               id,
               status,
               published_url,
-              media_outlets(name)
+              media_outlets (
+                name
+              )
             )
           `)
           .eq("user_id", session.user.id)
-          .order("created_at", { ascending: false }) as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: Submission[] | null; error: unknown }> };
+          .order("created_at", { ascending: false });
 
-        const { data, error } = await query.abortSignal(signal);
         if (error) throw error;
         return data || [];
       } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return [];
-        }
         console.error("Error fetching submissions:", err);
         return [];
       }
     },
     enabled: !!user,
+    staleTime: 30000, // Submissions can change more frequently
+    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
   const submissions = submissionsQuery.data || [];
   const loadingSubmissions = submissionsQuery.isLoading;
@@ -228,60 +166,69 @@ export default function Dashboard() {
 
   const placementsQuery = useQuery({
     queryKey: ["user-placements"],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return [];
 
-        const query = supabase
+        const { data, error } = await supabase
           .from("placements")
-          .select("*, playlists(name, spotify_playlist_url), submissions!inner(track_title, artist_name, user_id)")
+          .select(`
+            id,
+            start_date,
+            end_date,
+            playlists (
+              name,
+              spotify_playlist_url
+            ),
+            submissions!inner (
+              track_title,
+              artist_name,
+              user_id
+            )
+          `)
           .eq("submissions.user_id", session.user.id)
-          .order("start_date", { ascending: false }) as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: Placement[] | null; error: unknown }> };
-
-        const { data, error } = await query.abortSignal(signal);
+          .order("start_date", { ascending: false });
 
         if (error) throw error;
-        
         return data || [];
       } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return [];
-        }
         console.error("Error fetching placements:", err);
         return [];
       }
     },
     enabled: !!user,
+    staleTime: 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
   const placements = placementsQuery.data || [];
   const loadingPlacements = placementsQuery.isLoading;
 
   const paymentsQuery = useQuery({
     queryKey: ["user-payments"],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return [];
 
-        const query = supabase
+        const { data, error } = await supabase
           .from("payments")
           .select("*")
           .eq("user_id", session.user.id)
-          .order("created_at", { ascending: false }) as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: Payment[] | null; error: unknown }> };
+          .order("created_at", { ascending: false });
 
-        const { data, error } = await query.abortSignal(signal);
         if (error) throw error;
         return data || [];
       } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return [];
-        }
         console.error("Error fetching payments:", err);
         return [];
       }
     },
     enabled: !!user,
+    staleTime: 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
   const payments = paymentsQuery.data || [];
   const loadingPayments = paymentsQuery.isLoading;
@@ -301,10 +248,10 @@ export default function Dashboard() {
     switch (status) {
       case "approved": return <Badge className="bg-dem/20 text-dem border-dem/40 font-black">Approved</Badge>;
       case "published": return <Badge className="bg-dem/20 text-dem border-dem/40 font-black">Published</Badge>;
-      case "scheduled": return <Badge className="bg-muted text-muted-foreground border-border font-black">Scheduled</Badge>;
+      case "scheduled": return <Badge className="bg-muted text-foreground border-border font-black">Scheduled</Badge>;
       case "declined": 
       case "rejected": return <Badge className="bg-rep/20 text-rep border-rep/40 font-black">Declined</Badge>;
-      case "pending": return <Badge className="bg-muted text-muted-foreground border-border font-black">Pending</Badge>;
+      case "pending": return <Badge className="bg-muted text-foreground border-border font-black">Pending</Badge>;
       default: return <Badge variant="outline" className="border-border text-foreground font-black">{status}</Badge>;
     }
   };
@@ -351,7 +298,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <h1 className="text-3xl font-black tracking-tight text-dem">My Dashboard</h1>
-                    <p className="text-muted-foreground font-black text-lg">{user.email}</p>
+                    <p className="text-dem font-black text-lg">{user.email}</p>
                   </div>
                 </motion.div>
               </header>
@@ -457,12 +404,12 @@ export default function Dashboard() {
 
           <Tabs defaultValue="submissions" className="space-y-8">
             <TabsList className="bg-muted border border-border p-1">
-              <TabsTrigger value="submissions" className="data-[state=active]:bg-background text-foreground font-black">Submissions</TabsTrigger>
-              <TabsTrigger value="placements" className="data-[state=active]:bg-background text-foreground font-black">Placements</TabsTrigger>
-              <TabsTrigger value="capabilities" className="data-[state=active]:bg-background text-foreground font-black">Features</TabsTrigger>
-              <TabsTrigger value="payments" className="data-[state=active]:bg-background text-foreground font-black">Payments</TabsTrigger>
+              <TabsTrigger value="submissions" className="data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground font-black">Submissions</TabsTrigger>
+              <TabsTrigger value="placements" className="data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground font-black">Placements</TabsTrigger>
+              <TabsTrigger value="capabilities" className="data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground font-black">Features</TabsTrigger>
+              <TabsTrigger value="payments" className="data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground font-black">Payments</TabsTrigger>
               {isAdmin && (
-                <TabsTrigger value="management" className="data-[state=active]:bg-rep/20 text-rep font-black">Management</TabsTrigger>
+                <TabsTrigger value="management" className="data-[state=active]:bg-rep/20 data-[state=active]:text-rep text-muted-foreground font-black">Management</TabsTrigger>
               )}
             </TabsList>
 
@@ -474,81 +421,81 @@ export default function Dashboard() {
 
             <TabsContent value="submissions" className="space-y-4">
               {loadingSubmissions ? (
-                <div className="py-12 text-center text-muted-foreground font-black">Loading submissions...</div>
+                <div className="py-12 text-center text-foreground font-black">Loading submissions...</div>
               ) : submissions?.length === 0 ? (
-                <div className="py-24 text-center border border-dashed border-border rounded-2xl">
-                  <Music className="w-12 h-12 text-muted-foreground/70 mx-auto mb-4" />
-                  <h3 className="text-xl font-black mb-2 text-foreground">No submissions yet</h3>
-                  <p className="text-muted-foreground font-black text-lg mb-6">Start your first submission to get featured.</p>
-                  <Button className="bg-dem hover:bg-dem/90 text-white font-black" onClick={() => navigate("/booking")}>Submit Music</Button>
-                </div>
+                <Card className="bg-muted/30 border border-dashed border-border py-12">
+                  <div className="text-center">
+                    <Music className="w-12 h-12 text-muted-foreground/60 mx-auto mb-4" />
+                    <h3 className="text-xl font-black mb-2 text-foreground">No submissions yet</h3>
+                    <p className="text-muted-foreground font-black text-lg mb-6">Start your first submission to get featured.</p>
+                    <Button className="bg-dem hover:bg-dem/90 text-foreground font-black" onClick={() => navigate("/booking")}>Submit Music</Button>
+                  </div>
+                </Card>
               ) : (
-                <div className="grid gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {submissions?.map((s) => (
-                    <Card 
-                      key={s.id} 
-                      className="bg-card border-border hover:border-dem/40 transition-all cursor-pointer group shadow-sm"
-                      onClick={() => navigate(`/orders/${s.id}`)}
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded bg-muted flex items-center justify-center group-hover:bg-dem/10 transition-colors">
-                              <Music className="w-5 h-5 text-dem" />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-black text-lg text-foreground group-hover:text-dem transition-colors">{s.track_title}</h4>
-                                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-dem group-hover:translate-x-1 transition-all" />
-                              </div>
-                              <p className="text-sm text-muted-foreground font-black">{s.artist_name} • {s.slots?.name}</p>
-                            </div>
+                    <Card key={s.id} className="bg-card border-border text-foreground shadow-sm">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="font-black text-xl text-dem">{s.track_title}</CardTitle>
+                            <p className="text-sm text-muted-foreground font-black">{s.artist_name} • {s.slots?.name}</p>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <div className="text-right mr-4">
+                          <div className="flex flex-col gap-2 items-end">
+                            <div className="flex flex-col items-end">
                               <div className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">Status</div>
                               {getStatusBadge(s.status)}
                             </div>
-                            <div className="text-right">
+                            <div className="flex flex-col items-end">
                               <div className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">Payment</div>
                               {getPaymentBadge(s.payment_status)}
                             </div>
                           </div>
                         </div>
-
-                        {/* Syndication Status Section */}
+                      </CardHeader>
+                      <CardContent>
                         {s.submission_distribution && s.submission_distribution.length > 0 && (
-                          <div className="mt-6 pt-6 border-t border-border">
+                          <div className="mt-4 pt-4 border-t border-border">
                             <div className="flex items-center gap-2 mb-4 text-foreground">
-                              <Share2 className="w-4 h-4" />
-                              <h5 className="text-xs font-black uppercase tracking-wider">Syndication Status</h5>
+                              <Share2 className="w-4 h-4 text-dem" />
+                              <span className="text-sm font-black uppercase tracking-wider">Distribution Status</span>
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                               {s.submission_distribution.map((dist: DistributionStatus) => (
-                                 <div key={dist.id} className="bg-muted rounded-lg p-3 border border-border flex items-center justify-between group">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded bg-background flex items-center justify-center">
-                                      <Globe className="w-4 h-4 text-foreground" />
-                                    </div>
-                                    <div>
-                                      <p className="text-xs font-black text-foreground">{dist.media_outlets?.name}</p>
-                                      <div className="mt-1">
-                                        {getStatusBadge(dist.status)}
-                                      </div>
-                                    </div>
+                            <div className="space-y-3">
+                              {s.submission_distribution.map((dist) => (
+                                <div key={dist.id} className="flex items-center justify-between p-2 rounded bg-muted/50 border border-border">
+                                  <div className="flex items-center gap-2">
+                                    <Globe className="w-3 h-3 text-muted-foreground" />
+                                    <span className="text-xs font-bold text-foreground">{dist.media_outlets?.name}</span>
                                   </div>
-                                  {dist.published_url && (
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-dem opacity-0 group-hover:opacity-100 transition-opacity" asChild>
-                                      <a href={dist.published_url} target="_blank" rel="noopener noreferrer" title="View published story">
+                                  <div className="flex items-center gap-3">
+                                    {getStatusBadge(dist.status)}
+                                    {dist.published_url && (
+                                      <a 
+                                        href={dist.published_url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-dem hover:text-dem/80"
+                                      >
                                         <ExternalLink className="w-4 h-4" />
                                       </a>
-                                    </Button>
-                                  )}
+                                    )}
+                                  </div>
                                 </div>
                               ))}
                             </div>
                           </div>
                         )}
+                        <div className="flex justify-between items-center mt-6 text-[10px] text-muted-foreground font-black uppercase tracking-widest">
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {format(new Date(s.created_at), "MMM d, yyyy")}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Badge variant="outline" className="text-[9px] border-dem/30 text-dem">
+                              ID: {s.id.slice(0, 8)}
+                            </Badge>
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
@@ -558,9 +505,9 @@ export default function Dashboard() {
 
             <TabsContent value="placements" className="space-y-4">
               {loadingPlacements ? (
-                <div className="py-12 text-center text-muted-foreground font-black">Loading placements...</div>
+                <div className="py-12 text-center text-foreground font-black">Loading placements...</div>
               ) : placements?.length === 0 ? (
-                <div className="py-24 text-center border border-dashed border-border rounded-2xl">
+                <div className="py-24 text-center border border-dashed border-border rounded-2xl bg-muted/30">
                   <Layout className="w-12 h-12 text-muted-foreground/60 mx-auto mb-4" />
                   <h3 className="text-xl font-black mb-2 text-foreground">No active placements</h3>
                   <p className="text-muted-foreground font-black text-lg">Your music will appear here once approved and scheduled.</p>
@@ -577,7 +524,7 @@ export default function Dashboard() {
                               <CheckCircle2 className="w-5 h-5 text-dem" />
                             </div>
                             <div>
-                              <h4 className="font-black text-lg text-foreground">{p.submissions?.track_title}</h4>
+                              <h4 className="font-black text-lg text-dem">{p.submissions?.track_title}</h4>
                               <p className="text-sm text-muted-foreground font-black">on {p.playlists?.name}</p>
                             </div>
                           </div>
@@ -614,13 +561,13 @@ export default function Dashboard() {
                     {isLoadingCapabilities ? (
                       <div className="py-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-dem/40" /></div>
                     ) : capabilities.length === 0 ? (
-                      <div className="py-8 text-center text-muted-foreground font-bold bg-muted rounded-lg border border-border">
+                      <div className="py-8 text-center text-foreground font-bold bg-muted/30 rounded-lg border border-border">
                         No active features found.
                       </div>
                     ) : (
                       <div className="space-y-2">
                         {capabilities.map((cap, i) => (
-                          <div key={i} className="flex items-center justify-between p-3 bg-muted rounded-lg border border-border">
+                          <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border">
                             <div className="flex items-center gap-3">
                               <Zap className="w-4 h-4 text-dem" />
                               <span className="text-sm font-black text-foreground uppercase tracking-wider">{cap.replace('.', ' ')}</span>
@@ -632,7 +579,7 @@ export default function Dashboard() {
                     )}
                     
                     <div className="pt-4">
-                      <Button className="w-full bg-dem hover:bg-dem/90 text-white text-sm h-10 font-black uppercase tracking-widest" onClick={() => navigate("/booking")}>
+                      <Button className="w-full bg-dem hover:bg-dem/90 text-foreground text-sm h-10 font-black uppercase tracking-widest" onClick={() => navigate("/booking")}>
                         Get Featured
                       </Button>
                     </div>
@@ -659,9 +606,9 @@ export default function Dashboard() {
 
             <TabsContent value="payments" className="space-y-4">
                {loadingPayments ? (
-                <div className="py-12 text-center text-muted-foreground font-black">Loading payments...</div>
+                <div className="py-12 text-center text-foreground font-black">Loading payments...</div>
               ) : payments?.length === 0 ? (
-                <div className="py-24 text-center border border-dashed border-border rounded-2xl">
+                <div className="py-24 text-center border border-dashed border-border rounded-2xl bg-muted/30">
                   <CreditCard className="w-12 h-12 text-muted-foreground/60 mx-auto mb-4" />
                   <h3 className="text-xl font-black mb-2 text-foreground">No payment history</h3>
                   <p className="text-muted-foreground font-black text-lg">Your transaction receipts will appear here.</p>
@@ -689,7 +636,7 @@ export default function Dashboard() {
                                 {pm.status.toUpperCase()}
                               </Badge>
                             </div>
-                            <div className="text-xs font-mono text-foreground font-black">
+                            <div className="text-xs font-mono text-muted-foreground font-black">
                               {pm.stripe_payment_intent_id}
                             </div>
                           </div>

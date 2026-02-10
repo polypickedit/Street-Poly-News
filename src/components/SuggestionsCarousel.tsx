@@ -68,7 +68,7 @@ export const SuggestionsCarousel = () => {
   if (loadingPlacements || loadingPosts) {
     return (
       <div className="py-6 sm:py-8">
-        <h2 className="text-lg sm:text-xl font-display font-bold mb-4 text-white">
+        <h2 className="text-lg sm:text-xl font-display font-bold mb-4 text-dem">
           Suggested For You
         </h2>
         <div className="flex gap-4 overflow-hidden">
@@ -88,7 +88,7 @@ export const SuggestionsCarousel = () => {
       data-accepts="video,article"
       className="py-6 sm:py-8 border-t border-white/10"
     >
-      <h2 className="text-lg sm:text-xl font-display font-bold mb-4 text-black">
+      <h2 className="text-lg sm:text-xl font-display font-bold mb-4 text-dem">
         Suggested For You
       </h2>
       <Carousel

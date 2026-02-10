@@ -57,25 +57,17 @@ export const OutletManager = () => {
     }
   };
 
-  const fetchOutlets = useCallback(async (signal?: AbortSignal) => {
+  const fetchOutlets = useCallback(async () => {
     try {
       setLoading(true);
-      let query = supabase
+      const { data, error } = await supabase
         .from("media_outlets")
-        .select("*");
-      
-      if (signal) {
-        query = query.abortSignal(signal);
-      }
-
-      const { data, error } = await (query as unknown as { order: (o: string) => Promise<{data: unknown, error: unknown}> }).order("name");
+        .select("*")
+        .order("name");
 
       if (error) throw error;
       setOutlets((data as unknown as MediaOutlet[]) || []);
     } catch (error: unknown) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        return;
-      }
       const message = error instanceof Error ? error.message : "Unknown error";
       toast({
         title: "Error fetching outlets",
@@ -88,9 +80,7 @@ export const OutletManager = () => {
   }, [toast]);
 
   useEffect(() => {
-    const controller = new AbortController();
-    fetchOutlets(controller.signal);
-    return () => controller.abort();
+    fetchOutlets();
   }, [fetchOutlets]);
 
   const toggleActive = async (id: string, currentStatus: boolean) => {
@@ -135,7 +125,7 @@ export const OutletManager = () => {
           <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Syndication Network</h3>
           <p className="text-xs text-muted-foreground/80 mt-1">Manage distribution targets and outlet requirements.</p>
         </div>
-        <Button className="bg-dem hover:bg-dem/90 text-white gap-2">
+        <Button className="bg-dem hover:bg-dem/90 text-white gap-2 font-black uppercase">
           <Plus className="w-4 h-4" />
           Add Outlet
         </Button>
@@ -169,7 +159,7 @@ export const OutletManager = () => {
                   />
                 </div>
               </div>
-              <CardTitle className="mt-4 text-lg font-bold text-foreground">{outlet.name}</CardTitle>
+              <CardTitle className="mt-4 text-lg font-black text-dem uppercase">{outlet.name}</CardTitle>
               <div className="flex flex-wrap gap-2 mt-2">
                 <Badge variant="outline" className="text-xs bg-dem/10 border-dem/30 text-dem uppercase tracking-tight">
                   {outlet.outlet_type}
@@ -201,11 +191,11 @@ export const OutletManager = () => {
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-muted-foreground/70">
+                  <div className="flex items-center gap-2 text-dem/70">
                     <Globe className="w-3 h-3" />
                     <span className="text-xs uppercase font-bold tracking-tight">Words</span>
                   </div>
-                  <p className="text-sm font-semibold text-foreground">{outlet.preferred_word_count || "N/A"}</p>
+                  <p className="text-sm font-black text-dem uppercase">{outlet.preferred_word_count || "N/A"}</p>
                 </div>
                 <div className="space-y-1 text-right">
                   <div className="flex items-center justify-end gap-2 text-muted-foreground/70">
@@ -218,7 +208,7 @@ export const OutletManager = () => {
               <div className="flex gap-2 mt-6">
                 <Button 
                   variant="secondary" 
-                  className="flex-1 text-xs bg-muted hover:bg-muted/80 text-foreground border-border"
+                  className="flex-1 text-xs bg-muted hover:bg-muted/80 text-dem border-border font-black uppercase"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsDrawerOpen(true);

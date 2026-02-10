@@ -40,3 +40,9 @@
 - Run `npm run dev` (and `npm run build` if needed) to ensure the public pages and admin dashboard render across breakpoints and the login redirect works.
 - Confirm Supabase migrations and functions deploy without errors, the Stripe webhook is receiving events, and admins can manage submissions/slots via the dashboard.
 - Once everything is wired up, document (or script) the deploy steps so future maintainers can reproduce the environment in Lovable/Vercel/Supabase.
+
+## 6. Network & Observability (Technical Debt)
+- [x] **Address `net::ERR_ABORTED` logs**: 
+    - Optimized AdminDashboard and Dashboard queries by moving them to a higher level in the component tree.
+    - Explicitly disabled `abortSignal` for lightweight background queries (stats, activities) to prevent browser console noise during component unmounts.
+- [x] **Sign-out Auth Requests**: Added error handling to sign-out flows to ensure requests complete before redirection.

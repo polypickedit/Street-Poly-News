@@ -221,7 +221,7 @@ export function ConductDrawer({
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-display truncate leading-tight">{post.title}</p>
+                      <p className="text-sm font-display truncate leading-tight text-dem uppercase font-black">{post.title}</p>
                       <p className="text-xs text-muted-foreground font-body uppercase mt-1">{post.content_type}</p>
                     </div>
                     {selectedContentId === post.id.toString() && (
