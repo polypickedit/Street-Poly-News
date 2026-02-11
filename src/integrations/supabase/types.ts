@@ -1040,6 +1040,19 @@ export interface Database {
         }
         Returns: boolean
       }
+      create_submission_v2: {
+        Args: {
+          p_user_id: string
+          p_slot_id: string
+          p_artist_data: Json
+          p_submission_data: Json
+          p_distribution_targets: string[]
+          p_payment_type: string
+          p_account_id?: string
+          p_capability?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

@@ -27,8 +27,8 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "../hooks/useAuth";
-import { createSlotCheckoutSession } from "@/lib/stripe";
 import { getProductBySlotSlug } from "@/config/pricing";
+import { submissionService, SubmissionPayload } from "@/lib/submissionService";
 
 interface BookingFormProps {
   type: "music" | "interview";
@@ -62,7 +62,7 @@ interface Slot {
 }
 
 export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'confirming' | 'paid' | 'failed'>('idle');
   
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -82,88 +82,53 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
     }
   }, [canUseCapability]);
 
-  const checkPaymentStatus = useCallback(async (signal?: AbortSignal) => {
+  const verifyPayment = useCallback(async (submissionId: string, sessionId?: string) => {
     setPaymentStatus('confirming');
-    
-    const targetSubmissionId = searchParams.get('submissionId');
-    let attempts = 0;
-    const maxAttempts = 15;
-    
-    const poll = async () => {
-      if (signal?.aborted) return;
-      try {
-        const { data: { session: authSession } } = await supabase.auth.getSession();
-        if (!authSession) return;
-
-        let query = supabase
-          .from("submissions")
-          .select("id, payment_status")
-          .eq("user_id", authSession.user.id)
-          .eq("payment_status", "paid");
-        
-        if (targetSubmissionId) {
-          query = query.eq("id", targetSubmissionId);
-        }
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: submissions, error } = await (query as any).abortSignal(signal);
-
-        if (error) throw error;
-
-        if (submissions && submissions.length > 0) {
-          setPaymentStatus('paid');
-          toast.success("Payment confirmed!");
-          // Removed immediate onSuccess call to show success state
-          return;
-        }
-
-        attempts++;
-        if (attempts < maxAttempts) {
-          setTimeout(poll, 2000);
-        } else {
-          setPaymentStatus('failed');
-          toast.error("Payment confirmation timed out. Please check your dashboard later.");
-        }
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') return;
-        console.error("Polling error:", error);
+    try {
+      const isPaid = await submissionService.verifyPayment(submissionId, sessionId);
+      if (isPaid) {
+        setPaymentStatus('paid');
+        toast.success("Payment confirmed!");
+      } else {
+        setPaymentStatus('failed');
+        toast.error("Payment not yet confirmed. It may take a few minutes for Stripe to process.");
       }
-    };
-
-    poll();
-  }, [searchParams]);
+    } catch (error) {
+      console.error("Verification error:", error);
+      setPaymentStatus('failed');
+      toast.error("Error verifying payment status.");
+    }
+  }, []);
 
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
-    if (sessionId) {
-      const controller = new AbortController();
-      checkPaymentStatus(controller.signal);
-      return () => controller.abort();
+    const submissionId = searchParams.get('submissionId');
+    if (sessionId && submissionId) {
+      verifyPayment(submissionId, sessionId);
     }
-  }, [searchParams, checkPaymentStatus]);
+  }, [searchParams, verifyPayment]);
 
   useEffect(() => {
     const controller = new AbortController();
 
     const fetchSlots = async () => {
-      // @ts-expect-error - abortSignal is added by our Supabase client wrapper
+      // @ts-expect-error - abortSignal is added by our Supabase client wrapper to handle component unmounting
       const query = supabase.from("slots").select("*").eq("is_active", true).eq("type", type);
-      // @ts-expect-error
-      const { data } = await query.abortSignal(controller.signal);
-      if (data) setSlots(data as Slot[]);
+      const { data } = await (query as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: Slot[] | null }> }).abortSignal(controller.signal);
+      if (data) setSlots(data);
     };
 
     const fetchOutlets = async () => {
-      const query = supabase.from("media_outlets").select("id, name, price_cents, outlet_type").eq("active", true) as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: Outlet[] | null; error: unknown }> };
-      const { data } = await query.abortSignal(controller.signal);
-      if (data) setOutlets(data as unknown as Outlet[]);
+      const query = supabase.from("media_outlets").select("id, name, price_cents, outlet_type").eq("active", true);
+      const { data } = await (query as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: Outlet[] | null }> }).abortSignal(controller.signal);
+      if (data) setOutlets(data || []);
     };
 
     fetchSlots();
     fetchOutlets();
 
     return () => controller.abort();
-  }, []);
+  }, [type]);
 
   const defaultValues: BookingFormData = {
     name: "",
@@ -196,6 +161,15 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   const totalPrice = (selectedSlot?.price || 0) + outletsTotal;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFiles(Array.from(e.target.files));
+    }
+  };
+
+  const marketValue = (selectedSlot?.price || 0) * 1.5 + (outletsTotal * 1.2);
 
   if (paymentStatus === 'confirming') {
     return (
@@ -223,117 +197,109 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
     );
   }
 
-  const onSubmit = async (data: BookingFormData) => {
-    setIsSubmitting(true);
-    const artistName = data.artistName.trim() || data.name.trim() || "Unknown Artist";
-    const preferredDate = data.preferredDate || new Date().toISOString().split("T")[0];
-    const [primaryLink] = data.links.split(/\s+/).filter(Boolean);
-    const mood = data.description.trim() || "Needs artist input";
+  const uploadMedia = async (submissionId: string): Promise<string[]> => {
+    const urls: string[] = [];
+    for (const file of files) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${submissionId}/${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `submissions/${fileName}`;
 
-    try {
-      const { data: existingArtist } = await supabase
-        .from("artists")
-        .select("id")
-        .eq("email", data.email)
-        .maybeSingle();
+      const { error: uploadError } = await supabase.storage
+        .from('media')
+        .upload(filePath, file);
 
-      let artistId = existingArtist?.id;
-
-      if (!artistId) {
-        const { data: newArtist, error: artistError } = await supabase
-          .from("artists")
-          .insert({
-            name: artistName,
-            email: data.email,
-            user_id: user?.id,
-          })
-          .select("id")
-          .single();
-
-        if (artistError) throw artistError;
-        artistId = newArtist!.id;
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        continue;
       }
 
-      const submissionPayload = {
-        artist_id: artistId,
-        slot_id: selectedSlot?.id,
-        track_title: `${selectedSlot?.name || "Submission"} — ${artistName}`,
-        artist_name: artistName,
-        spotify_track_url: primaryLink || "https://streetpolynews.com/booking",
-        release_date: preferredDate,
-        genre: selectedSlot?.name || "General",
-        mood,
-        notes_internal: `${data.description}\nPreferred slot: ${selectedSlot?.name}\nPreferred date: ${preferredDate}\nLinks: ${data.links}`,
+      const { data: { publicUrl } } = supabase.storage
+        .from('media')
+        .getPublicUrl(filePath);
+
+      urls.push(publicUrl);
+    }
+    return urls;
+  };
+
+  const onSubmit = async (data: BookingFormData) => {
+    if (!user) {
+      toast.error("You must be signed in to submit.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // 1. Prepare initial payload
+      const payload: SubmissionPayload = {
+        artist_name: data.artistName || data.name,
+        artist_email: data.email,
+        track_title: data.artistName || "Untitled",
+        spotify_track_url: data.links.split(/\s+/)[0] || "",
+        release_date: data.preferredDate || new Date().toISOString().split('T')[0],
+        genre: "General",
+        mood: "General",
+        slot_id: selectedSlot?.id || "",
+        slot_slug: data.slotType,
+        description: data.description,
+        links: data.links.split(/\s+/).filter(Boolean),
+        preferred_date: data.preferredDate,
         submission_type: data.submissionType,
         distribution_targets: data.selectedOutlets,
-        content_bundle: {
-          artist_name: artistName,
-          title: `${selectedSlot?.name || "Submission"} — ${artistName}`,
-          description: data.description,
-          links: data.links.split(/\s+/).filter(Boolean),
-          preferred_date: preferredDate
-        }
+        media_urls: []
       };
 
-      let submissionId: string;
-
       if (paymentMethod === 'capability') {
-        const { data: consumed, error: consumeError } = await supabase.rpc("consume_capability", {
-          p_user_id: user?.id || "",
-          p_capability: requiredCapability || ""
-        });
+        // Atomic creation with capability
+        const submissionId = await submissionService.createWithCapability(payload, user.id, requiredCapability);
+        
+        // Handle media uploads if any
+        if (files.length > 0) {
+          toast.info("Uploading media assets...");
+          const mediaUrls = await uploadMedia(submissionId);
+          
+          // Update submission with media URLs
+          const { error: updateError } = await supabase
+            .from("submissions")
+            .update({ 
+              content_bundle: { 
+                ...payload, 
+                media_urls: mediaUrls 
+              } 
+            })
+            .eq("id", submissionId);
 
-        if (consumeError) throw consumeError;
-        if (!consumed) throw new Error(`You don't have an available ${requiredCapability} capability.`);
+          if (updateError) console.error("Error updating media URLs:", updateError);
+        }
 
-        const { data: submission, error: submissionError } = await supabase.from("submissions").insert({
-          ...submissionPayload,
-          user_id: user?.id,
-          status: "pending",
-          payment_status: "paid",
-          payment_type: "credits"
-        }).select("id").single();
-
-        if (submissionError) throw submissionError;
-        submissionId = submission!.id;
+        setPaymentStatus('paid');
+        toast.success("Submission successful!");
       } else {
-        const { data: submission, error: submissionError } = await supabase.from("submissions").insert({
-          ...submissionPayload,
-          user_id: user?.id,
-          status: "pending",
-          payment_status: "unpaid",
-          payment_type: "stripe"
-        }).select("id").single();
-
-        if (submissionError) throw submissionError;
-        submissionId = submission!.id;
-      }
-
-      if (data.selectedOutlets.length > 0) {
-        const distributionRecords = data.selectedOutlets.map(outletId => ({
-          submission_id: submissionId,
-          outlet_id: outletId,
-          status: 'pending'
-        }));
-        const { error: distError } = await supabase.from("submission_distribution").insert(distributionRecords);
-        if (distError) throw distError;
-      }
-
-      if (paymentMethod === 'stripe' && selectedSlot && selectedSlot.price > 0) {
-        toast.info("Redirecting to Stripe Checkout...");
-        await createSlotCheckoutSession(
-          selectedSlot.id, 
-          selectedSlot.slug, 
-          submissionId,
-          data.selectedOutlets
-        );
-      } else {
-        toast.success(paymentMethod === 'capability' ? "Capability used! Submission successful." : "Submission successful!");
-        form.reset(defaultValues);
-        onSuccess?.();
+        // Stripe Path
+        // Note: For Stripe, we create the submission first, THEN redirect.
+        // We'll handle media uploads AFTER successful payment in the dashboard
+        // or we could upload them now and attach them to the pending submission.
+        // Let's upload them now so they are part of the record immediately.
+        
+        const submissionId = await submissionService.createWithStripe(payload, user.id);
+        
+        if (files.length > 0) {
+          toast.info("Uploading media assets...");
+          const mediaUrls = await uploadMedia(submissionId);
+          await supabase
+            .from("submissions")
+            .update({ 
+              content_bundle: { 
+                ...payload, 
+                media_urls: mediaUrls 
+              } 
+            })
+            .eq("id", submissionId);
+        }
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "An unknown error occurred";
+      console.error("Submission error:", error);
+      const message = error instanceof Error ? error.message : "Failed to create submission.";
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -343,41 +309,47 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
-        <div className="bg-dem/10 border border-dem/20 rounded-lg p-4 mb-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-gradient-to-br from-dem/20 to-dem/5 border border-dem/20 rounded-2xl p-6 mb-8 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2 text-dem">
-              <CreditCard className="w-4 h-4" />
-              <span className="text-sm font-semibold uppercase tracking-wider">Estimated Total</span>
+              <CreditCard className="w-5 h-5" />
+              <span className="text-sm font-bold uppercase tracking-widest">Investment Summary</span>
             </div>
             {canUseCapability && (
-              <div className="text-[10px] font-bold px-2 py-1 bg-dem/20 text-dem rounded-full border border-dem/30 uppercase tracking-widest">
-                Capability Available
+              <div className="text-[10px] font-black px-3 py-1 bg-dem text-white rounded-full uppercase tracking-tighter animate-pulse">
+                Editor Access Active
               </div>
             )}
           </div>
           
-          <div className="flex items-end justify-between mb-4">
-            <div>
-              <p className="text-xs text-muted-foreground font-medium">
-                Service: <span className="text-foreground font-black">{selectedSlot?.name || "Loading..."}</span>
-              </p>
-              {watchOutlets.length > 0 && (
-                <p className="text-xs text-muted-foreground font-medium">
-                  + {watchOutlets.length} Syndication Outlets
-                </p>
-              )}
+          <div className="space-y-3 mb-6">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground font-medium">Market Value</span>
+              <span className="text-muted-foreground line-through font-bold">${marketValue.toFixed(2)}</span>
             </div>
-            <p className="text-2xl font-black text-foreground">
-              {paymentMethod === 'capability' ? "FREE" : `$${totalPrice.toFixed(2)}`}
-            </p>
+            <div className="flex justify-between items-end">
+              <div>
+                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">
+                  Your Price
+                </p>
+                <p className="text-3xl font-black text-foreground tracking-tighter">
+                  {paymentMethod === 'capability' ? "FREE" : `$${totalPrice.toFixed(2)}`}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] text-dem font-black uppercase tracking-widest bg-dem/10 px-2 py-1 rounded">
+                  {paymentMethod === 'capability' ? "100% Covered" : `Save $${(marketValue - totalPrice).toFixed(2)}`}
+                </p>
+              </div>
+            </div>
           </div>
 
           {canUseCapability && (
-            <div className="pt-4 border-t border-dem/10 flex gap-2">
+            <div className="pt-5 border-t border-dem/10 flex gap-3">
               <Button
                 type="button"
                 variant={paymentMethod === 'stripe' ? 'default' : 'outline'}
-                className="flex-1 h-9 text-xs"
+                className={`flex-1 h-10 text-xs font-bold uppercase tracking-wider transition-all ${paymentMethod === 'stripe' ? 'bg-dem shadow-lg shadow-dem/20' : ''}`}
                 onClick={() => setPaymentMethod('stripe')}
               >
                 Pay with Card
@@ -385,7 +357,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
               <Button
                 type="button"
                 variant={paymentMethod === 'capability' ? 'default' : 'outline'}
-                className="flex-1 h-9 text-xs bg-dem hover:bg-dem/90 border-dem/50"
+                className={`flex-1 h-10 text-xs font-bold uppercase tracking-wider transition-all ${paymentMethod === 'capability' ? 'bg-dem shadow-lg shadow-dem/20' : ''}`}
                 onClick={() => setPaymentMethod('capability')}
               >
                 Use Capability
@@ -568,16 +540,46 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
           )}
         />
 
-        <div className="space-y-3 sm:space-y-4">
-          <FormLabel>Media Assets</FormLabel>
-          <div className="border-2 border-dashed border-muted-foreground/20 rounded-xl p-4 sm:p-8 text-center hover:border-dem/50 transition-colors cursor-pointer group">
-            <input type="file" className="hidden" id="file-upload" multiple />
-            <label htmlFor="file-upload" className="cursor-pointer">
-              <Upload className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground group-hover:text-dem transition-colors mx-auto mb-2 sm:mb-4" />
-              <p className="text-sm font-medium text-foreground">Click to upload or drag and drop</p>
-              <p className="text-xs text-muted-foreground mt-1">MP3, WAV, JPG, or PDF (max. 50MB)</p>
+        <div className="space-y-4">
+          <FormLabel className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <Upload className="w-4 h-4" />
+            Media Assets
+          </FormLabel>
+          <div className="border-2 border-dashed border-muted-foreground/20 rounded-2xl p-8 text-center hover:border-dem/50 transition-all cursor-pointer group bg-muted/30">
+            <input 
+              type="file" 
+              className="hidden" 
+              id="file-upload" 
+              multiple 
+              onChange={handleFileChange}
+            />
+            <label htmlFor="file-upload" className="cursor-pointer block">
+              <Upload className="w-12 h-12 text-muted-foreground group-hover:text-dem transition-colors mx-auto mb-4" />
+              <p className="text-sm font-bold text-foreground">Click to upload or drag and drop</p>
+              <p className="text-[10px] text-muted-foreground mt-2 uppercase tracking-widest">MP3, WAV, JPG, or PDF (max. 50MB)</p>
             </label>
           </div>
+          
+          {files.length > 0 && (
+            <div className="bg-muted/50 rounded-xl p-4 space-y-2 border border-border">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Selected Files ({files.length})</p>
+              {files.map((file, idx) => (
+                <div key={idx} className="flex items-center justify-between text-xs bg-background p-2 rounded border border-border">
+                  <span className="truncate max-w-[200px] font-medium">{file.name}</span>
+                  <span className="text-[10px] text-muted-foreground">{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
+                </div>
+              ))}
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                className="w-full text-[10px] font-bold uppercase tracking-tighter h-8"
+                onClick={() => setFiles([])}
+              >
+                Clear All Files
+              </Button>
+            </div>
+          )}
         </div>
 
         <Button

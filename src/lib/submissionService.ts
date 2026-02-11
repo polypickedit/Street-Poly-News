@@ -3,7 +3,13 @@ import { createSlotCheckoutSession } from "./stripe";
 
 export interface SubmissionPayload {
   artist_name: string;
+  artist_email: string;
+  artist_country?: string;
   track_title: string;
+  spotify_track_url: string;
+  release_date: string;
+  genre: string;
+  mood: string;
   slot_id: string;
   slot_slug: string;
   description: string;
@@ -15,140 +21,111 @@ export interface SubmissionPayload {
 }
 
 export const submissionService = {
+  /**
+   * Creates a submission intended for Stripe payment.
+   * Uses the atomic create_submission_v2 RPC to ensure consistency.
+   */
   async createWithStripe(payload: SubmissionPayload, userId: string) {
-    // 1. Insert pending submission
-    const { data: submission, error } = await supabase
-      .from("submissions")
-      .insert({
-        user_id: userId,
-        slot_id: payload.slot_id,
+    const { data: submissionId, error } = await supabase.rpc("create_submission_v2", {
+      p_user_id: userId,
+      p_slot_id: payload.slot_id,
+      p_artist_data: {
+        name: payload.artist_name,
+        email: payload.artist_email,
+        country: payload.artist_country
+      },
+      p_submission_data: {
         track_title: payload.track_title,
-        artist_name: payload.artist_name,
-        status: "pending",
-        payment_status: "unpaid",
-        payment_type: "stripe",
+        spotify_track_url: payload.spotify_track_url,
+        release_date: payload.release_date,
+        genre: payload.genre,
+        mood: payload.mood,
         submission_type: payload.submission_type,
-        distribution_targets: payload.distribution_targets,
         content_bundle: {
-          artist_name: payload.artist_name,
-          title: payload.track_title,
           description: payload.description,
           links: payload.links,
           preferred_date: payload.preferred_date,
           media_urls: payload.media_urls || []
         },
-        notes_internal: `Links: ${payload.links.join(', ')}`
-      })
-      .select("id")
-      .single();
+        notes_internal: `Links: ${payload.links.join(", ")}`
+      },
+      p_distribution_targets: payload.distribution_targets,
+      p_payment_type: "stripe"
+    });
 
     if (error) throw error;
 
-    // 2. Insert distribution records
-    if (payload.distribution_targets.length > 0) {
-      const distRecords = payload.distribution_targets.map(targetId => ({
-        submission_id: submission.id,
-        outlet_id: targetId,
-        status: 'pending'
-      }));
-      const { error: distError } = await supabase
-        .from("submission_distribution")
-        .insert(distRecords);
-      if (distError) throw distError;
-    }
-
-    // 3. Trigger Stripe Checkout
+    // Trigger Stripe Checkout
     await createSlotCheckoutSession(
       payload.slot_id,
       payload.slot_slug,
-      submission.id,
+      submissionId,
       payload.distribution_targets
     );
 
-    return submission.id;
+    return submissionId;
   },
 
-  async createWithCredits(payload: SubmissionPayload, accountId: string) {
-    // Use the atomic RPC
-    const { data: submissionId, error } = await supabase.rpc("submit_with_credits", {
-      p_account_id: accountId,
-      p_credits_to_consume: 1, // Currently fixed at 1 credit per submission
+  /**
+   * Creates a submission using a User Capability (Editor/Admin).
+   * Uses the atomic create_submission_v2 RPC.
+   */
+  async createWithCapability(payload: SubmissionPayload, userId: string, capability: string) {
+    const { data: submissionId, error } = await supabase.rpc("create_submission_v2", {
+      p_user_id: userId,
+      p_slot_id: payload.slot_id,
+      p_artist_data: {
+        name: payload.artist_name,
+        email: payload.artist_email,
+        country: payload.artist_country
+      },
       p_submission_data: {
-        artist_id: null, // Optional in RPC
-        slot_id: payload.slot_id,
         track_title: payload.track_title,
-        artist_name: payload.artist_name,
-        spotify_track_url: payload.links[0] || "",
-        release_date: payload.preferred_date,
-        genre: "unknown", // Default or extract from description
-        mood: payload.description,
-        notes_internal: `Links: ${payload.links.join(', ')}`,
+        spotify_track_url: payload.spotify_track_url,
+        release_date: payload.release_date,
+        genre: payload.genre,
+        mood: payload.mood,
         submission_type: payload.submission_type,
-        distribution_targets: payload.distribution_targets,
         content_bundle: {
-          artist_name: payload.artist_name,
-          title: payload.track_title,
           description: payload.description,
           links: payload.links,
           preferred_date: payload.preferred_date,
           media_urls: payload.media_urls || []
-        }
-      }
+        },
+        notes_internal: `Capability used: ${capability}. Links: ${payload.links.join(", ")}`
+      },
+      p_distribution_targets: payload.distribution_targets,
+      p_payment_type: "capability",
+      p_capability: capability
     });
 
     if (error) throw error;
     return submissionId;
   },
 
-  async createWithCapability(payload: SubmissionPayload, userId: string, capability: string) {
-    // This is the "admin/editor" route where they consume a capability instead of paying
-    
-    // 1. Consume capability
-    const { data: consumed, error: consumeError } = await supabase.rpc("consume_capability", {
-      p_user_id: userId,
-      p_capability: capability
-    });
-
-    if (consumeError) throw consumeError;
-    if (!consumed) throw new Error(`Insufficient ${capability} capabilities.`);
-
-    // 2. Create paid submission
-    const { data: submission, error: submissionError } = await supabase
-      .from("submissions")
-      .insert({
-        user_id: userId,
-        slot_id: payload.slot_id,
-        track_title: payload.track_title,
-        artist_name: payload.artist_name,
-        status: "pending",
-        payment_status: "paid",
-        payment_type: "credits", // Or 'capability' if we add it
-        submission_type: payload.submission_type,
-        distribution_targets: payload.distribution_targets,
-        content_bundle: {
-          artist_name: payload.artist_name,
-          title: payload.track_title,
-          description: payload.description,
-          links: payload.links,
-          preferred_date: payload.preferred_date,
-          media_urls: payload.media_urls || []
-        }
-      })
-      .select("id")
-      .single();
-
-    if (submissionError) throw submissionError;
-
-    // 3. Distribution records
-    if (payload.distribution_targets.length > 0) {
-      const distRecords = payload.distribution_targets.map(targetId => ({
-        submission_id: submission.id,
-        outlet_id: targetId,
-        status: 'pending'
-      }));
-      await supabase.from("submission_distribution").insert(distRecords);
+  /**
+   * Verifies a payment session after redirect.
+   * Calls an edge function to verify directly with Stripe for trustless confirmation.
+   */
+  async verifyPayment(submissionId: string, sessionId?: string) {
+    if (sessionId) {
+      // Call edge function for direct verification
+      const { data, error } = await supabase.functions.invoke("verify-payment", {
+        body: { sessionId, submissionId }
+      });
+      
+      if (error) throw error;
+      return data.status === "paid";
     }
 
-    return submission.id;
+    // Fallback to DB check if no session ID
+    const { data, error } = await supabase
+      .from("submissions")
+      .select("payment_status")
+      .eq("id", submissionId)
+      .single();
+
+    if (error) throw error;
+    return data.payment_status === "paid";
   }
 };
