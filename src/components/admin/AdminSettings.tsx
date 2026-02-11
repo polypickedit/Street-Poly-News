@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Dialog, 
@@ -60,6 +61,7 @@ interface OutletPrice {
 
 export const AdminSettings = () => {
   const { toast } = useToast();
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [editingPrices, setEditingPrices] = useState<Record<string, number>>({});
   const [editingOutletPrices, setEditingOutletPrices] = useState<Record<string, number>>({});
@@ -376,115 +378,117 @@ export const AdminSettings = () => {
       </Card>
 
       {/* Admin Management */}
-      <Card className="border-border">
-        <CardHeader>
-          <div className="flex items-center gap-2 mb-1">
-            <ShieldCheck className="w-5 h-5 text-dem" />
-            <CardTitle className="text-xl font-black text-dem uppercase">Team & Permissions</CardTitle>
-          </div>
-          <CardDescription className="text-muted-foreground">Manage who has access to this dashboard.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-4">
-            {loadingAdmins ? (
-              <div className="flex justify-center p-8">
-                <Loader2 className="w-8 h-8 animate-spin text-dem" />
-              </div>
-            ) : admins.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No team members found.</p>
-            ) : (
-              admins.map((user) => (
-                <div key={user.user_id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-xs font-bold uppercase text-foreground">
-                      {user.full_name?.substring(0, 2) || "??"}
+      {isAdmin && (
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2 mb-1">
+              <ShieldCheck className="w-5 h-5 text-dem" />
+              <CardTitle className="text-xl font-black text-dem uppercase">Team & Permissions</CardTitle>
+            </div>
+            <CardDescription className="text-muted-foreground">Manage who has access to this dashboard.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              {loadingAdmins ? (
+                <div className="flex justify-center p-8">
+                  <Loader2 className="w-8 h-8 animate-spin text-dem" />
+                </div>
+              ) : admins.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">No team members found.</p>
+              ) : (
+                admins.map((user) => (
+                  <div key={user.user_id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-xs font-bold uppercase text-foreground">
+                        {user.full_name?.substring(0, 2) || "??"}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{user.full_name || "Unknown User"}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{user.user_id}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">{user.full_name || "Unknown User"}</p>
-                      <p className="text-xs text-muted-foreground font-mono">{user.user_id}</p>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded bg-dem/10 text-dem border border-dem/20">
+                        {user.role}
+                      </span>
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleRemoveRole(user.user_id)}
+                        className="text-rep hover:text-rep/80 hover:bg-rep/10"
+                      >
+                        Remove
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded bg-dem/10 text-dem border border-dem/20">
-                      {user.role}
-                    </span>
-                    <Button 
-                      type="button"
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleRemoveRole(user.user_id)}
-                      className="text-rep hover:text-rep/80 hover:bg-rep/10"
-                    >
-                      Remove
-                    </Button>
+                ))
+              )}
+            </div>
+            <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+              <DialogTrigger asChild>
+                <Button type="button" variant="secondary" className="gap-2 bg-dem hover:bg-dem/90 text-white font-black uppercase">
+                  <UserPlus className="w-4 h-4" />
+                  Add Team Member
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="border-border">
+                <DialogHeader>
+                  <DialogTitle>Add Team Member</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
+                    Assign a role to a user by their Supabase User ID.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="userId">User ID (UUID)</Label>
+                    <Input 
+                      id="userId"
+                      placeholder="00000000-0000-0000-0000-000000000000"
+                      value={inviteUserId}
+                      onChange={(e) => setInviteUserId(e.target.value)}
+                      className="bg-background border-input"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Role</Label>
+                    <Select value={inviteRoleId} onValueChange={setInviteRoleId}>
+                      <SelectTrigger id="role" className="bg-background border-input">
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableRoles.map((role) => (
+                          <SelectItem key={role.id} value={role.id}>
+                            {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-          <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
-            <DialogTrigger asChild>
-              <Button type="button" variant="secondary" className="gap-2 bg-dem hover:bg-dem/90 text-white font-black uppercase">
-                <UserPlus className="w-4 h-4" />
-                Add Team Member
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="border-border">
-              <DialogHeader>
-                <DialogTitle>Add Team Member</DialogTitle>
-                <DialogDescription className="text-muted-foreground">
-                  Assign a role to a user by their Supabase User ID.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="userId">User ID (UUID)</Label>
-                  <Input 
-                    id="userId"
-                    placeholder="00000000-0000-0000-0000-000000000000"
-                    value={inviteUserId}
-                    onChange={(e) => setInviteUserId(e.target.value)}
-                    className="bg-background border-input"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select value={inviteRoleId} onValueChange={setInviteRoleId}>
-                    <SelectTrigger className="bg-background border-input">
-                      <SelectValue placeholder="Select a role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableRoles.map((role) => (
-                        <SelectItem key={role.id} value={role.id}>
-                          {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button 
-                  type="button"
-                  variant="ghost" 
-                  onClick={() => setIsInviteDialogOpen(false)}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="button"
-                  onClick={() => addAdminMutation.mutate({ userId: inviteUserId, roleId: inviteRoleId })}
-                  disabled={!inviteUserId || !inviteRoleId || addAdminMutation.isPending}
-                  className="bg-dem hover:bg-dem/90 text-white font-black uppercase"
-                >
-                  {addAdminMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add Member"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </CardContent>
-      </Card>
+                <DialogFooter>
+                  <Button 
+                    type="button"
+                    variant="ghost" 
+                    onClick={() => setIsInviteDialogOpen(false)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="button"
+                    onClick={() => addAdminMutation.mutate({ userId: inviteUserId, roleId: inviteRoleId })}
+                    disabled={!inviteUserId || !inviteRoleId || addAdminMutation.isPending}
+                    className="bg-dem hover:bg-dem/90 text-white font-black uppercase"
+                  >
+                    {addAdminMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add Member"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

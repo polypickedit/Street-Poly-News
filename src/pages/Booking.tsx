@@ -12,12 +12,27 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { BookingForm } from "@/components/BookingForm";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { QuickPaymentDialog } from "@/components/QuickPaymentDialog";
+import { useSearchParams } from "react-router-dom";
 
-const Booking = () => {
+export const Booking = () => {
   const [isMusicModalOpen, setIsMusicModalOpen] = useState(false);
   const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const sessionId = searchParams.get("session_id");
+    const slotType = searchParams.get("slotType");
+
+    if (sessionId && slotType) {
+      if (slotType.includes("music")) {
+        setIsMusicModalOpen(true);
+      } else if (slotType.includes("interview")) {
+        setIsInterviewModalOpen(true);
+      }
+    }
+  }, [searchParams]);
 
   return (
     <PageLayoutWithAds>
@@ -40,6 +55,7 @@ const Booking = () => {
                   <Music className="w-6 h-6 text-dem" />
                 </div>
                 <h3 className="font-display text-2xl text-foreground mb-2">New Music Mondays</h3>
+                <p className="font-display text-3xl text-dem font-black mb-4">$300</p>
                 <p className="font-body text-muted-foreground mb-6">
                   Get your track featured and reviewed live. Limited slots available every week.
                 </p>
@@ -57,7 +73,7 @@ const Booking = () => {
 
                 <div className="w-full">
                   <SlotPaywall 
-                    slotSlug="new-music-mondays"
+                    slotSlug="new-music-monday"
                     preview={
                       <div className="p-4 bg-muted/20 rounded-lg border border-dashed border-border text-center">
                         <p className="text-sm text-muted-foreground">Live stream preview and slot details</p>
@@ -97,6 +113,7 @@ const Booking = () => {
                   <Mic2 className="w-6 h-6 text-rep" />
                 </div>
                 <h3 className="font-display text-2xl text-foreground mb-2">Featured Interview</h3>
+                <p className="font-display text-3xl text-rep font-black mb-4">$150</p>
                 <p className="font-body text-muted-foreground mb-6">
                   A professional 1-on-1 interview slot for artists, activists, and community leaders.
                 </p>

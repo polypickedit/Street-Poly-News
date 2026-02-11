@@ -19,6 +19,16 @@ export const PRODUCTS = {
   POST_SUBMIT: {
     priceId: "price_post_submit",
     grants: ["post.submit"]
+  },
+  INTERVIEW: {
+    priceId: "price_interview",
+    grants: ["ad.feature"],
+    price_cents: 15000
+  },
+  MUSIC_MONDAY: {
+    priceId: "price_music_monday",
+    grants: ["playlist.place"],
+    price_cents: 30000
   }
 } as const;
 

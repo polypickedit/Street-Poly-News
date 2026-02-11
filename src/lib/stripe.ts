@@ -25,7 +25,7 @@ export const createSlotCheckoutSession = async (
         selectedOutlets,
         userId: session.user.id,
         userEmail: session.user.email,
-        returnUrl: window.location.origin + '/booking?session_id={CHECKOUT_SESSION_ID}'
+        returnUrl: window.location.origin + `/booking?session_id={CHECKOUT_SESSION_ID}&slotType=${slotSlug}&submissionId=${submissionId}`
       }
     });
 

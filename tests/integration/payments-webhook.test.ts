@@ -11,7 +11,6 @@ const tableResponses: Record<string, any> = {
   submissions: { update: { error: null } },
   slot_entitlements: { insert: { error: null } },
   admin_actions: { insert: { error: null } },
-  user_capabilities: { insert: { error: null } },
 };
 
 function buildChain(table: string) {
@@ -87,13 +86,13 @@ describe("Stripe webhook handler", () => {
     expect(mockSupabase.tableChains.submission_distribution.upsert).toHaveBeenCalled();
   });
 
-  it("grants user capabilities on checkout session completion", async () => {
+  it("grants slot entitlements on checkout session completion", async () => {
     const mockSupabase = createMockSupabase();
 
     await processStripeWebhookEvent(checkoutSessionCompleted, mockSupabase as any);
 
-    expect(mockSupabase.from).toHaveBeenCalledWith("user_capabilities");
-    expect(mockSupabase.tableChains.user_capabilities.insert).toHaveBeenCalled();
+    expect(mockSupabase.from).toHaveBeenCalledWith("slot_entitlements");
+    expect(mockSupabase.tableChains.slot_entitlements.insert).toHaveBeenCalled();
   });
 
   it("handles payment_intent.succeeded events gracefully", async () => {

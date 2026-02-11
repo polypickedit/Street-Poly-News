@@ -33,7 +33,15 @@ export const PRODUCTS = {
   // INTERVIEW capability (added to map slot slug)
   INTERVIEW: {
     priceId: "price_interview",
-    grants: ["ad.feature"]
+    grants: ["ad.feature"],
+    price_cents: 15000
+  },
+
+  // NEW MUSIC MONDAYS capability
+  MUSIC_MONDAY: {
+    priceId: "price_music_monday",
+    grants: ["playlist.place"],
+    price_cents: 30000
   }
 } as const;
 
@@ -51,6 +59,7 @@ export function getProductByPriceId(priceId: string) {
  * Helper to find a product by its Slot Slug
  */
 export function getProductBySlotSlug(slug: string) {
-  if (slug === 'interview') return PRODUCTS.INTERVIEW;
+  if (slug === 'featured-interview' || slug === 'interview') return PRODUCTS.INTERVIEW;
+  if (slug === 'new-music-mondays' || slug === 'new-music-monday') return PRODUCTS.MUSIC_MONDAY;
   return PRODUCTS.POST_SUBMIT;
 }

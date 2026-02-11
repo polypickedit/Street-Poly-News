@@ -1,7 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { PostgrestError } from "@supabase/supabase-js";
 
-interface AdminStats {
+interface CountResponse {
+  data: null;
+  count: number | null;
+  error: PostgrestError | null;
+}
+
+interface AbortableCountQuery {
+  abortSignal: (signal: AbortSignal) => Promise<CountResponse>;
+}
+
+export interface AdminStats {
   pendingSubmissions: number;
   activePlacements: number;
   endingSoon: number;
@@ -13,23 +24,18 @@ export function useAdminStats(enabled: boolean) {
     queryKey: ["admin-dashboard-stats"],
     queryFn: async ({ signal }): Promise<AdminStats> => {
       try {
-        interface CountResponse {
-          count: number | null;
-          error: { message: string; code: string } | null;
-        }
-
         const [
           pendingRes,
           activeRes,
           endingSoonRes,
           failedPaymentsRes
         ] = await Promise.all([
-          supabase.from("submissions").select("*", { count: 'exact', head: true }).eq('status', 'pending'),
-          supabase.from("placements").select("*", { count: 'exact', head: true }).gt('end_date', new Date().toISOString()),
-          supabase.from("placements").select("*", { count: 'exact', head: true })
+          (supabase.from("submissions").select("*", { count: 'exact', head: true }).eq('status', 'pending') as unknown as AbortableCountQuery).abortSignal(signal),
+          (supabase.from("placements").select("*", { count: 'exact', head: true }).gt('end_date', new Date().toISOString()) as unknown as AbortableCountQuery).abortSignal(signal),
+          (supabase.from("placements").select("*", { count: 'exact', head: true })
             .gt('end_date', new Date().toISOString())
-            .lt('end_date', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()),
-          supabase.from("payments").select("*", { count: 'exact', head: true }).eq('status', 'failed')
+            .lt('end_date', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()) as unknown as AbortableCountQuery).abortSignal(signal),
+          (supabase.from("payments").select("*", { count: 'exact', head: true }).eq('status', 'failed') as unknown as AbortableCountQuery).abortSignal(signal)
         ]);
 
         if (pendingRes.error) console.warn("Pending submissions fetch returned error:", pendingRes.error);
@@ -70,23 +76,35 @@ export interface ActivityLog {
 export function useAdminActivities(enabled: boolean) {
   return useQuery({
     queryKey: ["admin-dashboard-activities"],
-    queryFn: async (): Promise<ActivityLog[]> => {
+    queryFn: async ({ signal }): Promise<ActivityLog[]> => {
       try {
-        const { data, error } = await supabase
+        type ActivityResponse = {
+          data: ActivityLog[] | null;
+          error: PostgrestError | null;
+        };
+
+        type AbortableActivityQuery = {
+          abortSignal: (signal: AbortSignal) => Promise<ActivityResponse>;
+        };
+
+        const { data, error } = await (supabase
           .from("admin_actions")
           .select(`
             id,
             action_type,
             target_type,
             created_at,
-            profiles:admin_user_id (full_name)
+            profiles (full_name)
           `)
-          .order('created_at', { ascending: false })
-          .limit(5);
+          .order("created_at", { ascending: false })
+          .limit(5) as unknown as AbortableActivityQuery).abortSignal(signal);
 
         if (error) throw error;
         return data || [];
       } catch (err) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          throw err;
+        }
         console.error("Error fetching admin activities:", err);
         throw err;
       }

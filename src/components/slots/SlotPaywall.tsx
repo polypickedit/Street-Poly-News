@@ -85,6 +85,7 @@ const PaywallMessage = ({
   isRedirecting: boolean;
 }) => {
   if (reason === 'unauthenticated') {
+    const currentPath = window.location.pathname + window.location.search;
     return (
       <div className="max-w-md mx-auto space-y-4">
         <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
@@ -97,9 +98,9 @@ const PaywallMessage = ({
           This slot is reserved for members. Please sign in to access {slot?.name || 'this content'}.
         </p>
         <Button asChild className="rounded-full px-8">
-          <Link to="/login">
+          <Link to={`/login?redirectTo=${encodeURIComponent(currentPath)}`}>
             <LogIn className="w-4 h-4 mr-2" />
-            Sign In to Access
+            Sign In to Unlock
           </Link>
         </Button>
       </div>

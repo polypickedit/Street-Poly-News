@@ -21,6 +21,7 @@ interface MediaOutlet {
   preferred_word_count: number | null;
   requires_review: boolean;
   website_url: string | null;
+  logo_url: string | null;
   active: boolean;
   price_cents: number;
 }
@@ -32,6 +33,8 @@ export const OutletManager = () => {
     isOpen: boolean;
     outlet: MediaOutlet | null;
   }>({ isOpen: false, outlet: null });
+  
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   
   // Selection and Conduct Drawer State (Option B)
   const [selectedOutletId, setSelectedOutletId] = useState<string | null>(null);
@@ -85,7 +88,7 @@ export const OutletManager = () => {
 
   const toggleActive = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await (supabase as unknown as { from: (t: string) => { update: (v: unknown) => { eq: (k: string, v: string) => Promise<{error: unknown}> } } })
+      const { error } = await supabase
         .from("media_outlets")
         .update({ active: !currentStatus })
         .eq("id", id);
@@ -125,10 +128,14 @@ export const OutletManager = () => {
           <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Syndication Network</h3>
           <p className="text-xs text-muted-foreground/80 mt-1">Manage distribution targets and outlet requirements.</p>
         </div>
-        <Button className="bg-dem hover:bg-dem/90 text-white gap-2 font-black uppercase">
+        <button 
+          onClick={() => setIsCreateOpen(true)}
+          data-conduction-toggle
+          className="inline-flex items-center justify-center rounded-md bg-dem hover:bg-dem/90 text-white px-4 py-2 gap-2 font-black uppercase transition-colors"
+        >
           <Plus className="w-4 h-4" />
           Add Outlet
-        </Button>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -233,6 +240,13 @@ export const OutletManager = () => {
           </Card>
         ))}
       </div>
+
+      <OutletEditDialog
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        outlet={null}
+        onSuccess={fetchOutlets}
+      />
 
       <OutletEditDialog
         isOpen={editDialog.isOpen}

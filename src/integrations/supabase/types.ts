@@ -148,6 +148,43 @@ export interface Database {
         }
         Relationships: []
       }
+      slot_entitlements: {
+        Row: {
+          id: string
+          user_id: string
+          slot_id: string
+          source: string
+          granted_at: string
+          expires_at: string | null
+          is_active: boolean
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          slot_id: string
+          source: string
+          granted_at?: string
+          expires_at?: string | null
+          is_active?: boolean
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          slot_id?: string
+          source?: string
+          granted_at?: string
+          expires_at?: string | null
+          is_active?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slot_entitlements_slot_id_fkey"
+            columns: ["slot_id"]
+            referencedRelation: "slots"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       post_categories: {
         Row: {
           post_id: number
@@ -382,6 +419,11 @@ export interface Database {
           follower_count_snapshot: number | null
           active: boolean | null
           created_at: string
+          energy_level: number | null
+          genres: string[] | null
+          moods: string[] | null
+          spotify_playlist_id: string | null
+          submission_notes: string | null
         }
         Insert: {
           id?: string
@@ -395,6 +437,11 @@ export interface Database {
           follower_count_snapshot?: number | null
           active?: boolean | null
           created_at?: string
+          energy_level?: number | null
+          genres?: string[] | null
+          moods?: string[] | null
+          spotify_playlist_id?: string | null
+          submission_notes?: string | null
         }
         Update: {
           id?: string
@@ -408,6 +455,11 @@ export interface Database {
           follower_count_snapshot?: number | null
           active?: boolean | null
           created_at?: string
+          energy_level?: number | null
+          genres?: string[] | null
+          moods?: string[] | null
+          spotify_playlist_id?: string | null
+          submission_notes?: string | null
         }
         Relationships: []
       }

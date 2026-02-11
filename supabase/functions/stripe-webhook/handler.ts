@@ -50,25 +50,7 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
       return;
     }
 
-    // 1. Grant Capabilities based on Product/Price ID
-    if (priceId) {
-      const product = getProductByPriceId(priceId);
-      if (product) {
-        console.log(`🔓 Granting capabilities for user ${userId}: ${product.grants.join(", ")}`);
-        const capabilityRows = product.grants.map(cap => ({
-          user_id: userId,
-          capability: cap,
-          granted_at: new Date().toISOString()
-        }));
-
-        const { error: capError } = await supabase.from("user_capabilities").insert(capabilityRows);
-        if (capError) {
-          console.error("❌ Error granting capabilities:", capError);
-        }
-      }
-    }
-
-    // 2. Legacy/Specific logic for submissions and slots
+    // 1. Legacy/Specific logic for submissions and slots
     const piId = typeof paymentIntent === "string" ? paymentIntent : Array.isArray(paymentIntent) ? String(paymentIntent[0]) : (paymentIntent as Record<string, unknown>)?.["id"];
     const amount = typeof session?.["amount_total"] === "number"
       ? session.amount_total
@@ -147,4 +129,3 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
     }
   }
 }
-

@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { Youtube } from "lucide-react";
 
 const Contact = () => {
   const { toast } = useToast();
@@ -77,6 +78,19 @@ const Contact = () => {
                 <h3 className="font-display text-xl text-white mb-2">Email Us</h3>
                 <a href="mailto:contact@streetpolynews.com" className="text-dem hover:underline transition-colors break-all">
                   contact@streetpolynews.com
+                </a>
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-lg p-6">
+                <h3 className="font-display text-xl text-white mb-2">Follow Us</h3>
+                <a 
+                  href="https://www.youtube.com/@STREETPOLY" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-rep hover:text-rep/80 transition-colors font-black uppercase tracking-widest text-sm"
+                >
+                  <Youtube className="w-5 h-5" />
+                  YouTube Channel
                 </a>
               </div>
             </div>

@@ -36,6 +36,7 @@ import Category from "./pages/Category";
 import Categories from "./pages/Categories";
 import Person from "./pages/Person";
 import NotFound from "./pages/NotFound";
+import Community from "./pages/Community";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const AnimatedRoutes = () => {
         <Route path="/post/:id" element={<PostDetail />} />
         <Route path="/merch" element={<Merch />} />
         <Route path="/gallery" element={<Gallery />} />
+        <Route path="/community" element={<Community />} />
         <Route path="/booking" element={<Booking />} />
         <Route
           path="/dashboard"

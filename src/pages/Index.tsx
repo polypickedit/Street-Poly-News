@@ -107,7 +107,7 @@ const Index = () => {
               </h2>
             </div>
             <a
-              href="https://www.youtube.com/@STREETPOLYNEWS"
+              href="https://www.youtube.com/@STREETPOLY"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs font-black uppercase tracking-widest text-dem hover:text-dem/80 transition-colors"

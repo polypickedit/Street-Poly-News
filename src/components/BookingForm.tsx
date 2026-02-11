@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router-dom";
 import { 
   Upload, Music, Mic2, Calendar as CalendarIcon, User, Mail, 
-  MessageSquare, CreditCard, Share2 
+  MessageSquare, CreditCard, Share2, Loader2, CheckCircle2 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -85,6 +85,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   const checkPaymentStatus = useCallback(async (signal?: AbortSignal) => {
     setPaymentStatus('confirming');
     
+    const targetSubmissionId = searchParams.get('submissionId');
     let attempts = 0;
     const maxAttempts = 15;
     
@@ -94,20 +95,25 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
         const { data: { session: authSession } } = await supabase.auth.getSession();
         if (!authSession) return;
 
-        const query = supabase
+        let query = supabase
           .from("submissions")
           .select("id, payment_status")
           .eq("user_id", authSession.user.id)
-          .eq("payment_status", "paid") as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: { id: string, payment_status: string }[] | null, error: unknown }> };
+          .eq("payment_status", "paid");
+        
+        if (targetSubmissionId) {
+          query = query.eq("id", targetSubmissionId);
+        }
 
-        const { data: submissions, error } = await query.abortSignal(signal);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: submissions, error } = await (query as any).abortSignal(signal);
 
         if (error) throw error;
 
         if (submissions && submissions.length > 0) {
           setPaymentStatus('paid');
           toast.success("Payment confirmed!");
-          onSuccess?.();
+          // Removed immediate onSuccess call to show success state
           return;
         }
 
@@ -125,7 +131,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
     };
 
     poll();
-  }, [onSuccess]);
+  }, [searchParams]);
 
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
@@ -140,9 +146,11 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
     const controller = new AbortController();
 
     const fetchSlots = async () => {
-      const query = supabase.from("slots").select("*").eq("is_active", true) as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: Slot[] | null; error: unknown }> };
+      // @ts-expect-error - abortSignal is added by our Supabase client wrapper
+      const query = supabase.from("slots").select("*").eq("is_active", true).eq("type", type);
+      // @ts-expect-error
       const { data } = await query.abortSignal(controller.signal);
-      if (data) setSlots(data);
+      if (data) setSlots(data as Slot[]);
     };
 
     const fetchOutlets = async () => {
@@ -180,7 +188,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   }, [form, slots]);
 
   const watchOutlets = form.watch("selectedOutlets");
-  const outletsTotal = watchOutlets.reduce((acc, id) => {
+  const outletsTotal = (watchOutlets || []).reduce((acc, id) => {
     const outlet = outlets.find(o => o.id === id);
     return acc + (outlet?.price_cents || 0);
   }, 0) / 100;
@@ -188,6 +196,32 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   const totalPrice = (selectedSlot?.price || 0) + outletsTotal;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (paymentStatus === 'confirming') {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-dem" />
+        <p className="text-sm font-medium text-muted-foreground">Confirming payment...</p>
+      </div>
+    );
+  }
+
+  if (paymentStatus === 'paid') {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 space-y-4 text-center">
+        <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mb-2">
+          <CheckCircle2 className="w-8 h-8 text-green-500" />
+        </div>
+        <h3 className="text-xl font-display text-foreground">Payment Confirmed!</h3>
+        <p className="text-sm text-muted-foreground max-w-[280px]">
+          Your submission is now active. You can track its progress in your dashboard.
+        </p>
+        <Button onClick={() => onSuccess?.()} className="rounded-full px-8 mt-4 bg-dem hover:bg-dem/90">
+          Return to Booking
+        </Button>
+      </div>
+    );
+  }
 
   const onSubmit = async (data: BookingFormData) => {
     setIsSubmitting(true);

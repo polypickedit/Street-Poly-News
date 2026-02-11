@@ -14,10 +14,10 @@ export const useSlotAccess = (slotSlug: string) => {
     const checkAccess = async () => {
       // Mock data for development when database records are missing
       const MOCK_SLOTS: Record<string, Slot> = {
-        'new-music-mondays': {
+        'new-music-monday': {
           id: 'mock-music-id',
           name: 'New Music Mondays',
-          slug: 'new-music-mondays',
+          slug: 'new-music-monday',
           description: 'Weekly track reviews',
           slot_type: 'service',
           visibility: 'public',
@@ -35,8 +35,8 @@ export const useSlotAccess = (slotSlug: string) => {
           description: '1-on-1 interviews',
           slot_type: 'service',
           visibility: 'public',
-          monetization_model: 'free',
-          price: 0,
+          monetization_model: 'one_time',
+          price: 150,
           billing_interval: null,
           is_active: true,
           created_at: new Date().toISOString(),
@@ -74,13 +74,13 @@ export const useSlotAccess = (slotSlug: string) => {
           return;
         }
 
-        // 2. Check visibility
-        if (typedSlot.visibility === 'public') {
+        // 2. Check if free
+        if (typedSlot.monetization_model === 'free') {
           setAccess({ hasAccess: true, slot: typedSlot });
           return;
         }
 
-        // 3. Check session
+        // 3. Check session for paid/restricted content
         if (!session) {
           setAccess({ 
             hasAccess: false, 
@@ -90,20 +90,15 @@ export const useSlotAccess = (slotSlug: string) => {
           return;
         }
 
-        // 3.5 Check if admin - Admins bypass paywalls
+        // 4. Check if admin - Admins bypass paywalls
         if (isAdmin) {
           setAccess({ hasAccess: true, slot: typedSlot });
           return;
         }
 
-        if (typedSlot.visibility === 'account') {
-          setAccess({ hasAccess: true, slot: typedSlot });
-          return;
-        }
-
-        // 4. Check entitlements for 'paid' visibility
+        // 5. Check entitlements for paid slots
         const entQuery = ((supabase as SupabaseClient)
-          .from('entitlements')
+          .from('slot_entitlements')
           .select('*')
           .eq('user_id', session.user.id)
           .eq('slot_id', typedSlot.id)

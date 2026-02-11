@@ -14,7 +14,7 @@ import logo from "/logo.svg";
 import mobileSeal from "../assets/mobile-seal.png";
 import { cn } from "@/lib/utils";
 
-import { useCapabilities } from "../hooks/useCapabilities";
+import { useEntitlements } from "../hooks/useEntitlements";
 
 const navLinks = [
   { name: "Home", path: "/" },
@@ -36,7 +36,7 @@ export function Navbar() {
   const isVisible = useHeaderVisible();
   const location = useLocation();
   const { totalItems, setIsOpen: setCartOpen } = useCart();
-  const { capabilities } = useCapabilities();
+  const { entitlements } = useEntitlements();
   const { isAdminMode, toggleAdminMode } = useAdmin();
 
   const handleSignOut = async () => {
@@ -143,11 +143,11 @@ export function Navbar() {
                             <div className="flex gap-1.5">
                               <span className={cn(
                                 "px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider",
-                                capabilities.length > 0 ? "bg-dem/20 text-dem border border-dem/30" : "bg-white/5 text-dem/40 border border-white/10"
+                                entitlements.length > 0 ? "bg-dem/20 text-dem border border-dem/30" : "bg-white/5 text-dem/40 border border-white/10"
                               )}>
-                                {capabilities.length > 0 ? "PARTNER" : "VIEWER"}
+                                {entitlements.length > 0 ? "PARTNER" : "VIEWER"}
                               </span>
-                              {capabilities.length > 0 && (
+                              {entitlements.length > 0 && (
                                 <span className="bg-white/5 text-dem/40 border border-white/10 px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider">
                                   VIEWER
                                 </span>
@@ -339,11 +339,11 @@ export function Navbar() {
                               </>
                             )}
 
-                            {capabilities.length > 0 && (
+                            {entitlements.length > 0 && (
                               <div className="flex items-center gap-2 px-3 py-1 bg-dem/10 border border-dem/20 rounded-full mt-2">
                                 <Zap className="w-3 h-3 text-dem" />
                                 <span className="text-[10px] font-bold text-dem uppercase tracking-wider">
-                                  {capabilities.length} Active
+                                  {entitlements.length} Active
                                 </span>
                               </div>
                             )}

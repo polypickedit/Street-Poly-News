@@ -20,7 +20,7 @@ import {
   Plus
 } from "lucide-react";
 import { useAccount } from "../hooks/useAccount";
-import { useCapabilities } from "../hooks/useCapabilities";
+import { useEntitlements } from "../hooks/useEntitlements";
 import { useAuth } from "../hooks/useAuth";
 import { useAdminStats, useAdminActivities } from "../hooks/useAdminStats";
 import { createCreditPackCheckoutSession } from "../lib/stripe";
@@ -66,7 +66,7 @@ export default function Dashboard() {
   
   // Decouple these from the first paint
   const accountQuery = useAccount();
-  const capabilityQuery = useCapabilities();
+  const capabilityQuery = useEntitlements();
   
   const activeAccount = accountQuery.activeAccount;
   const isLoadingAccount = accountQuery.isLoading;

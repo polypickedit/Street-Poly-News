@@ -1,5 +1,6 @@
 import { PageLayoutWithAds } from "@/components/PageLayoutWithAds";
 import { PageTransition } from "@/components/PageTransition";
+import { Youtube } from "lucide-react";
 
 const About = () => {
   return (
@@ -42,13 +43,26 @@ const About = () => {
             </ul>
             
             <div className="border-t border-white/10 pt-8">
-              <h2 className="font-display text-2xl md:text-3xl text-white mb-4">Contact</h2>
-              <p className="font-body text-white/40 text-sm md:text-base">
-                Have a story tip or want to get in touch? Reach out to us at{" "}
-                <a href="mailto:contact@streetpolynews.com" className="text-dem hover:underline transition-colors">
-                  contact@streetpolynews.com
-                </a>
-              </p>
+              <h2 className="font-display text-2xl md:text-3xl text-white mb-4">Connect With Us</h2>
+              <div className="space-y-4">
+                <p className="font-body text-white/40 text-sm md:text-base">
+                  Have a story tip or want to get in touch? Reach out to us at{" "}
+                  <a href="mailto:contact@streetpolynews.com" className="text-dem hover:underline transition-colors">
+                    contact@streetpolynews.com
+                  </a>
+                </p>
+                <div className="flex items-center gap-4">
+                  <a 
+                    href="https://www.youtube.com/@STREETPOLY" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-rep hover:text-rep/80 transition-colors font-black uppercase tracking-widest text-sm"
+                  >
+                    <Youtube className="w-5 h-5" />
+                    YouTube Channel
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>

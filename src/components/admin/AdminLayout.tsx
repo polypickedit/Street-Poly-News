@@ -30,7 +30,6 @@ const navItems = [
   { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
   { name: "Queue", path: "/admin/queue", icon: Inbox },
   { name: "Submissions", path: "/admin/submissions", icon: ListMusic },
-  { name: "Playlists", path: "/admin/playlists", icon: Library },
   { name: "Outlets", path: "/admin/outlets", icon: Share2 },
   { name: "Placements", path: "/admin/placements", icon: History },
   { name: "Settings", path: "/admin/settings", icon: Settings },

@@ -2,7 +2,10 @@ import { describe, expect, it, beforeAll } from "vitest";
 import { signInUser, serviceRoleClient } from "../helpers/supabase";
 import { seedTestFixture } from "../helpers/seed";
 
-describe("Supabase RLS and health checks", () => {
+const shouldRunRlsTests = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+const conditionalDescribe = shouldRunRlsTests ? describe : describe.skip;
+
+conditionalDescribe("Supabase RLS and health checks", () => {
   let fixture: Awaited<ReturnType<typeof seedTestFixture>>;
   let normalClient: Awaited<ReturnType<typeof signInUser>>;
   let adminClient: Awaited<ReturnType<typeof signInUser>>;

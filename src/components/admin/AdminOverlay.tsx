@@ -83,6 +83,12 @@ export function AdminOverlay() {
 
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+      
+      // Allow clicks on data-conduction-toggle elements (indicators, close buttons)
+      if (target.closest("[data-conduction-toggle]")) {
+        return;
+      }
+
       const slotElement = target.closest("[data-slot]");
       if (slotElement) {
         e.preventDefault();
