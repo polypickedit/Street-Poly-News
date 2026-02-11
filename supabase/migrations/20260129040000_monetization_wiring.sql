@@ -8,7 +8,7 @@ ALTER TABLE public.placements ADD COLUMN IF NOT EXISTS payment_id UUID REFERENCE
 -- 2. Seed Initial Monetized Slots
 INSERT INTO public.slots (name, slug, description, slot_type, visibility, monetization_model, price, is_active)
 VALUES 
-('New Music Monday Review', 'new-music-monday', 'Professional review and placement on New Music Monday playlist', 'service', 'public', 'one_time', 25.00, true),
+('New Music Monday Review', 'new-music-monday', 'Professional review and placement on New Music Monday playlist', 'service', 'public', 'one_time', 300.00, true),
 ('Featured Interview', 'featured-interview', 'Full length article and social media promotion', 'service', 'public', 'one_time', 150.00, true),
 ('Sidebar Skyscraper Ad', 'sidebar-ad', '30-day run for 240x600px sidebar advertisement', 'content', 'public', 'one_time', 75.00, true),
 ('Featured Showcase', 'featured-showcase', 'Front page featured section for 7 days', 'content', 'public', 'one_time', 50.00, true)

@@ -65,8 +65,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
         isCollapsed ? "w-20" : "w-64"
       )}>
         <div className={cn("p-6 flex items-center justify-between", isCollapsed && "px-4")}>
-          {!isCollapsed && (
-            <div>
+            {!isCollapsed && (
+              <div>
                 <h1 className="text-xl font-bold tracking-tight text-dem">Streetpoly</h1>
                 <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest font-semibold">Media Portal</p>
               </div>
@@ -79,21 +79,19 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             </button>
           </div>
 
-          <div className="p-4 border-t border-border space-y-2">
-          <Link
-            to="/"
-            className={cn(
-              "flex items-center gap-3 px-3 py-2 text-sm font-medium bg-dem text-white hover:bg-dem/90 rounded-lg transition-all shadow-lg shadow-dem/20",
-              isCollapsed && "justify-center px-0"
-            )}
-            title={isCollapsed ? "Back to Home" : undefined}
-          >
-            <Home className="w-5 h-5 shrink-0" />
-            {!isCollapsed && <span className="font-bold">Back to Home</span>}
-          </Link>
-          </div>
-
           <nav className={cn("flex-1 px-4 space-y-1", isCollapsed && "px-2")}>
+            <Link
+              to="/"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 text-sm font-bold bg-dem text-white hover:bg-dem/90 rounded-lg transition-all shadow-lg shadow-dem/20 mb-4",
+                isCollapsed && "justify-center px-0"
+              )}
+              title={isCollapsed ? "Back to Site" : undefined}
+            >
+              <Home className="w-5 h-5 shrink-0" />
+              {!isCollapsed && <span>Back to Site</span>}
+            </Link>
+
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               const Icon = item.icon;

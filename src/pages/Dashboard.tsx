@@ -475,6 +475,8 @@ export default function Dashboard() {
                                         target="_blank" 
                                         rel="noopener noreferrer"
                                         className="text-dem hover:text-dem/80"
+                                        aria-label={`View publication on ${dist.media_outlets?.name}`}
+                                        title={`View publication on ${dist.media_outlets?.name}`}
                                       >
                                         <ExternalLink className="w-4 h-4" />
                                       </a>

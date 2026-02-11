@@ -13,7 +13,8 @@ export const PRODUCTS = {
   },
   PLAYLIST_PLACEMENT: {
     priceId: "price_playlist_place",
-    grants: ["playlist.place"]
+    grants: ["playlist.place"],
+    price_cents: 30000
   },
   POST_SUBMIT: {
     priceId: "price_post_submit",

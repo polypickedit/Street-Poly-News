@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories } from "@/hooks/useCategories";
 import { usePeople } from "@/hooks/usePeople";
-import { Loader2, Plus, Tags, Users } from "lucide-react";
+import { Loader2, Plus, Tags, Users, Home } from "lucide-react";
 import { useHeaderVisible } from "@/hooks/useHeaderVisible";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ContactSubmissions } from "@/components/ContactSubmissions";
@@ -265,13 +265,23 @@ const Admin = () => {
               </h1>
               <p className="text-muted-foreground font-medium mt-1">Manage your content and platform settings</p>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={handleSignOut}
-              className="border-rep/50 text-rep hover:bg-rep/10 hover:text-rep font-black uppercase tracking-widest transition-all self-start md:self-center"
-            >
-              Sign Out
-            </Button>
+            <div className="flex items-center gap-3 self-start md:self-center">
+              <Button 
+                variant="outline" 
+                onClick={() => navigate("/")}
+                className="border-dem/50 text-dem hover:bg-dem/10 hover:text-dem font-black uppercase tracking-widest transition-all"
+              >
+                <Home className="w-4 h-4 mr-2" />
+                Back to Site
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleSignOut}
+                className="border-rep/50 text-rep hover:bg-rep/10 hover:text-rep font-black uppercase tracking-widest transition-all"
+              >
+                Sign Out
+              </Button>
+            </div>
           </div>
 
           <Tabs defaultValue="posts" className="space-y-6">
