@@ -59,6 +59,7 @@ interface Slot {
   name: string;
   slug: string;
   price: number;
+  type: "music" | "interview";
 }
 
 export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
@@ -66,6 +67,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'confirming' | 'paid' | 'failed'>('idle');
   
   const [slots, setSlots] = useState<Slot[]>([]);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(true);
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const { user, isAdmin, isEditor } = useAuth();
@@ -75,12 +77,10 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   const canUseCapability = isAdmin || isEditor;
 
   useEffect(() => {
-    if (canUseCapability) {
-      setPaymentMethod('capability');
-    } else {
-      setPaymentMethod('stripe');
-    }
-  }, [canUseCapability]);
+    // Default to stripe even for admins so they can see prices/test the flow.
+    // They can still manually switch to 'capability' via the UI buttons.
+    setPaymentMethod('stripe');
+  }, []);
 
   const verifyPayment = useCallback(async (submissionId: string, sessionId?: string) => {
     setPaymentStatus('confirming');
@@ -112,10 +112,56 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
     const controller = new AbortController();
 
     const fetchSlots = async () => {
-      // @ts-expect-error - abortSignal is added by our Supabase client wrapper to handle component unmounting
-      const query = supabase.from("slots").select("*").eq("is_active", true).eq("type", type);
-      const { data } = await (query as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: Slot[] | null }> }).abortSignal(controller.signal);
-      if (data) setSlots(data);
+      setIsLoadingSlots(true);
+      try {
+        // Try to fetch using the new 'type' column first (World-class filtering)
+        let { data, error } = await (supabase.from("slots") as any) // eslint-disable-line @typescript-eslint/no-explicit-any
+          .select("id, name, slug, price, type")
+          .eq("is_active", true)
+          .eq("type", type);
+        
+        // Fallback to legacy inference if the 'type' column doesn't exist yet
+        if (error && (error.message?.includes('type') || error.code === 'PGRST204')) {
+          const { data: legacyData, error: legacyError } = await supabase
+            .from("slots")
+            .select("id, name, slug, price, display_category")
+            .eq("is_active", true);
+          
+          if (legacyError) throw legacyError;
+          
+          data = (legacyData || []).filter(s => {
+            const inferred = (s.slug?.includes('interview') || s.display_category === 'interview') ? 'interview' : 'music';
+            return inferred === type;
+          });
+          error = null;
+        }
+
+        if (error) throw error;
+
+        if (data) {
+          const fetchedSlots = (data as any[]).map(s => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+            id: s.id,
+            name: s.name,
+            slug: s.slug,
+            price: Number(s.price),
+            type: (s.type || ((s.slug?.includes('interview') || s.display_category === 'interview') ? 'interview' : 'music')) as "music" | "interview"
+          })) as Slot[];
+          
+          setSlots(fetchedSlots);
+          
+          // Set initial selected slot dynamically from DB results
+          if (fetchedSlots.length > 0) {
+            const defaultSlot = fetchedSlots[0];
+            form.setValue("slotType", defaultSlot.slug);
+            setSelectedSlot(defaultSlot);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching slots:", err);
+        toast.error("Failed to load available service options.");
+      } finally {
+        setIsLoadingSlots(false);
+      }
     };
 
     const fetchOutlets = async () => {
@@ -134,7 +180,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
     name: "",
     email: "",
     artistName: "",
-    slotType: type === "music" ? "new-music-monday" : "interview",
+    slotType: "", // Will be set dynamically by fetchSlots
     preferredDate: "",
     description: "",
     links: "",
@@ -233,6 +279,17 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
       return;
     }
 
+    if (isSubmitting) return; // Prevent double-click
+    if (isLoadingSlots) {
+      toast.error("Please wait for service options to load.");
+      return;
+    }
+
+    if (!selectedSlot || !selectedSlot.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      toast.error("Please select a valid service option.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const payload: SubmissionPayload = {
@@ -280,6 +337,46 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+        <FormField
+          control={form.control}
+          name="slotType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <CreditCard className="w-4 h-4" />
+                Select Your Service Option
+              </FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <div className="relative">
+                    <SelectTrigger className="h-12 bg-muted/30 border-muted-foreground/20 rounded-xl hover:border-dem/50 transition-all">
+                      <SelectValue placeholder="Select a service" />
+                    </SelectTrigger>
+                  </div>
+                </FormControl>
+                <SelectContent className="rounded-xl border-border shadow-xl">
+                  {slots.map((slot) => (
+                    <SelectItem key={slot.id} value={slot.slug} className="py-3 cursor-pointer">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-sm">{slot.name}</span>
+                        <span className="text-[10px] text-dem font-black uppercase tracking-widest mt-0.5">
+                          ${slot.price.toFixed(2)} — Professional Tier
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                  {slots.length === 0 && (
+                    <SelectItem value="loading" disabled>
+                      Loading services...
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <div className="bg-gradient-to-br from-dem/20 to-dem/5 border border-dem/20 rounded-2xl p-6 mb-8 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2 text-dem">
@@ -343,6 +440,9 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
             <h4 className="text-sm font-semibold uppercase tracking-wider">Syndication Network & Promotional Opportunities (Optional)</h4>
           </div>
           <p className="text-xs text-muted-foreground font-medium mb-4">Select outlets to distribute your content or other promotional opportunities. One click, maximum reach.</p>
+          <p className="text-[10px] text-muted-foreground italic mb-4 bg-muted/30 p-2 rounded-md border border-border/50">
+            * All bookings are handled on a first-come, first-served basis. Secure your slot early to ensure preferred placement.
+          </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {outlets.map((outlet) => (
@@ -389,14 +489,18 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           <FormField
             control={form.control}
-            name="name"
+            name="artistName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel>{type === "music" ? "Artist/Band Name" : "Organization/Public Figure Name"}</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="John Doe" className="pl-9" {...field} />
+                    {type === "music" ? (
+                      <Music className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Mic2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    )}
+                    <Input placeholder="Enter name" className="pl-9 h-11" {...field} />
                   </div>
                 </FormControl>
                 <FormMessage />
@@ -405,14 +509,14 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
           />
           <FormField
             control={form.control}
-            name="email"
+            name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email Address</FormLabel>
+                <FormLabel>Full Name</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="john@example.com" type="email" className="pl-9" {...field} />
+                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="John Doe" className="pl-9 h-11" {...field} />
                   </div>
                 </FormControl>
                 <FormMessage />
@@ -424,18 +528,14 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           <FormField
             control={form.control}
-            name="artistName"
+            name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{type === "music" ? "Artist/Band Name" : "Organization/Public Figure Name"}</FormLabel>
+                <FormLabel>Email Address</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    {type === "music" ? (
-                      <Music className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Mic2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    )}
-                    <Input placeholder="Enter name" className="pl-9" {...field} />
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="john@example.com" type="email" className="pl-9 h-11" {...field} />
                   </div>
                 </FormControl>
                 <FormMessage />
@@ -444,14 +544,14 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
           />
           <FormField
             control={form.control}
-            name="preferredDate"
+            name="links"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Preferred Date</FormLabel>
+                <FormLabel>{type === "music" ? "Spotify/Social Link" : "Website/Social Link"}</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <CalendarIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input type="date" className="pl-9" {...field} />
+                    <Share2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="https://..." className="pl-9 h-11" {...field} />
                   </div>
                 </FormControl>
                 <FormMessage />
@@ -460,35 +560,24 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="slotType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Slot Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+          <FormField
+            control={form.control}
+            name="preferredDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Preferred Date</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a slot type" />
-                  </SelectTrigger>
+                  <div className="relative">
+                    <CalendarIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input type="date" className="pl-9 h-11" {...field} />
+                  </div>
                 </FormControl>
-                <SelectContent>
-                  {slots.map((slot) => (
-                    <SelectItem key={slot.id} value={slot.slug}>
-                      {slot.name} (${slot.price.toFixed(2)})
-                    </SelectItem>
-                  ))}
-                  {slots.length === 0 && (
-                    <SelectItem value="loading" disabled>
-                      Loading services...
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}
@@ -555,10 +644,10 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
 
         <Button
           type="submit"
-          disabled={isSubmitting}
-          className={`w-full rounded-full h-12 text-white font-medium transition ${type === "music" ? "bg-dem hover:bg-dem/90" : "bg-rep hover:bg-rep/90"} ${isSubmitting ? "opacity-80 cursor-wait" : ""}`}
+          disabled={isSubmitting || isLoadingSlots}
+          className={`w-full rounded-full h-12 text-white font-medium transition ${type === "music" ? "bg-dem hover:bg-dem/90" : "bg-rep hover:bg-rep/90"} ${isSubmitting || isLoadingSlots ? "opacity-80 cursor-wait" : ""}`}
         >
-          {isSubmitting ? "Submitting..." : "Submit Booking Request"}
+          {isSubmitting ? "Submitting..." : isLoadingSlots ? "Loading options..." : "Submit Booking Request"}
         </Button>
       </form>
     </Form>
