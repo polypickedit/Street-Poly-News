@@ -22,6 +22,73 @@ export interface SubmissionPayload {
 
 export const submissionService = {
   /**
+   * High-level method to handle the entire submission process including media uploads.
+   * Keeps the UI code extremely simple.
+   */
+  async submit(
+    payload: SubmissionPayload, 
+    userId: string, 
+    options: { 
+      paymentMethod: 'stripe' | 'capability';
+      capability?: string;
+      files?: File[];
+      onUploadProgress?: (progress: number) => void;
+    }
+  ) {
+    let submissionId: string;
+
+    // 1. Create the submission (Atomic RPC)
+    if (options.paymentMethod === 'capability') {
+      if (!options.capability) throw new Error("Capability name required");
+      submissionId = await this.createWithCapability(payload, userId, options.capability);
+    } else {
+      submissionId = await this.createWithStripe(payload, userId);
+    }
+
+    // 2. Handle Media Uploads if files are provided
+    if (options.files && options.files.length > 0) {
+      const mediaUrls: string[] = [];
+      for (const file of options.files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${submissionId}/${crypto.randomUUID()}.${fileExt}`;
+        const filePath = `submissions/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error("Upload error for file:", file.name, uploadError);
+          continue;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('media')
+          .getPublicUrl(filePath);
+
+        mediaUrls.push(publicUrl);
+      }
+
+      // 3. Update submission with media URLs
+      if (mediaUrls.length > 0) {
+        const { error: updateError } = await supabase
+          .from("submissions")
+          .update({ 
+            content_bundle: { 
+              ...payload, 
+              media_urls: mediaUrls 
+            } 
+          })
+          .eq("id", submissionId);
+
+        if (updateError) console.error("Error updating media URLs:", updateError);
+      }
+    }
+
+    return submissionId;
+  },
+
+  /**
    * Creates a submission intended for Stripe payment.
    * Uses the atomic create_submission_v2 RPC to ensure consistency.
    */

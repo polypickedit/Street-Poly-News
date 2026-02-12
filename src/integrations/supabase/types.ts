@@ -1040,6 +1040,15 @@ export interface Database {
         }
         Returns: boolean
       }
+      update_submission_status: {
+        Args: {
+          p_submission_id: string
+          p_new_status: string
+          p_user_id: string
+          p_reason?: string
+        }
+        Returns: undefined
+      }
       create_submission_v2: {
         Args: {
           p_user_id: string

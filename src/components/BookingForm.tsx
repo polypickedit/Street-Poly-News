@@ -182,17 +182,22 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
 
   if (paymentStatus === 'paid') {
     return (
-      <div className="flex flex-col items-center justify-center p-12 space-y-4 text-center">
-        <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mb-2">
-          <CheckCircle2 className="w-8 h-8 text-green-500" />
+      <div className="flex flex-col items-center justify-center p-12 space-y-4 text-center animate-in fade-in zoom-in duration-500">
+        <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mb-4 border border-green-500/20 shadow-lg shadow-green-500/10">
+          <CheckCircle2 className="w-10 h-10 text-green-500" />
         </div>
-        <h3 className="text-xl font-display text-foreground">Payment Confirmed!</h3>
-        <p className="text-sm text-muted-foreground max-w-[280px]">
-          Your submission is now active. You can track its progress in your dashboard.
+        <h3 className="text-2xl font-black text-foreground tracking-tight">Booking Confirmed!</h3>
+        <p className="text-sm text-muted-foreground max-w-[320px] leading-relaxed">
+          Your submission is being processed by our media engine. You'll receive a notification as soon as it goes live.
         </p>
-        <Button onClick={() => onSuccess?.()} className="rounded-full px-8 mt-4 bg-dem hover:bg-dem/90">
-          Return to Booking
-        </Button>
+        <div className="pt-6 w-full max-w-[240px]">
+          <Button 
+            onClick={() => onSuccess?.()} 
+            className="w-full rounded-full h-11 bg-dem hover:bg-dem/90 font-bold uppercase tracking-widest shadow-md"
+          >
+            Done
+          </Button>
+        </div>
       </div>
     );
   }
@@ -230,7 +235,6 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
 
     setIsSubmitting(true);
     try {
-      // 1. Prepare initial payload
       const payload: SubmissionPayload = {
         artist_name: data.artistName || data.name,
         artist_email: data.email,
@@ -249,54 +253,21 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
         media_urls: []
       };
 
+      if (files.length > 0) {
+        toast.info("Uploading media assets...");
+      }
+
+      const submissionId = await submissionService.submit(payload, user.id, {
+        paymentMethod,
+        capability: requiredCapability,
+        files
+      });
+
       if (paymentMethod === 'capability') {
-        // Atomic creation with capability
-        const submissionId = await submissionService.createWithCapability(payload, user.id, requiredCapability);
-        
-        // Handle media uploads if any
-        if (files.length > 0) {
-          toast.info("Uploading media assets...");
-          const mediaUrls = await uploadMedia(submissionId);
-          
-          // Update submission with media URLs
-          const { error: updateError } = await supabase
-            .from("submissions")
-            .update({ 
-              content_bundle: { 
-                ...payload, 
-                media_urls: mediaUrls 
-              } 
-            })
-            .eq("id", submissionId);
-
-          if (updateError) console.error("Error updating media URLs:", updateError);
-        }
-
         setPaymentStatus('paid');
         toast.success("Submission successful!");
-      } else {
-        // Stripe Path
-        // Note: For Stripe, we create the submission first, THEN redirect.
-        // We'll handle media uploads AFTER successful payment in the dashboard
-        // or we could upload them now and attach them to the pending submission.
-        // Let's upload them now so they are part of the record immediately.
-        
-        const submissionId = await submissionService.createWithStripe(payload, user.id);
-        
-        if (files.length > 0) {
-          toast.info("Uploading media assets...");
-          const mediaUrls = await uploadMedia(submissionId);
-          await supabase
-            .from("submissions")
-            .update({ 
-              content_bundle: { 
-                ...payload, 
-                media_urls: mediaUrls 
-              } 
-            })
-            .eq("id", submissionId);
-        }
       }
+      // Stripe flow handles redirect inside submissionService.createWithStripe
     } catch (error) {
       console.error("Submission error:", error);
       const message = error instanceof Error ? error.message : "Failed to create submission.";

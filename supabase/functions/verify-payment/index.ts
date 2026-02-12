@@ -38,6 +38,18 @@ serve(async (req: Request) => {
       const finalSubmissionId = submissionId || session.metadata?.submissionId;
 
       if (finalSubmissionId) {
+        // Use the RPC to ensure state machine and logging are triggered
+        const { error: rpcError } = await supabaseClient.rpc("update_submission_status", {
+          p_submission_id: finalSubmissionId,
+          p_new_status: "paid",
+          p_user_id: session.metadata?.userId || "00000000-0000-0000-0000-000000000000",
+          p_reason: "Manual redirect verification"
+        });
+
+        if (rpcError) {
+          console.error("Error updating status via RPC:", rpcError);
+        }
+
         const { error: updateError } = await supabaseClient
           .from("submissions")
           .update({
@@ -47,7 +59,7 @@ serve(async (req: Request) => {
           .eq("id", finalSubmissionId);
 
         if (updateError) {
-          console.error("Error updating submission status:", updateError);
+          console.error("Error updating payment fields:", updateError);
         }
       }
 

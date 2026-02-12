@@ -81,7 +81,7 @@ BEGIN
         (p_submission_data->>'release_date')::DATE,
         p_submission_data->>'genre',
         p_submission_data->>'mood',
-        'pending',
+        CASE WHEN p_payment_type = 'stripe' THEN 'unpaid' ELSE 'pending_review' END,
         CASE WHEN p_payment_type IN ('credits', 'capability') THEN 'paid' ELSE 'unpaid' END,
         p_payment_type,
         COALESCE(p_submission_data->>'submission_type', 'music'),
@@ -96,6 +96,37 @@ BEGIN
         SELECT v_submission_id, outlet_id, 'pending'
         FROM unnest(p_distribution_targets) AS outlet_id;
     END IF;
+
+    -- 5. Invisible Logging
+    INSERT INTO public.admin_actions (
+        user_id,
+        action_type,
+        entity_type,
+        entity_id,
+        metadata
+    ) VALUES (
+        p_user_id,
+        'submission.created',
+        'submission',
+        v_submission_id,
+        jsonb_build_object(
+            'payment_type', p_payment_type,
+            'slot_id', p_slot_id,
+            'artist_id', v_artist_id,
+            'initial_status', CASE WHEN p_payment_type = 'stripe' THEN 'unpaid' ELSE 'pending_review' END,
+            'distribution_count', array_length(p_distribution_targets, 1)
+        )
+    );
+
+    -- 6. Initial Status History
+    INSERT INTO public.submission_status_history (submission_id, from_status, to_status, changed_by, reason)
+    VALUES (
+        v_submission_id, 
+        'none', 
+        CASE WHEN p_payment_type = 'stripe' THEN 'unpaid' ELSE 'pending_review' END, 
+        p_user_id, 
+        'Initial creation via ' || p_payment_type
+    );
 
     RETURN v_submission_id;
 END;

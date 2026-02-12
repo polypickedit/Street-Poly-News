@@ -75,13 +75,23 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
     }
 
     if (submissionId) {
-      const { error: subError } = await supabase.from("submissions").update({
+      // Use the RPC to ensure state machine and logging are triggered
+      const { error: subError } = await supabase.rpc("update_submission_status", {
+        p_submission_id: submissionId,
+        p_new_status: "paid",
+        p_user_id: userId,
+        p_reason: "Stripe payment confirmation"
+      });
+
+      // We still update payment_status and paid_at separately as they are specific fields 
+      // not currently handled by the general state machine RPC (which focuses on workflow status)
+      await supabase.from("submissions").update({
         payment_status: "paid",
         paid_at: new Date().toISOString(),
       }).eq("id", submissionId);
       
       if (subError) {
-        console.error("❌ Error updating submission payment status:", subError);
+        console.error("❌ Error updating submission status via RPC:", subError);
       }
 
       if (selectedOutlets?.length) {
