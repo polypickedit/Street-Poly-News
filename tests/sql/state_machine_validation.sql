@@ -122,7 +122,34 @@ BEGIN
         RAISE NOTICE 'TEST PASSED: L4-04 Direct status update blocked as expected. Error: %', SQLERRM;
     END;
 
-    -- TEST CASE L7-07: Enum Drift Validation
+    -- TEST CASE L6-08: Webhook Replay / Regressive Protection
+  -- Scenario: Submission is already 'pending_review', webhook replays 'paid' transition.
+  -- Expected: Should ignore (early return) and NOT log a duplicate history/action entry.
+  BEGIN
+    -- 1. Setup: Move to pending_review
+    PERFORM public.update_submission_status(v_submission_id, 'paid', v_user_id, 'Initial payment');
+    PERFORM public.update_submission_status(v_submission_id, 'pending_review', v_user_id, 'Initial queue move');
+    
+    v_history_count_before := (SELECT count(*) FROM public.submission_status_history WHERE submission_id = v_submission_id);
+    
+    -- 2. Simulate Replay: System attempts to move back to 'paid'
+    SET ROLE service_role;
+    PERFORM public.update_submission_status(v_submission_id, 'paid', v_user_id, 'Webhook replay');
+    RESET ROLE;
+
+    -- 3. Verify: Status remains 'pending_review' and count is same
+    IF (SELECT status FROM public.submissions WHERE id = v_submission_id) != 'pending_review' THEN
+      RAISE EXCEPTION 'TEST FAILED: L6-08 Status reverted to paid during replay.';
+    END IF;
+
+    IF (SELECT count(*) FROM public.submission_status_history WHERE submission_id = v_submission_id) > v_history_count_before THEN
+      RAISE EXCEPTION 'TEST FAILED: L6-08 Duplicate history entry created during replay.';
+    END IF;
+
+    RAISE NOTICE 'TEST PASSED: L6-08 Webhook replay ignored as expected.';
+  END;
+
+  -- TEST CASE L7-07: Enum Drift Validation
     BEGIN
         IF EXISTS (SELECT 1 FROM public.vw_status_integrity_audit WHERE is_valid = false) THEN
             RAISE EXCEPTION 'TEST FAILED: L7-07 Invalid status found in data or constraint drift detected.';
