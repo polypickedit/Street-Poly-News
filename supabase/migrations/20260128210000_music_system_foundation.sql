@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS public.submissions (
     genre TEXT NOT NULL,
     mood TEXT NOT NULL,
     bpm INTEGER,
-    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'declined', 'archived')),
+    status TEXT NOT NULL DEFAULT 'unpaid' CHECK (status IN ('unpaid', 'paid', 'pending_review', 'approved', 'declined', 'scheduled', 'published', 'archived')),
     payment_status TEXT NOT NULL DEFAULT 'unpaid' CHECK (payment_status IN ('unpaid', 'paid', 'refunded')),
     notes_internal TEXT,
     feedback_artist TEXT,

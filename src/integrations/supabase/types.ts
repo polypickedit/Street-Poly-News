@@ -1022,6 +1022,10 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_admin_or_editor: {
         Args: Record<PropertyKey, never>
         Returns: boolean

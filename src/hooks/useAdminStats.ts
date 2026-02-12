@@ -13,7 +13,8 @@ interface AbortableCountQuery {
 }
 
 export interface AdminStats {
-  pendingSubmissions: number;
+  pendingReview: number;
+  unpaidSubmissions: number;
   activePlacements: number;
   endingSoon: number;
   failedPayments: number;
@@ -26,11 +27,13 @@ export function useAdminStats(enabled: boolean) {
       try {
         const [
           pendingRes,
+          unpaidRes,
           activeRes,
           endingSoonRes,
           failedPaymentsRes
         ] = await Promise.all([
-          (supabase.from("submissions").select("*", { count: 'exact', head: true }).eq('status', 'pending') as unknown as AbortableCountQuery).abortSignal(signal),
+          (supabase.from("submissions").select("*", { count: 'exact', head: true }).eq('status', 'pending_review') as unknown as AbortableCountQuery).abortSignal(signal),
+          (supabase.from("submissions").select("*", { count: 'exact', head: true }).eq('status', 'unpaid') as unknown as AbortableCountQuery).abortSignal(signal),
           (supabase.from("placements").select("*", { count: 'exact', head: true }).gt('end_date', new Date().toISOString()) as unknown as AbortableCountQuery).abortSignal(signal),
           (supabase.from("placements").select("*", { count: 'exact', head: true })
             .gt('end_date', new Date().toISOString())
@@ -38,13 +41,9 @@ export function useAdminStats(enabled: boolean) {
           (supabase.from("payments").select("*", { count: 'exact', head: true }).eq('status', 'failed') as unknown as AbortableCountQuery).abortSignal(signal)
         ]);
 
-        if (pendingRes.error) console.warn("Pending submissions fetch returned error:", pendingRes.error);
-        if (activeRes.error) console.warn("Active placements fetch returned error:", activeRes.error);
-        if (endingSoonRes.error) console.warn("Ending soon placements fetch returned error:", endingSoonRes.error);
-        if (failedPaymentsRes.error) console.warn("Failed payments fetch returned error:", failedPaymentsRes.error);
-
         return {
-          pendingSubmissions: pendingRes.count || 0,
+          pendingReview: pendingRes.count || 0,
+          unpaidSubmissions: unpaidRes.count || 0,
           activePlacements: activeRes.count || 0,
           endingSoon: endingSoonRes.count || 0,
           failedPayments: failedPaymentsRes.count || 0
@@ -62,6 +61,75 @@ export function useAdminStats(enabled: boolean) {
     gcTime: 10 * 60 * 1000,
     retry: 1,
     refetchOnWindowFocus: false,
+  });
+}
+
+export interface VisibilityMetrics {
+  conversionRate: number;
+  avgLagTimeHours: number;
+  submissionsByStatus: Record<string, number>;
+}
+
+export function useVisibilityMetrics(enabled: boolean) {
+  return useQuery({
+    queryKey: ["admin-visibility-metrics"],
+    queryFn: async ({ signal }): Promise<VisibilityMetrics> => {
+      try {
+        // 1. Get submissions by status
+        const { data: statusCounts, error: statusError } = await supabase
+          .from("submissions")
+          .select("status");
+        
+        if (statusError) throw statusError;
+
+        const counts: Record<string, number> = {};
+        statusCounts.forEach(s => {
+          counts[s.status] = (counts[s.status] || 0) + 1;
+        });
+
+        // 2. Calculate conversion rate (paid vs unpaid)
+        const total = (counts['paid'] || 0) + (counts['unpaid'] || 0) + (counts['pending_review'] || 0) + (counts['approved'] || 0) + (counts['declined'] || 0);
+        const paid = total - (counts['unpaid'] || 0);
+        const conversionRate = total > 0 ? (paid / total) * 100 : 0;
+
+        // 3. Calculate avg lag time (paid -> approved/declined) from history
+        const { data: history, error: historyError } = await supabase
+          .from("submission_status_history")
+          .select("submission_id, from_status, to_status, created_at")
+          .order("created_at", { ascending: true });
+
+        if (historyError) throw historyError;
+
+        const lagTimes: number[] = [];
+        const paidEvents: Record<string, string> = {};
+
+        history.forEach(event => {
+          if (event.to_status === 'paid' || event.to_status === 'pending_review') {
+            paidEvents[event.submission_id] = event.created_at;
+          } else if ((event.to_status === 'approved' || event.to_status === 'declined') && paidEvents[event.submission_id]) {
+            const start = new Date(paidEvents[event.submission_id]).getTime();
+            const end = new Date(event.created_at).getTime();
+            lagTimes.push((end - start) / (1000 * 60 * 60)); // hours
+            delete paidEvents[event.submission_id];
+          }
+        });
+
+        const avgLagTimeHours = lagTimes.length > 0 
+          ? lagTimes.reduce((a, b) => a + b, 0) / lagTimes.length 
+          : 0;
+
+        return {
+          conversionRate,
+          avgLagTimeHours,
+          submissionsByStatus: counts
+        };
+      } catch (err) {
+        console.error("Error fetching visibility metrics:", err);
+        throw err;
+      }
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000,
   });
 }
 

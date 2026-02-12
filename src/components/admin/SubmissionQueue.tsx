@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { SubmissionDistributionDialog } from "./SubmissionDistributionDialog";
 
-type SubmissionStatus = "pending" | "approved" | "declined" | "archived";
+type SubmissionStatus = "unpaid" | "paid" | "pending_review" | "approved" | "declined" | "scheduled" | "published" | "archived";
 type PaymentStatus = "paid" | "unpaid" | "refunded";
 
 type SubmissionRow = {
@@ -44,9 +44,13 @@ type SubmissionRow = {
 type SubmissionFilter = "all" | SubmissionStatus;
 
 const statusBadgeColor: Record<SubmissionStatus, string> = {
-  pending: "text-dem bg-dem/10 border-dem/40 font-black",
+  unpaid: "text-rep bg-rep/10 border-rep/40 font-black",
+  paid: "text-dem bg-dem/10 border-dem/40 font-black",
+  pending_review: "text-dem bg-dem/10 border-dem/40 font-black",
   approved: "text-white bg-dem border-dem/40 font-black",
   declined: "text-rep bg-rep/10 border-rep/40 font-black",
+  scheduled: "text-white bg-dem border-dem/40 font-black",
+  published: "text-white bg-dem border-dem/40 font-black",
   archived: "text-foreground bg-muted border-border font-black",
 };
 
@@ -91,30 +95,37 @@ export const SubmissionQueue = () => {
     },
   });
 
-  const updateStatus = async (id: string, newStatus: Exclude<SubmissionFilter, "all">) => {
+  const [userRole, setUserRole] = useState<{ isAdmin: boolean; isEditor: boolean }>({ isAdmin: false, isEditor: false });
+
+  useEffect(() => {
+    const checkRole = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: isAdmin } = await supabase.rpc("is_admin");
+      const { data: isEditor } = await supabase.rpc("is_admin_or_editor");
+
+      setUserRole({ 
+        isAdmin: !!isAdmin, 
+        isEditor: !!isEditor 
+      });
+    };
+    checkRole();
+  }, []);
+
+  const updateStatus = async (id: string, newStatus: SubmissionStatus, reason?: string) => {
     setBusyId(id);
     try {
-      const { error } = await supabase
-        .from("submissions")
-        .update({ 
-          status: newStatus,
-          reviewed_at: new Date().toISOString()
-        })
-        .eq("id", id);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await supabase.rpc('update_submission_status', {
+        p_submission_id: id,
+        p_new_status: newStatus,
+        p_user_id: user?.id,
+        p_reason: reason || `Updated via Admin Dashboard`
+      });
 
       if (error) throw error;
-
-      // Log the admin action
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("admin_actions").insert({
-          admin_user_id: user.id,
-          action_type: newStatus === "approved" ? "approve_submission" : "decline_submission",
-          target_type: "submission",
-          target_id: id,
-          metadata: { status: newStatus }
-        });
-      }
 
       toast({
         title: "Status updated",
@@ -149,15 +160,15 @@ export const SubmissionQueue = () => {
   return (
     <div className="space-y-6 text-foreground">
       <div className="flex flex-wrap items-center gap-3 justify-between">
-        <div className="flex gap-2">
-          {["all", "pending", "approved", "declined", "archived"].map((status) => (
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {["all", "unpaid", "paid", "pending_review", "approved", "declined", "scheduled", "published", "archived"].map((status) => (
             <Button
               key={status}
               variant={filter === status ? "secondary" : "ghost"}
-              className="text-xs uppercase tracking-[0.3em] text-foreground"
+              className="text-xs uppercase tracking-[0.1em] text-foreground whitespace-nowrap"
               onClick={() => setFilter(status as SubmissionFilter)}
             >
-              {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
+              {status === "all" ? "All" : status.replace("_", " ")}
             </Button>
           ))}
         </div>
@@ -244,35 +255,56 @@ export const SubmissionQueue = () => {
                       >
                         <Share2 className="w-4 h-4" />
                       </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 text-dem hover:text-dem/80 hover:bg-dem/10"
-                        onClick={() => {
-                          if (submission.payment_status !== "paid") {
-                            toast({
-                              title: "Payment required",
-                              description: "Cannot approve an unpaid submission.",
-                              variant: "destructive",
-                            });
-                            return;
-                          }
-                          updateStatus(submission.id, "approved");
-                        }}
-                        disabled={busyId === submission.id || submission.status === "approved" || submission.payment_status !== "paid"}
-                        title={submission.payment_status !== "paid" ? "Payment required" : "Approve submission"}
-                      >
-                        <Check className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 text-rep hover:text-rep/80 hover:bg-rep/10"
-                        onClick={() => updateStatus(submission.id, "declined")}
-                        disabled={busyId === submission.id || submission.status === "declined"}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
+                      {/* Conditional Actions based on status and role */}
+                      {(submission.status === "paid" || submission.status === "pending_review") && userRole.isEditor && (
+                        <>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-dem hover:text-dem/80 hover:bg-dem/10"
+                            onClick={() => updateStatus(submission.id, "approved")}
+                            disabled={busyId === submission.id}
+                            title="Approve submission"
+                          >
+                            <Check className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-rep hover:text-rep/80 hover:bg-rep/10"
+                            onClick={() => updateStatus(submission.id, "declined")}
+                            disabled={busyId === submission.id}
+                            title="Decline submission"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
+
+                      {submission.status === "approved" && userRole.isAdmin && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-dem hover:text-dem/80 hover:bg-dem/10"
+                          onClick={() => updateStatus(submission.id, "scheduled", "Moving to scheduled state")}
+                          disabled={busyId === submission.id}
+                          title="Schedule submission"
+                        >
+                          <Clock className="w-4 h-4" />
+                        </Button>
+                      )}
+
+                      {submission.status === "unpaid" && userRole.isAdmin && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-xs font-black border-dem/20 text-dem hover:bg-dem/10"
+                          onClick={() => updateStatus(submission.id, "paid", "Manual payment override by admin")}
+                          disabled={busyId === submission.id}
+                        >
+                          MARK PAID
+                        </Button>
+                      )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground">
@@ -290,12 +322,14 @@ export const SubmissionQueue = () => {
                             </a>
                           </DropdownMenuItem>
                           <DropdownMenuItem className="hover:bg-muted">Add internal note</DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="hover:bg-muted text-rep"
-                            onClick={() => updateStatus(submission.id, "archived")}
-                          >
-                            Archive submission
-                          </DropdownMenuItem>
+                          {userRole.isAdmin && (
+                            <DropdownMenuItem
+                              className="hover:bg-muted text-rep"
+                              onClick={() => updateStatus(submission.id, "archived")}
+                            >
+                              Archive submission
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

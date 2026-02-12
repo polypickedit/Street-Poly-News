@@ -75,13 +75,29 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
     }
 
     if (submissionId) {
-      // Use the RPC to ensure state machine and logging are triggered
-      const { error: subError } = await supabase.rpc("update_submission_status", {
+      // 1. Move to paid
+      const { error: paidError } = await supabase.rpc("update_submission_status", {
         p_submission_id: submissionId,
         p_new_status: "paid",
         p_user_id: userId,
         p_reason: "Stripe payment confirmation"
       });
+
+      if (paidError) {
+        console.error("❌ Error updating submission to 'paid':", paidError);
+      } else {
+        // 2. Auto-transition to pending_review
+        const { error: reviewError } = await supabase.rpc("update_submission_status", {
+          p_submission_id: submissionId,
+          p_new_status: "pending_review",
+          p_user_id: userId,
+          p_reason: "Auto-transition after payment"
+        });
+        
+        if (reviewError) {
+          console.error("❌ Error auto-transitioning to 'pending_review':", reviewError);
+        }
+      }
 
       // We still update payment_status and paid_at separately as they are specific fields 
       // not currently handled by the general state machine RPC (which focuses on workflow status)
@@ -90,10 +106,6 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
         paid_at: new Date().toISOString(),
       }).eq("id", submissionId);
       
-      if (subError) {
-        console.error("❌ Error updating submission status via RPC:", subError);
-      }
-
       if (selectedOutlets?.length) {
         const distributionRows = selectedOutlets.map((outletId: string) => ({
           submission_id: submissionId,
@@ -110,14 +122,14 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
     }
 
     if (slotId) {
-      const { error: slotError } = await supabase.from("slot_entitlements").insert({
+      const { error: slotError } = await supabase.from("slot_entitlements").upsert({
         user_id: userId,
         slot_id: slotId,
         source: session?.["mode"] === "subscription" ? "subscription" : "purchase",
         is_active: true,
         granted_at: new Date().toISOString(),
         expires_at: null,
-      });
+      }, { onConflict: "user_id,slot_id" });
       
       if (slotError) {
         console.error("❌ Error granting entitlement:", slotError);

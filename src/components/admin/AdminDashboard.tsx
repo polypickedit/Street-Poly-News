@@ -3,8 +3,8 @@ import { ListMusic, History, AlertCircle, TrendingUp, Loader2, User } from "luci
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAdmin } from "@/hooks/useAdmin";
-import { useAdminStats, useAdminActivities } from "@/hooks/useAdminStats";
-import { Zap } from "lucide-react";
+import { useAdminStats, useAdminActivities, useVisibilityMetrics } from "@/hooks/useAdminStats";
+import { Zap, Percent, Clock } from "lucide-react";
 
 interface ActivityLog {
   id: string;
@@ -19,7 +19,8 @@ export const AdminDashboard = () => {
   const { setIsAdminMode } = useAdmin();
 
   const { data: stats = {
-    pendingSubmissions: 0,
+    pendingReview: 0,
+    unpaidSubmissions: 0,
     activePlacements: 0,
     endingSoon: 0,
     failedPayments: 0
@@ -28,7 +29,10 @@ export const AdminDashboard = () => {
   // Use React Query for activities
   const { data: activities = [], isLoading: isLoadingActivities } = useAdminActivities(true);
 
-  const loading = isLoadingStats || isLoadingActivities;
+  // Use React Query for visibility metrics
+  const { data: metrics, isLoading: isLoadingMetrics } = useVisibilityMetrics(true);
+
+  const loading = isLoadingStats || isLoadingActivities || isLoadingMetrics;
 
   const formatAction = (type: string) => {
     return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -48,12 +52,22 @@ export const AdminDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">Pending Submissions</CardTitle>
+            <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">Pending Review</CardTitle>
             <ListMusic className="w-4 h-4 text-dem" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black text-dem">{stats.pendingSubmissions}</div>
-            <p className="text-sm text-muted-foreground mt-1 font-bold">Requires review</p>
+            <div className="text-3xl font-black text-dem">{stats.pendingReview}</div>
+            <p className="text-sm text-muted-foreground mt-1 font-bold">In review queue</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">Unpaid</CardTitle>
+            <AlertCircle className="w-4 h-4 text-rep" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-rep">{stats.unpaidSubmissions}</div>
+            <p className="text-sm text-muted-foreground mt-1 font-bold">Waiting for payment</p>
           </CardContent>
         </Card>
         <Card className="bg-card border-border shadow-sm">
@@ -68,22 +82,48 @@ export const AdminDashboard = () => {
         </Card>
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">Ending Soon</CardTitle>
-            <History className="w-4 h-4 text-dem" />
+            <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">Conversion Rate</CardTitle>
+            <Percent className="w-4 h-4 text-dem" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black text-dem">{stats.endingSoon}</div>
-            <p className="text-sm text-muted-foreground mt-1 font-bold">Expires in 7 days</p>
+            <div className="text-3xl font-black text-dem">{metrics?.conversionRate.toFixed(1)}%</div>
+            <p className="text-sm text-muted-foreground mt-1 font-bold">Paid conversion</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Visibility & Efficiency Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="bg-card border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">Avg. Review Lag Time</CardTitle>
+            <Clock className="w-4 h-4 text-dem" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-dem">{metrics?.avgLagTimeHours.toFixed(1)}h</div>
+            <p className="text-sm text-muted-foreground mt-1 font-bold">Paid to Decision</p>
           </CardContent>
         </Card>
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">Failed Payments</CardTitle>
-            <AlertCircle className="w-4 h-4 text-rep" />
+            <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">System Health</CardTitle>
+            <TrendingUp className="w-4 h-4 text-dem" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black text-rep">{stats.failedPayments}</div>
-            <p className="text-sm text-muted-foreground mt-1 font-bold">Requires attention</p>
+            <div className="flex gap-4">
+              <div>
+                <div className="text-xl font-black text-dem">{stats.activePlacements}</div>
+                <p className="text-[10px] text-muted-foreground uppercase font-black">Live</p>
+              </div>
+              <div>
+                <div className="text-xl font-black text-rep">{stats.failedPayments}</div>
+                <p className="text-[10px] text-muted-foreground uppercase font-black">Failures</p>
+              </div>
+              <div>
+                <div className="text-xl font-black text-foreground">{stats.endingSoon}</div>
+                <p className="text-[10px] text-muted-foreground uppercase font-black">Expiring</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

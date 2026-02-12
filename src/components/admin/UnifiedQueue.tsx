@@ -64,7 +64,7 @@ export const UnifiedQueue = () => {
       const { data, error } = await supabase
         .from("submissions")
         .select("*, artists ( name, email ), slots ( name )")
-        .eq("status", "pending")
+        .eq("status", "pending_review")
         .eq("payment_status", "paid")
         .order("created_at", { ascending: true });
       
