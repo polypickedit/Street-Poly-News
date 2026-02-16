@@ -35,6 +35,8 @@ interface Slot {
   visibility: "public" | "account" | "paid";
 }
 
+import { safeQuery } from "@/lib/supabase-debug";
+
 const Admin = () => {
   const isVisible = useHeaderVisible();
   const isMobile = useIsMobile();
@@ -45,23 +47,28 @@ const Admin = () => {
   const [userProfile, setUserProfile] = useState<{ full_name: string | null } | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchProfile = async () => {
       if (user) {
         try {
-          const { data, error } = await supabase
+          const data = await safeQuery<{ full_name: string }>(
+            supabase
             .from("profiles")
             .select("full_name")
             .eq("id", user.id)
-            .single();
+            .abortSignal(controller.signal)
+            .single()
+          );
             
-          if (error) throw error;
-          setUserProfile(data);
+          if (data) setUserProfile(data);
         } catch (err) {
-          console.error("Error fetching profile:", err);
+          if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) return;
+          console.error("Admin: Error fetching profile:", err);
         }
       }
     };
     fetchProfile();
+    return () => controller.abort();
   }, [user]);
 
   const handleSignOut = async () => {

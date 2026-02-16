@@ -64,6 +64,8 @@ const paymentBadgeColor: Record<PaymentStatus, string> = {
   refunded: "text-foreground bg-muted border-border font-black",
 };
 
+import { safeQuery } from "@/lib/supabase-debug";
+
 export const SubmissionQueue = () => {
   const [filter, setFilter] = useState<SubmissionFilter>("all");
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -77,7 +79,7 @@ export const SubmissionQueue = () => {
 
   const { data: submissions = [], isLoading } = useQuery<SubmissionRow[]>({
     queryKey: ["submissions", filter],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       try {
         let baseQuery = (supabase as SupabaseClient)
           .from("submissions")
@@ -88,11 +90,13 @@ export const SubmissionQueue = () => {
           baseQuery = baseQuery.eq("status", filter);
         }
 
-        const { data, error } = await baseQuery;
+        const data = await safeQuery(baseQuery.abortSignal(signal));
 
-        if (error) throw error;
         return data as unknown as SubmissionRow[] || [];
       } catch (err) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          return [];
+        }
         console.error("SubmissionQueue: Error fetching submissions:", err);
         throw err;
       }

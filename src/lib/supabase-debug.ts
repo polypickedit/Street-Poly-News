@@ -55,3 +55,32 @@ export function logSupabaseError(error: PostgrestError) {
     code: error.code,
   });
 }
+
+/**
+ * Wraps a Supabase query that returns a count.
+ * 
+ * @param queryPromise - The promise returned by a Supabase query builder with count option.
+ * @returns The count if successful.
+ * @throws The error from the query if one occurred.
+ */
+export async function safeCountQuery(
+  queryPromise: PromiseLike<{ data: unknown; count: number | null; error: PostgrestError | null }>
+): Promise<number> {
+  try {
+    const { count, error } = await queryPromise;
+
+    if (error) {
+      logSupabaseError(error);
+      throw error;
+    }
+
+    return count ?? 0;
+  } catch (err) {
+    if (isPostgrestError(err)) {
+      logSupabaseError(err);
+    } else {
+      console.error("Unexpected error during Supabase count query:", err);
+    }
+    throw err;
+  }
+}

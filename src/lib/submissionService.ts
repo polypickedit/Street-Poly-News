@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { createSlotCheckoutSession } from "./stripe";
+import { safeQuery } from "./supabase-debug";
 
 export interface SubmissionPayload {
   artist_name: string;
@@ -73,7 +74,8 @@ export const submissionService = {
 
       // 3. Update submission with media URLs
       if (mediaUrls.length > 0) {
-        const { error: updateError } = await supabase
+        await safeQuery(
+          supabase
           .from("submissions")
           .update({ 
             content_bundle: { 
@@ -81,9 +83,8 @@ export const submissionService = {
               media_urls: mediaUrls 
             } 
           })
-          .eq("id", submissionId);
-
-        if (updateError) console.error("Error updating media URLs:", updateError);
+          .eq("id", submissionId)
+        );
       }
     }
 
@@ -95,46 +96,48 @@ export const submissionService = {
    * Uses the atomic create_submission_v2 RPC to ensure consistency.
    */
   async createWithStripe(payload: SubmissionPayload, userId: string | null, skipRedirect = false) {
-    const { data: submissionId, error } = await supabase.rpc("create_submission_v2", {
-      p_user_id: userId,
-      p_slot_id: payload.slot_id,
-      p_artist_data: {
-        name: payload.artist_name,
-        email: payload.artist_email,
-        country: payload.artist_country
-      },
-      p_submission_data: {
-        track_title: payload.track_title,
-        spotify_track_url: payload.spotify_track_url,
-        release_date: payload.release_date,
-        genre: payload.genre,
-        mood: payload.mood,
-        submission_type: payload.submission_type,
-        content_bundle: {
-          description: payload.description,
-          links: payload.links,
-          preferred_date: payload.preferred_date,
-          media_urls: payload.media_urls || []
+    const submissionId = await safeQuery(
+      supabase.rpc("create_submission_v2", {
+        p_user_id: userId,
+        p_slot_id: payload.slot_id,
+        p_artist_data: {
+          name: payload.artist_name,
+          email: payload.artist_email,
+          country: payload.artist_country
         },
-        notes_internal: `Links: ${payload.links.join(", ")}`
-      },
-      p_distribution_targets: payload.distribution_targets,
-      p_payment_type: "stripe"
-    });
+        p_submission_data: {
+          track_title: payload.track_title,
+          spotify_track_url: payload.spotify_track_url,
+          release_date: payload.release_date,
+          genre: payload.genre,
+          mood: payload.mood,
+          submission_type: payload.submission_type,
+          content_bundle: {
+            description: payload.description,
+            links: payload.links,
+            preferred_date: payload.preferred_date,
+            media_urls: payload.media_urls || []
+          },
+          notes_internal: `Links: ${payload.links.join(", ")}`
+        },
+        p_distribution_targets: payload.distribution_targets,
+        p_payment_type: "stripe"
+      })
+    );
 
-    if (error) throw error;
+    if (!submissionId) throw new Error("Failed to create submission");
 
     // Trigger Stripe Checkout if not skipped
     if (!skipRedirect) {
       await createSlotCheckoutSession(
         payload.slot_id,
         payload.slot_slug,
-        submissionId,
+        submissionId as string,
         payload.distribution_targets
       );
     }
 
-    return submissionId;
+    return submissionId as string;
   },
 
   /**
@@ -142,36 +145,38 @@ export const submissionService = {
    * Uses the atomic create_submission_v2 RPC.
    */
   async createWithCapability(payload: SubmissionPayload, userId: string, capability: string) {
-    const { data: submissionId, error } = await supabase.rpc("create_submission_v2", {
-      p_user_id: userId,
-      p_slot_id: payload.slot_id,
-      p_artist_data: {
-        name: payload.artist_name,
-        email: payload.artist_email,
-        country: payload.artist_country
-      },
-      p_submission_data: {
-        track_title: payload.track_title,
-        spotify_track_url: payload.spotify_track_url,
-        release_date: payload.release_date,
-        genre: payload.genre,
-        mood: payload.mood,
-        submission_type: payload.submission_type,
-        content_bundle: {
-          description: payload.description,
-          links: payload.links,
-          preferred_date: payload.preferred_date,
-          media_urls: payload.media_urls || []
+    const submissionId = await safeQuery(
+      supabase.rpc("create_submission_v2", {
+        p_user_id: userId,
+        p_slot_id: payload.slot_id,
+        p_artist_data: {
+          name: payload.artist_name,
+          email: payload.artist_email,
+          country: payload.artist_country
         },
-        notes_internal: `Capability used: ${capability}. Links: ${payload.links.join(", ")}`
-      },
-      p_distribution_targets: payload.distribution_targets,
-      p_payment_type: "capability",
-      p_capability: capability
-    });
+        p_submission_data: {
+          track_title: payload.track_title,
+          spotify_track_url: payload.spotify_track_url,
+          release_date: payload.release_date,
+          genre: payload.genre,
+          mood: payload.mood,
+          submission_type: payload.submission_type,
+          content_bundle: {
+            description: payload.description,
+            links: payload.links,
+            preferred_date: payload.preferred_date,
+            media_urls: payload.media_urls || []
+          },
+          notes_internal: `Capability used: ${capability}. Links: ${payload.links.join(", ")}`
+        },
+        p_distribution_targets: payload.distribution_targets,
+        p_payment_type: "capability",
+        p_capability: capability
+      })
+    );
 
-    if (error) throw error;
-    return submissionId;
+    if (!submissionId) throw new Error("Failed to create submission");
+    return submissionId as string;
   },
 
   /**
@@ -197,13 +202,14 @@ export const submissionService = {
     }
 
     // Fallback to DB check if no session ID
-    const { data, error } = await supabase
-      .from("submissions")
-      .select("payment_status")
-      .eq("id", submissionId)
-      .single();
+    const data = await safeQuery(
+      supabase
+        .from("submissions")
+        .select("payment_status")
+        .eq("id", submissionId)
+        .single()
+    );
 
-    if (error) throw error;
-    return data.payment_status === "paid";
+    return data?.payment_status === "paid";
   }
 };

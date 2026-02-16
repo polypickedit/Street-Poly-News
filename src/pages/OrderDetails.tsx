@@ -47,6 +47,8 @@ interface SubmissionDetail {
   }>;
 }
 
+import { safeQuery } from "@/lib/supabase-debug";
+
 export default function OrderDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -57,12 +59,13 @@ export default function OrderDetails() {
     const controller = new AbortController();
     const checkAdmin = async () => {
       try {
-        const query = supabase.rpc("is_admin_or_editor") as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: boolean | null; error: unknown }> };
-        const { data: hasAccess } = await query.abortSignal(controller.signal);
+        const hasAccess = await safeQuery(
+          supabase.rpc("is_admin_or_editor").abortSignal(controller.signal)
+        );
         setIsAdmin(!!hasAccess);
       } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') return;
-        console.error("Admin check error:", err);
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) return;
+        // safeQuery already logs the error
       }
     };
     checkAdmin();
@@ -73,7 +76,8 @@ export default function OrderDetails() {
     queryKey: ["submission", id],
     queryFn: async ({ signal }) => {
       try {
-        const query = supabase
+        const data = await safeQuery(
+          supabase
           .from("submissions")
           .select(`
             *,
@@ -89,12 +93,11 @@ export default function OrderDetails() {
             )
           `)
           .eq("id", id)
-          .single() as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: SubmissionDetail | null; error: { code: string; message: string } | null }> };
+          .abortSignal(signal)
+          .single()
+        );
 
-        const { data, error } = await query.abortSignal(signal);
-
-        if (error) throw error;
-        return data;
+        return data as SubmissionDetail;
       } catch (err) {
         if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
           return null;

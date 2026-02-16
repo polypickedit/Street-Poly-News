@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { PostgrestError } from "@supabase/supabase-js";
+import { safeQuery, safeCountQuery } from "@/lib/supabase-debug";
 
 interface CountResponse {
   data: null;
@@ -26,27 +27,27 @@ export function useAdminStats(enabled: boolean) {
     queryFn: async ({ signal }): Promise<AdminStats> => {
       try {
         const [
-          pendingRes,
-          unpaidRes,
-          activeRes,
-          endingSoonRes,
-          failedPaymentsRes
+          pendingCount,
+          unpaidCount,
+          activeCount,
+          endingSoonCount,
+          failedPaymentsCount
         ] = await Promise.all([
-          (supabase.from("submissions").select("*", { count: 'exact', head: true }).eq('status', 'pending_review') as unknown as AbortableCountQuery).abortSignal(signal),
-          (supabase.from("submissions").select("*", { count: 'exact', head: true }).eq('status', 'unpaid') as unknown as AbortableCountQuery).abortSignal(signal),
-          (supabase.from("content_placements").select("*", { count: 'exact', head: true }).gt('ends_at', new Date().toISOString()) as unknown as AbortableCountQuery).abortSignal(signal),
-          (supabase.from("content_placements").select("*", { count: 'exact', head: true })
+          safeCountQuery((supabase.from("submissions").select("*", { count: 'exact', head: true }).eq('status', 'pending_review') as unknown as AbortableCountQuery).abortSignal(signal)),
+          safeCountQuery((supabase.from("submissions").select("*", { count: 'exact', head: true }).eq('status', 'unpaid') as unknown as AbortableCountQuery).abortSignal(signal)),
+          safeCountQuery((supabase.from("content_placements").select("*", { count: 'exact', head: true }).gt('ends_at', new Date().toISOString()) as unknown as AbortableCountQuery).abortSignal(signal)),
+          safeCountQuery((supabase.from("content_placements").select("*", { count: 'exact', head: true })
             .gt('ends_at', new Date().toISOString())
-            .lt('ends_at', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()) as unknown as AbortableCountQuery).abortSignal(signal),
-          (supabase.from("payments").select("*", { count: 'exact', head: true }).eq('status', 'failed') as unknown as AbortableCountQuery).abortSignal(signal)
+            .lt('ends_at', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()) as unknown as AbortableCountQuery).abortSignal(signal)),
+          safeCountQuery((supabase.from("payments").select("*", { count: 'exact', head: true }).eq('status', 'failed') as unknown as AbortableCountQuery).abortSignal(signal))
         ]);
 
         return {
-          pendingReview: pendingRes.count || 0,
-          unpaidSubmissions: unpaidRes.count || 0,
-          activePlacements: activeRes.count || 0,
-          endingSoon: endingSoonRes.count || 0,
-          failedPayments: failedPaymentsRes.count || 0
+          pendingReview: pendingCount || 0,
+          unpaidSubmissions: unpaidCount || 0,
+          activePlacements: activeCount || 0,
+          endingSoon: endingSoonCount || 0,
+          failedPayments: failedPaymentsCount || 0
         };
       } catch (err) {
         if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
@@ -84,30 +85,34 @@ export function useVisibilityMetrics(enabled: boolean) {
     queryFn: async ({ signal: _signal }): Promise<VisibilityMetrics> => {
       try {
         // 1. Get submissions by status
-        const { data: statusCounts, error: statusError } = await supabase
+        const statusCounts = await safeQuery(
+          supabase
           .from("submissions")
-          .select("status");
+          .select("status")
+          .abortSignal(_signal)
+        );
         
-        if (statusError) throw statusError;
-
         const counts: Record<string, number> = {};
-        statusCounts.forEach(s => {
-          counts[s.status] = (counts[s.status] || 0) + 1;
-        });
+        if (statusCounts) {
+          statusCounts.forEach((s: { status: string }) => {
+            counts[s.status] = (counts[s.status] || 0) + 1;
+          });
+        }
 
         // 2. Calculate conversion rate (paid vs unpaid)
         const total = (counts['paid'] || 0) + (counts['unpaid'] || 0) + (counts['pending_review'] || 0) + (counts['approved'] || 0) + (counts['declined'] || 0);
         const paid = total - (counts['unpaid'] || 0);
         const conversionRate = total > 0 ? (paid / total) * 100 : 0;
 
-        const { data: historyData, error: historyError } = await supabase
+        const historyData = await safeQuery(
+          supabase
           .from("submission_status_history" as "submissions")
           .select("submission_id, from_status, to_status, created_at")
-          .order("created_at", { ascending: true });
+          .order("created_at", { ascending: true })
+          .abortSignal(_signal)
+        );
 
-        if (historyError) throw historyError;
-
-        const history = historyData as unknown as StatusHistory[];
+        const history = (historyData || []) as unknown as StatusHistory[];
         const lagTimes: number[] = [];
         const paidEvents: Record<string, string> = {};
 
@@ -127,12 +132,13 @@ export function useVisibilityMetrics(enabled: boolean) {
           : 0;
 
         // 3. Get revenue by slot
-        const { data: revenueData, error: revenueError } = await supabase
+        const revenueData = await safeQuery(
+          supabase
           .from("submissions")
           .select("slot_id, payments(amount_cents)")
-          .eq("payment_status", "paid");
-
-        if (revenueError) throw revenueError;
+          .eq("payment_status", "paid")
+          .abortSignal(_signal)
+        );
 
         interface RevenueRow {
           slot_id: string;
@@ -152,6 +158,9 @@ export function useVisibilityMetrics(enabled: boolean) {
           revenueBySlot
         };
       } catch (err) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          throw err;
+        }
         console.error("Error fetching visibility metrics:", err);
         throw err;
       }
@@ -174,16 +183,8 @@ export function useAdminActivities(enabled: boolean) {
     queryKey: ["admin-dashboard-activities"],
     queryFn: async ({ signal }): Promise<ActivityLog[]> => {
       try {
-        type ActivityResponse = {
-          data: ActivityLog[] | null;
-          error: PostgrestError | null;
-        };
-
-        type AbortableActivityQuery = {
-          abortSignal: (signal: AbortSignal) => Promise<ActivityResponse>;
-        };
-
-        const { data, error } = await (supabase
+        const data = await safeQuery(
+          supabase
           .from("admin_actions")
           .select(`
             id,
@@ -193,10 +194,11 @@ export function useAdminActivities(enabled: boolean) {
             profiles!admin_user_id (full_name)
           `)
           .order("created_at", { ascending: false })
-          .limit(5) as unknown as AbortableActivityQuery).abortSignal(signal);
+          .limit(5)
+          .abortSignal(signal)
+        );
 
-        if (error) throw error;
-        return data || [];
+        return (data || []) as unknown as ActivityLog[];
       } catch (err) {
         if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
           throw err;
@@ -207,8 +209,5 @@ export function useAdminActivities(enabled: boolean) {
     },
     enabled,
     staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    retry: 1,
-    refetchOnWindowFocus: false,
   });
 }
