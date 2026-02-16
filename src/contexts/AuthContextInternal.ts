@@ -1,21 +1,21 @@
 import { createContext } from 'react';
-import { Session, User } from '@supabase/supabase-js';
+import type { AuthState } from './authTypes';
 
-export interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  isAdmin: boolean;
-  isEditor: boolean;
+export interface AuthContextType extends AuthState {
   loading: boolean;
   authReady: boolean;
   refreshAuth: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
-  session: null,
+  status: 'initializing',
   user: null,
+  session: null,
+  rolesLoaded: false,
   isAdmin: false,
   isEditor: false,
+  error: undefined,
+  traceId: null,
   loading: true,
   authReady: false,
   refreshAuth: async () => {},

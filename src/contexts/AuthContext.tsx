@@ -1,220 +1,285 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Session, User } from '@supabase/supabase-js';
+import type { Session } from '@supabase/supabase-js';
 import { AuthContext } from './AuthContextInternal';
-import { AuthState } from './authTypes';
-import { fetchSession, AuthServiceResult } from '@/services/authService';
-import { hydrateRoles, RoleHydrationResult } from '@/services/roleService';
+import { AuthState, initialAuthState } from './authTypes';
+import { fetchSession } from '@/services/authService';
+import { hydrateRoles } from '@/services/roleService';
 import { generateTraceId } from '@/utils/trace';
-import { DevAuthOverlay } from '@/components/DevAuthOverlay';
 
-const initialAuthState: AuthState = 'initializing';
-const stateReadySet: AuthState[] = ['ready', 'unauthenticated', 'error'];
-const stateLoadingSet: AuthState[] = ['initializing', 'hydrating_roles'];
+export type AuthStatusEvent =
+  | 'bootstrap.start'
+  | 'session.authenticated'
+  | 'session.unauthenticated'
+  | 'session.error'
+  | 'listener.authenticated'
+  | 'listener.unauthenticated'
+  | 'roles.hydrating'
+  | 'roles.loaded'
+  | 'roles.failed';
 
-type SessionFetchPromise = Promise<AuthServiceResult>;
+const logTransition = (event: AuthStatusEvent, next: AuthState) => {
+  console.log('%cAUTH TRANSITION', 'color: violet; font-weight: bold;', event, {
+    status: next.status,
+    userId: next.user?.id ?? null,
+    traceId: next.traceId,
+  });
+  console.log('AUTH STATE →', next);
+};
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isEditor, setIsEditor] = useState(false);
-  const [authState, setAuthState] = useState<AuthState>(initialAuthState);
-  const [authTraceId, setAuthTraceId] = useState<string | null>(null);
-  const [authError, setAuthError] = useState<Error | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [authReady, setAuthReady] = useState(false);
-
-  const prevStateRef = useRef<AuthState>(initialAuthState);
+  const [state, setState] = useState<AuthState>(initialAuthState);
   const hydratedUserRef = useRef<string | null>(null);
-  const sessionFetchPromiseRef = useRef<SessionFetchPromise | null>(null);
-  const sessionFetchControllerRef = useRef<AbortController | null>(null);
-  const roleHydrationControllerRef = useRef<AbortController | null>(null);
-  const alreadyInitializedRef = useRef(false);
+  const hydrationRunIdRef = useRef(0);
+  const bootstrappedRef = useRef(false);
 
-  const setState = useCallback((nextState: AuthState, traceId: string | null, meta: Record<string, unknown> = {}) => {
-    setAuthTraceId(traceId);
-    setAuthState((current) => {
-      if (current === nextState) return current;
-      console.log('AUTH TRANSITION:', current, '→', nextState, { traceId, ...meta });
-      prevStateRef.current = nextState;
-      return nextState;
+  const transition = useCallback((event: AuthStatusEvent, partial: Partial<AuthState>) => {
+    setState((prev) => {
+      const next: AuthState = {
+        ...prev,
+        ...partial,
+        traceId: partial.traceId ?? prev.traceId,
+      };
+      logTransition(event, next);
+      return next;
     });
-    setLoading(stateLoadingSet.includes(nextState));
-    setAuthReady(stateReadySet.includes(nextState));
   }, []);
 
-  const resetRoles = useCallback(() => {
-    setIsAdmin(false);
-    setIsEditor(false);
-  }, []);
-
-  const handleUnauthenticated = useCallback(
-    (traceId: string, reason: string) => {
-      hydratedUserRef.current = null;
-      setSession(null);
-      setUser(null);
-      setAuthError(null);
-      resetRoles();
-      setState('unauthenticated', traceId, { reason });
-    },
-    [resetRoles, setState]
-  );
-
-  const hydrateRolesForUser = useCallback(
-    async (userId: string, traceId: string) => {
+  const hydrateRolesInBackground = useCallback(
+    (userId: string, traceId?: string) => {
       if (hydratedUserRef.current === userId) {
-        setState('ready', traceId, { userId, note: 'roles_cached' });
-        return true;
-      }
-
-      roleHydrationControllerRef.current?.abort();
-      const controller = new AbortController();
-      roleHydrationControllerRef.current = controller;
-
-      setAuthError(null);
-      setState('hydrating_roles', traceId, { userId });
-
-      const result = await hydrateRoles(userId, { signal: controller.signal });
-      roleHydrationControllerRef.current = null;
-
-      if (result.ok) {
-        setIsAdmin(result.isAdmin);
-        setIsEditor(result.isEditor);
-        hydratedUserRef.current = userId;
-        setState('ready', traceId, { userId, roles: { admin: result.isAdmin, editor: result.isEditor } });
-        return true;
-      }
-
-      const error = (result as { error: Error }).error;
-      setAuthError(error);
-      resetRoles();
-      hydratedUserRef.current = null;
-      setState('error', traceId, { userId, error: error.message });
-      return false;
-    },
-    [hydrateRoles, resetRoles, setState]
-  );
-
-  const fetchSessionOnce = useCallback(async (): Promise<AuthServiceResult> => {
-    if (sessionFetchPromiseRef.current) {
-      return sessionFetchPromiseRef.current;
-    }
-
-    const controller = new AbortController();
-    sessionFetchControllerRef.current = controller;
-
-    const promise = (async () => {
-      try {
-        return await fetchSession({ signal: controller.signal });
-      } finally {
-        sessionFetchControllerRef.current = null;
-        sessionFetchPromiseRef.current = null;
-      }
-    })();
-
-    sessionFetchPromiseRef.current = promise;
-    return promise;
-  }, []);
-
-  const abortPendingSessionFetch = useCallback(() => {
-    sessionFetchControllerRef.current?.abort();
-  }, []);
-
-  const handleSessionPayload = useCallback(
-    async (incomingSession: Session | null, traceId?: string) => {
-      const lifecycleId = traceId ?? generateTraceId();
-      if (!incomingSession?.user?.id) {
-        handleUnauthenticated(lifecycleId, 'session_missing');
         return;
       }
 
-      setSession(incomingSession);
-      setUser(incomingSession.user);
-      setState('authenticated', lifecycleId, { userId: incomingSession.user.id });
-      await hydrateRolesForUser(incomingSession.user.id, lifecycleId);
+      const runId = ++hydrationRunIdRef.current;
+      const trace = traceId ?? generateTraceId();
+      transition('roles.hydrating', {
+        rolesLoaded: false,
+        // Keep previous role flags during hydration to avoid admin UI flicker.
+        error: undefined,
+        traceId: trace,
+      });
+
+      hydrateRoles(userId)
+        .then((result) => {
+          if (runId !== hydrationRunIdRef.current) {
+            return;
+          }
+
+          if (!result.ok) {
+            const error = (result as { error: Error }).error;
+            transition('roles.failed', {
+              rolesLoaded: true,
+              // Preserve previous role flags on transient role hydration failure.
+              error: error.message,
+              traceId: result.traceId,
+            });
+            return;
+          }
+
+          const success = result as { ok: true; isAdmin: boolean; isEditor: boolean; traceId: string };
+          hydratedUserRef.current = userId;
+          transition('roles.loaded', {
+            rolesLoaded: true,
+            isAdmin: success.isAdmin,
+            isEditor: success.isEditor,
+            error: undefined,
+            traceId: success.traceId,
+          });
+        })
+        .catch((error) => {
+          if (runId !== hydrationRunIdRef.current) {
+            return;
+          }
+
+          const errMessage = error instanceof Error ? error.message : String(error);
+          console.error('Role hydration failed', error);
+          transition('roles.failed', {
+            rolesLoaded: true,
+            // Preserve previous role flags on transient role hydration failure.
+            error: errMessage,
+            traceId: generateTraceId(),
+          });
+        });
     },
-    [handleUnauthenticated, hydrateRolesForUser, setState]
+    [transition]
   );
 
-  const refreshAuth = useCallback(async () => {
-    abortPendingSessionFetch();
-    try {
-      const result = await fetchSessionOnce();
-      if (!result.ok) {
-        throw (result as { error: Error }).error;
+  const hydrateForSession = useCallback(
+    (session: Session, traceId?: string, event: AuthStatusEvent = 'session.authenticated') => {
+      const trace = traceId ?? generateTraceId();
+      transition(event, {
+        status: 'authenticated',
+        session,
+        user: session.user,
+        rolesLoaded: false,
+        isAdmin: false,
+        isEditor: false,
+        error: undefined,
+        traceId: trace,
+      });
+      if (session.user?.id) {
+        hydrateRolesInBackground(session.user.id, trace);
       }
-      await handleSessionPayload(result.response.data.session, result.traceId);
-    } catch (error) {
-      console.error('Auth: Refresh error:', error);
-    }
-  }, [abortPendingSessionFetch, fetchSessionOnce, handleSessionPayload]);
+    },
+    [hydrateRolesInBackground, transition]
+  );
 
-  useEffect(() => {
-    if (import.meta.hot && alreadyInitializedRef.current) {
-      console.log('Auth: HMR active, skipping re-initialization');
-      return;
-    }
+  const markUnauthenticated = useCallback(
+    (traceId?: string, event: AuthStatusEvent = 'session.unauthenticated') => {
+      hydratedUserRef.current = null;
+      transition(event, {
+        status: 'unauthenticated',
+        session: null,
+        user: null,
+        rolesLoaded: false,
+        isAdmin: false,
+        isEditor: false,
+        error: undefined,
+        traceId: traceId ?? generateTraceId(),
+      });
+    },
+    [transition]
+  );
 
-    alreadyInitializedRef.current = true;
-    let mounted = true;
+  const bootstrap = useCallback(async () => {
+    const traceId = generateTraceId();
+    transition('bootstrap.start', {
+      status: 'initializing',
+      session: null,
+      user: null,
+      rolesLoaded: false,
+      isAdmin: false,
+      isEditor: false,
+      error: undefined,
+      traceId,
+    });
 
-    const initializeAuth = async () => {
-      const lifecycleId = generateTraceId();
-      setAuthError(null);
-      setState('initializing', lifecycleId, { source: 'bootstrap' });
-
-      const result = await fetchSessionOnce();
-      if (!mounted) return;
-
+    try {
+      const result = await fetchSession({ timeoutMs: 4000 });
       if (!result.ok) {
         const error = (result as { error: Error }).error;
-        console.warn('Auth: Session fetch failed', error);
-        handleUnauthenticated(result.traceId, 'session_fetch_failed');
+        transition('session.error', {
+          status: 'unauthenticated',
+          session: null,
+          user: null,
+          rolesLoaded: false,
+          isAdmin: false,
+          isEditor: false,
+          error: error.message,
+          traceId: result.traceId,
+        });
         return;
       }
 
-      await handleSessionPayload(result.response.data.session, result.traceId);
-    };
-
-    initializeAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        if (!mounted) return;
-        console.log('Auth: State change event:', event);
-        await handleSessionPayload(currentSession, generateTraceId());
+      const session = result.response.data.session;
+      if (!session?.user) {
+        markUnauthenticated(result.traceId, 'session.unauthenticated');
+        return;
       }
-    );
+
+      hydrateForSession(session, result.traceId);
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      transition('session.error', {
+        status: 'error',
+        session: null,
+        user: null,
+        rolesLoaded: false,
+        isAdmin: false,
+        isEditor: false,
+        error: err.message,
+        traceId: generateTraceId(),
+      });
+    }
+  }, [hydrateForSession, markUnauthenticated, transition]);
+
+  const refreshAuth = useCallback(async () => {
+    try {
+      const result = await fetchSession({ timeoutMs: 4000 });
+      if (!result.ok) {
+        markUnauthenticated(result.traceId, 'session.unauthenticated');
+        return;
+      }
+
+      const session = result.response.data.session;
+      if (!session?.user) {
+        markUnauthenticated(result.traceId, 'session.unauthenticated');
+        return;
+      }
+
+      hydrateForSession(session, result.traceId);
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Auth: refresh failed', err);
+      transition('session.error', {
+        status: 'error',
+        session: null,
+        user: null,
+        rolesLoaded: false,
+        isAdmin: false,
+        isEditor: false,
+        error: err.message,
+        traceId: generateTraceId(),
+      });
+    }
+  }, [hydrateForSession, markUnauthenticated, transition]);
+
+  useEffect(() => {
+    if (bootstrappedRef.current) {
+      return;
+    }
+    bootstrappedRef.current = true;
+    bootstrap();
+  }, [bootstrap]);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('%cAUTH TRANSITION', 'color: violet; font-weight: bold;', event, {
+        hasSession: !!session,
+        userId: session?.user?.id ?? null,
+      });
+      if (!session?.user) {
+        markUnauthenticated(generateTraceId(), 'listener.unauthenticated');
+        return;
+      }
+
+      // Fix for "admin status lost on refresh"
+      // If the user ID matches the one we've already hydrated (or are hydrating),
+      // we only want to update the session object, not reset the role state.
+      if (hydratedUserRef.current === session.user.id) {
+        transition('session.authenticated', {
+          session,
+          user: session.user,
+          // Do NOT reset rolesLoaded, isAdmin, isEditor - preserve existing state
+        });
+        return;
+      }
+
+      hydrateForSession(session, generateTraceId(), 'listener.authenticated');
+    });
 
     return () => {
-      mounted = false;
-      abortPendingSessionFetch();
-      roleHydrationControllerRef.current?.abort();
       subscription.unsubscribe();
     };
-  }, [abortPendingSessionFetch, fetchSessionOnce, handleSessionPayload, handleUnauthenticated, setState]);
+  }, [hydrateForSession, markUnauthenticated]);
 
-  const value = useMemo(
+  const contextValue = useMemo(
     () => ({
-      session,
-      user,
-      isAdmin,
-      isEditor,
-      loading,
-      authReady,
+      status: state.status,
+      session: state.session,
+      user: state.user,
+      rolesLoaded: state.rolesLoaded,
+      isAdmin: state.isAdmin,
+      isEditor: state.isEditor,
+      error: state.error,
+      traceId: state.traceId ?? null,
+      loading: state.status === 'initializing',
+      authReady: state.status !== 'initializing',
       refreshAuth,
-      authState,
-      traceId: authTraceId,
-      authError,
     }),
-    [session, user, isAdmin, isEditor, loading, authReady, refreshAuth, authState, authTraceId, authError]
+    [state, refreshAuth]
   );
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-      {isAdmin && <DevAuthOverlay />}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };

@@ -20,6 +20,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Info } from "lucide-react";
 
+import { useAuth } from "@/hooks/useAuth";
+
 interface ConductDrawerProps {
   slotKey: string;
   accepts: ContentType[];
@@ -34,7 +36,9 @@ export function ConductDrawer({
   onClose,
 }: ConductDrawerProps) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<'featured' | 'all'>('featured');
   const [reason, setReason] = useState("");
   const [deviceScope, setDeviceScope] = useState<'all' | 'mobile' | 'desktop'>('all');
   const [startsAt, setStartsAt] = useState("");
@@ -81,8 +85,6 @@ export function ConductDrawer({
   // 3. Mutation to update placement
   const conductMutation = useMutation({
     mutationFn: async ({ contentId, reason }: { contentId: string; reason: string }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       // Editorial Pacing: Artificial delay to give the change "weight"
       await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -194,6 +196,32 @@ export function ConductDrawer({
             <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-3">
               Swap Content
             </h3>
+            
+            <div className="flex items-center gap-2 mb-4">
+              <Button
+                variant={filterType === 'featured' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterType('featured')}
+                className={cn(
+                  "h-7 text-xs uppercase tracking-wider font-bold",
+                  filterType === 'featured' ? "bg-dem text-dem-foreground" : "text-muted-foreground"
+                )}
+              >
+                Featured
+              </Button>
+              <Button
+                variant={filterType === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterType('all')}
+                className={cn(
+                  "h-7 text-xs uppercase tracking-wider font-bold",
+                  filterType === 'all' ? "bg-dem text-dem-foreground" : "text-muted-foreground"
+                )}
+              >
+                All Posts
+              </Button>
+            </div>
+
             {loadingPosts ? (
               <div className="flex justify-center p-8">
                 <Loader2 className="animate-spin text-dem" />

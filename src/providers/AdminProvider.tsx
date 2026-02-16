@@ -3,12 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ActiveAdmin } from "@/types/admin";
 import { AdminContext } from "@/contexts/AdminContext";
-import { SupabaseClient } from "@supabase/supabase-js";
-
-// Temporary types for schema extensions not yet in generated definitions
-type SupabaseRPCOverride = {
-  rpc: (name: string, args: Record<string, unknown>) => { abortSignal: (s?: AbortSignal) => Promise<{ data: unknown; error: unknown }> };
-};
+import { useAuth } from "@/hooks/useAuth";
 
 type SupabaseTableOverride = {
   from: (table: string) => {
@@ -24,6 +19,8 @@ type SupabaseTableOverride = {
 };
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
+  const { user, status, isAdmin, isEditor } = useAuth();
+  const hasAdminAccess = status === "authenticated" && (isAdmin || isEditor);
   const queryClient = useQueryClient();
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [isWalkthroughActive, setIsWalkthroughActive] = useState(false);
@@ -31,41 +28,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [activeAdmins, setActiveAdmins] = useState<ActiveAdmin[]>([]);
   const [hasDismissedWalkthrough, setHasDismissedWalkthrough] = useState(false);
 
-  // Check if current user is an admin
-  const { data: isAdmin } = useQuery({
-    queryKey: ["is-admin"],
-    queryFn: async ({ signal }) => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return false;
-        
-        // Cast to unknown then to specific rpc type to avoid 'any' lint error
-        const { data, error } = await (supabase as unknown as SupabaseRPCOverride)
-          .rpc("is_admin_or_editor_safe", {
-            target_user_id: user.id
-          })
-          .abortSignal(signal);
-        
-        if (error) {
-          console.error("Error checking admin status:", error);
-          return false;
-        }
-        return !!data;
-      } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return false;
-        }
-        throw err;
-      }
-    },
-  });
-
   // Check if walkthrough is completed
   const { data: profile } = useQuery({
-    queryKey: ["admin-profile"],
+    queryKey: ["admin-profile", user?.id ?? null],
     queryFn: async ({ signal }) => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
         // Using casting to bypass missing property in generated types
         const { data } = await (supabase as unknown as SupabaseTableOverride)
@@ -82,7 +49,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         throw err;
       }
     },
-    enabled: !!isAdmin,
+    enabled: hasAdminAccess && !!user,
   });
 
   const hasCompletedWalkthrough = !!profile?.admin_walkthrough_completed_at;
@@ -95,7 +62,6 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const completeWalkthroughMutation = useMutation({
     mutationFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { error } = await (supabase as unknown as SupabaseTableOverride)
         .from("profiles")
@@ -109,7 +75,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   });
 
   const toggleAdminMode = useCallback(() => {
-    if (isAdmin) {
+    if (hasAdminAccess) {
       setIsAdminMode((prev) => {
         const next = !prev;
         if (!next) {
@@ -118,7 +84,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
     }
-  }, [isAdmin]);
+  }, [hasAdminAccess]);
 
   const completeWalkthrough = () => {
     setIsWalkthroughActive(false);
@@ -137,11 +103,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isAdmin, toggleAdminMode]);
+  }, [hasAdminAccess, toggleAdminMode]);
 
   // Realtime Presence for Admins
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!hasAdminAccess || !user) return;
 
     const channel = supabase.channel('online-admins');
 
@@ -153,26 +119,23 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            await channel.track({
-              user_id: user.id,
-              email: user.email,
-              online_at: new Date().toISOString(),
-            });
-          }
+          await channel.track({
+            user_id: user.id,
+            email: user.email,
+            online_at: new Date().toISOString(),
+          });
         }
       });
 
     return () => {
       channel.unsubscribe();
     };
-  }, [isAdmin]);
+  }, [hasAdminAccess, user]);
 
   return (
     <AdminContext.Provider 
       value={{ 
-        isAdmin: !!isAdmin, 
+        isAdmin: hasAdminAccess, 
         isAdminMode, 
         setIsAdminMode, 
         toggleAdminMode,

@@ -1,7 +1,19 @@
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import { supabase } from '@/integrations/supabase/client';
+import type { Session } from '@supabase/supabase-js';
+import { fetchSession } from '@/services/authService';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+
+async function requireAuthenticatedSession(errorMessage: string): Promise<Session> {
+  const result = await fetchSession({ timeoutMs: 4000 });
+
+  if (!result.ok || !result.response.data.session) {
+    throw new Error(errorMessage);
+  }
+
+  return result.response.data.session;
+}
 
 export const createSlotCheckoutSession = async (
   slotId: string, 
@@ -10,11 +22,7 @@ export const createSlotCheckoutSession = async (
   selectedOutlets?: string[]
 ) => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      throw new Error('You must be signed in to purchase this service');
-    }
+    const session = await requireAuthenticatedSession('You must be signed in to purchase this service');
 
     // Call Supabase Edge Function to create the checkout session
     const { data, error } = await supabase.functions.invoke('create-checkout-session', {
@@ -44,11 +52,7 @@ export const createSlotCheckoutSession = async (
 
 export const createCreditPackCheckoutSession = async (packId: string) => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      throw new Error('You must be signed in to purchase credits');
-    }
+    const session = await requireAuthenticatedSession('You must be signed in to purchase credits');
 
     const { data, error } = await supabase.functions.invoke('create-checkout-session', {
       body: { 
@@ -84,11 +88,7 @@ export const createMerchCheckoutSession = async (items: any[], options?: MerchCh
   const { shippingAddress, contactMethod, contactValue } = options || {};
 
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      throw new Error('You must be signed in to complete your purchase');
-    }
+    const session = await requireAuthenticatedSession('You must be signed in to complete your purchase');
 
     // Determine return URL - if it's a single booking, go back to booking page for confirmation
     const bookingItem = items.find(i => typeof i.id === 'string' && i.id.startsWith('booking-'));
@@ -127,11 +127,7 @@ export const createMerchCheckoutSession = async (items: any[], options?: MerchCh
 
 export const createQuickPaymentSession = async (amount: number, description: string) => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      throw new Error('You must be signed in to make a payment');
-    }
+    const session = await requireAuthenticatedSession('You must be signed in to make a payment');
 
     const { data, error } = await supabase.functions.invoke('create-checkout-session', {
       body: { 

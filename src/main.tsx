@@ -1,13 +1,14 @@
-import { createRoot } from "react-dom/client";
-import { injectSpeedInsights } from "@vercel/speed-insights";
-import App from "./App.tsx";
-import "./index.css";
+import { createRoot } from 'react-dom/client';
+import { injectSpeedInsights } from '@vercel/speed-insights';
+import App from './App.tsx';
+import { RootErrorBoundary } from '@/components/RootErrorBoundary';
+import './index.css';
 
-console.log("ENV:", import.meta.env.VITE_SUPABASE_URL);
+console.log('ENV:', import.meta.env.VITE_SUPABASE_URL);
 
-if (import.meta.env.PROD && typeof window !== "undefined") {
+if (import.meta.env.PROD && typeof window !== 'undefined') {
   const host = window.location.hostname;
-  const isLocal = host === "localhost" || host === "127.0.0.1" || host === "::1";
+  const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '::1';
   if (!isLocal) {
     try {
       injectSpeedInsights();
@@ -17,4 +18,8 @@ if (import.meta.env.PROD && typeof window !== "undefined") {
   }
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById('root')!).render(
+  <RootErrorBoundary>
+    <App />
+  </RootErrorBoundary>
+);

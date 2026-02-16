@@ -27,14 +27,13 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 
 const Checkout = () => {
   const { items, removeItem, updateQuantity, totalPrice, clearCart } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { session } = useAuth();
+  const { session, status: authStatus } = useAuth();
   const [shippingAddress, setShippingAddress] = useState("");
   const [contactMethod, setContactMethod] = useState<"email" | "phone">("email");
   const [contactValue, setContactValue] = useState("");
@@ -59,7 +58,11 @@ const Checkout = () => {
     }
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      if (authStatus === "initializing") {
+        toast.error("Authentication is still loading. Please try again.");
+        return;
+      }
+
       if (!session) {
         toast.error("Please sign in to complete your purchase");
         navigate(`/login?redirectTo=${encodeURIComponent(location.pathname)}`);

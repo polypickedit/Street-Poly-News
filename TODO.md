@@ -10,6 +10,20 @@
 - [x] **Admin UX Polish**: Increased tap targets to 96px for mobile efficiency, added visible text labels, and ensured slot tags are always visible in edit mode.
 - [x] **Technical Debt**: Refactored hooks for React Fast Refresh and implemented strict typing for the Supabase service layer.
 
+## ✅ Recently Completed (Auth Hardening Follow-up)
+
+- [x] **Fail-closed slot access**: `useSlotAccess` now denies access on lookup/check failures instead of default-allow.
+- [x] **Admin role source-of-truth alignment**: `SubmissionQueue` and `AdminProvider` now consume `useAuth` role/session state instead of duplicating `getUser` + role RPC checks.
+- [x] **User-scoped query keys**: dashboard user data queries (`submissions`, `placements`, `payments`) are now keyed by `userId` to avoid cross-session cache bleed.
+- [x] **Checkout/session consistency**: checkout flow now uses auth context state; Stripe helpers use centralized session fetch guard (`fetchSession`) with timeout.
+
+## 🔄 Auth/System Gaps Remaining
+
+- [ ] Remove/guard runtime debug logs in production paths (`src/integrations/supabase/client.ts`, dashboard/admin debug logs).
+- [ ] Normalize role hydration typing in `roleService` (remove `any` cast from `get_user_roles` response).
+- [ ] Migrate remaining direct `supabase.auth.getUser/getSession` usage in non-admin hooks/components to auth-context-backed flows where applicable.
+- [ ] Add e2e coverage for OAuth redirect + role hydration timing (post-redirect auth transition, admin route gating while roles load).
+
 ---
 
 ## Top Priorities (work in order)

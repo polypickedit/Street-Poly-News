@@ -10,6 +10,7 @@ import { ExternalLink, Check, X, Clock, Loader2, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { SubmissionDistributionDialog } from "./SubmissionDistributionDialog";
+import { useAuth } from "@/hooks/useAuth";
 
 type SubmissionStatus = "unpaid" | "paid" | "pending_review" | "approved" | "declined" | "scheduled" | "published" | "archived";
 type PaymentStatus = "paid" | "unpaid" | "refunded";
@@ -76,6 +77,7 @@ export const SubmissionQueue = () => {
   });
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user, isAdmin, isEditor } = useAuth();
 
   const { data: submissions = [], isLoading } = useQuery<SubmissionRow[]>({
     queryKey: ["submissions", filter],
@@ -103,33 +105,17 @@ export const SubmissionQueue = () => {
     },
   });
 
-  const [userRole, setUserRole] = useState<{ isAdmin: boolean; isEditor: boolean }>({ isAdmin: false, isEditor: false });
-
-  useEffect(() => {
-    const checkRole = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: isAdmin } = await supabase.rpc("is_admin");
-      const { data: isEditor } = await supabase.rpc("is_admin_or_editor");
-
-      setUserRole({ 
-        isAdmin: !!isAdmin, 
-        isEditor: !!isEditor 
-      });
-    };
-    checkRole();
-  }, []);
-
   const updateStatus = async (id: string, newStatus: SubmissionStatus, reason?: string) => {
     setBusyId(id);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("No authenticated user found for status update.");
+      }
       
       const { error } = await supabase.rpc('update_submission_status', {
         p_submission_id: id,
         p_new_status: newStatus,
-        p_user_id: user?.id,
+        p_user_id: user.id,
         p_reason: reason || `Updated via Admin Dashboard`
       });
 
@@ -273,7 +259,7 @@ export const SubmissionQueue = () => {
                         <Share2 className="w-4 h-4" />
                       </Button>
                       {/* Conditional Actions based on status and role */}
-                      {(submission.status === "paid" || submission.status === "pending_review") && userRole.isEditor && (
+                      {(submission.status === "paid" || submission.status === "pending_review") && isEditor && (
                         <>
                           <Button
                             size="icon"
@@ -298,7 +284,7 @@ export const SubmissionQueue = () => {
                         </>
                       )}
 
-                      {submission.status === "approved" && userRole.isAdmin && (
+                      {submission.status === "approved" && isAdmin && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -311,7 +297,7 @@ export const SubmissionQueue = () => {
                         </Button>
                       )}
 
-                      {submission.status === "unpaid" && userRole.isAdmin && (
+                      {submission.status === "unpaid" && isAdmin && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -339,7 +325,7 @@ export const SubmissionQueue = () => {
                             </a>
                           </DropdownMenuItem>
                           <DropdownMenuItem className="hover:bg-muted">Add internal note</DropdownMenuItem>
-                          {userRole.isAdmin && (
+                          {isAdmin && (
                             <DropdownMenuItem
                               className="hover:bg-muted text-rep"
                               onClick={() => updateStatus(submission.id, "archived")}

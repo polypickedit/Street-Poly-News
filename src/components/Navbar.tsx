@@ -37,6 +37,7 @@ export function Navbar() {
   const [showSearch, setShowSearch] = useState(false);
   const [mobileLogoErrored, setMobileLogoErrored] = useState(false);
   const { session, isAdmin, isEditor, loading: authLoading } = useAuth();
+  const hasAdminAccess = isAdmin || isEditor;
   const isAuthenticated = !!session;
   const { data: categories } = useCategories();
   const isVisible = useHeaderVisible();
@@ -56,6 +57,13 @@ export function Navbar() {
   };
 
   const { activeAccount, isLoading: isLoadingAccount } = useAccount();
+
+  useEffect(() => {
+    const topOverlayOpen = isOpen || showSearch;
+    window.dispatchEvent(
+      new CustomEvent("streetpoly:top-overlay", { detail: { open: topOverlayOpen } })
+    );
+  }, [isOpen, showSearch]);
 
   useEffect(() => {
     console.log('Navbar Debug:', {
@@ -120,7 +128,7 @@ export function Navbar() {
                   {/* Actions (Search & Cart) */}
                   <div className="flex items-center gap-2">
                     {/* Admin Link (Desktop Only) */}
-                    {(isAdmin || isEditor) && (
+                    {hasAdminAccess && (
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
@@ -156,7 +164,7 @@ export function Navbar() {
                         <DropdownMenuTrigger asChild>
                           <button className="flex flex-col items-end mr-2 px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] text-yellow-400 uppercase leading-tight backdrop-blur-sm hover:bg-white/10 transition-colors focus:outline-none">
                             <div className="flex items-center gap-2">
-                              {!isAdmin && (
+                              {!hasAdminAccess && (
                                 <div className="flex gap-1.5">
                                   <span className={cn(
                                     "px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider",
@@ -171,9 +179,9 @@ export function Navbar() {
                                   )}
                                 </div>
                               )}
-                              {isAdmin && (
+                              {hasAdminAccess && (
                                 <span className="bg-rep/20 text-rep border border-rep/30 px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider">
-                                  ADMIN
+                                  {isAdmin ? "ADMIN" : "EDITOR"}
                                 </span>
                               )}
                               {activeAccount && (
@@ -194,7 +202,7 @@ export function Navbar() {
                               My Dashboard
                             </Link>
                           </DropdownMenuItem>
-                          {isAdmin && (
+                          {hasAdminAccess && (
                             <DropdownMenuItem asChild>
                               <Link to="/admin" className="w-full cursor-pointer hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white font-display uppercase tracking-wider">
                                 Admin Panel
@@ -357,12 +365,12 @@ export function Navbar() {
                             <Link
                               to="/dashboard"
                               onClick={() => setIsOpen(false)}
-                              className="text-xs uppercase tracking-[0.3em] text-dem font-bold"
+                              className="text-xs uppercase tracking-[0.3em] text-white font-bold"
                             >
                               My Dashboard
                             </Link>
                             
-                            {isAdmin && (
+                            {hasAdminAccess && (
                               <>
                                 <Link
                                   to="/admin/queue"

@@ -34,31 +34,29 @@ import MerchOrdersPage from "./pages/admin/MerchOrdersPage";
 import InventoryPage from "./pages/admin/InventoryPage";
 import { AdminOverlay } from "@/components/admin/AdminOverlay";
 import { AdminRoute } from "@/components/AdminRoute";
-import { DevDebugBanner } from "@/components/DevDebugBanner";
 import Search from "./pages/Search";
 import Category from "./pages/Category";
 import Categories from "./pages/Categories";
 import Person from "./pages/Person";
 import NotFound from "./pages/NotFound";
 import Community from "./pages/Community";
+import { DevAuthOverlay } from "@/components/DevAuthOverlay";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error: unknown) => {
-        // Retry on network errors or unreachable addresses
         const err = error as { message?: string; code?: string };
-        const isNetworkError = 
-          err?.message?.includes('Failed to fetch') || 
-          err?.message?.includes('net::ERR_') ||
-          err?.code === 'PGRST205'; // Also retry transient Postgres errors
-        
+        const isNetworkError =
+          err?.message?.includes("Failed to fetch") ||
+          err?.message?.includes("net::ERR_") ||
+          err?.code === "PGRST205";
+
         return failureCount < 3 && isNetworkError;
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
-      staleTime: 1000 * 60 * 5, // Default to 5 minutes to reduce request volume
-      refetchOnWindowFocus: false, // Prevent bursts of requests on focus
-      refetchOnMount: false, // Don't refetch on mount by default, individual queries can override
+      staleTime: 1000 * 60 * 5,
+      refetchOnWindowFocus: false,
     },
   },
 });
@@ -206,6 +204,7 @@ const AnimatedRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+      <DevAuthOverlay />
       <AdminProvider>
         <CartProvider>
           <TooltipProvider>
@@ -213,7 +212,6 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <div className="min-h-screen bg-white text-foreground font-sans selection:bg-dem/30">
-                <DevDebugBanner />
                 <AdminOverlay />
                 <AnimatedRoutes />
                 <CartSidebar />

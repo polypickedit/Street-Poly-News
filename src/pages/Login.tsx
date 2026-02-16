@@ -17,17 +17,17 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const { session, loading: isAuthLoading, authReady } = useAuth();
+  const { session, status: authStatus } = useAuth();
   const [searchParams] = useSearchParams();
   // Default to home screen per user request, unless specific redirect requested
   const redirectTo = searchParams.get("redirectTo") || "/";
 
   useEffect(() => {
-    if (authReady && session) {
+    if (authStatus === "authenticated" && session) {
       console.log("Login: Session ready, redirecting to", redirectTo);
       navigate(redirectTo, { replace: true });
     }
-  }, [authReady, session, navigate, redirectTo]);
+  }, [authStatus, session, navigate, redirectTo]);
 
 
   const mapAuthError = (error: { message: string }) => {
@@ -159,7 +159,7 @@ const Login = () => {
     }
   };
 
-  if (isAuthLoading) {
+  if (authStatus === "initializing") {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-dem" />

@@ -29,6 +29,6 @@ export interface Entitlement {
 
 export interface SlotAccess {
   hasAccess: boolean;
-  reason?: 'unauthenticated' | 'unsubscribed' | 'inactive_slot' | 'payment_required';
+  reason?: 'unauthenticated' | 'unsubscribed' | 'inactive_slot' | 'payment_required' | 'slot_unavailable' | 'access_check_failed';
   slot?: Slot;
 }

@@ -62,7 +62,9 @@ import { PageTransition } from "@/components/PageTransition";
 export default function Dashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isAdmin, loading: authLoading } = useAuth();
+  const { user, isAdmin, status: authStatus } = useAuth();
+  const userId = user?.id ?? null;
+  const authLoading = authStatus === "initializing";
   
   // Decouple these from the first paint
   const accountQuery = useAccount();
@@ -80,22 +82,21 @@ export default function Dashboard() {
   
   // Debug logs to identify loading hang
   useEffect(() => {
-    console.log("Dashboard Loading State:", {
-      authLoading,
+    console.log("%cDASHBOARD TRANSITION", "color: #f59e0b; font-weight: bold;", "loading_state", {
+      authStatus,
       isLoadingAccount,
       isLoadingCapabilities,
       hasUser: !!user,
       activeAccount: !!activeAccount,
       timestamp: new Date().toISOString()
     });
-  }, [authLoading, isLoadingAccount, isLoadingCapabilities, user, activeAccount]);
+  }, [authStatus, isLoadingAccount, isLoadingCapabilities, user, activeAccount]);
 
   const submissionsQuery = useQuery({
-    queryKey: ["user-submissions"],
+    queryKey: ["user-submissions", userId],
     queryFn: async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return [];
+        if (!userId) return [];
 
         const { data, error } = await supabase
           .from("submissions")
@@ -120,7 +121,7 @@ export default function Dashboard() {
               )
             )
           `)
-          .eq("user_id", session.user.id)
+          .eq("user_id", userId)
           .order("created_at", { ascending: false });
 
         if (error) throw error;
@@ -130,7 +131,7 @@ export default function Dashboard() {
         return [];
       }
     },
-    enabled: !!user,
+    enabled: !!userId,
     staleTime: 30000, // Submissions can change more frequently
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -166,11 +167,10 @@ export default function Dashboard() {
   }, [user, refetchSubmissions]);
 
   const placementsQuery = useQuery({
-    queryKey: ["user-placements"],
+    queryKey: ["user-placements", userId],
     queryFn: async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return [];
+        if (!userId) return [];
 
         const { data, error } = await supabase
           .from("placements")
@@ -188,7 +188,7 @@ export default function Dashboard() {
               user_id
             )
           `)
-          .eq("submissions.user_id", session.user.id)
+          .eq("submissions.user_id", userId)
           .order("start_date", { ascending: false });
 
         if (error) throw error;
@@ -198,7 +198,7 @@ export default function Dashboard() {
         return [];
       }
     },
-    enabled: !!user,
+    enabled: !!userId,
     staleTime: 60 * 1000,
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -207,16 +207,15 @@ export default function Dashboard() {
   const loadingPlacements = placementsQuery.isLoading;
 
   const paymentsQuery = useQuery({
-    queryKey: ["user-payments"],
+    queryKey: ["user-payments", userId],
     queryFn: async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return [];
+        if (!userId) return [];
 
         const { data, error } = await supabase
           .from("payments")
           .select("*")
-          .eq("user_id", session.user.id)
+          .eq("user_id", userId)
           .order("created_at", { ascending: false });
 
         if (error) throw error;
@@ -226,7 +225,7 @@ export default function Dashboard() {
         return [];
       }
     },
-    enabled: !!user,
+    enabled: !!userId,
     staleTime: 60 * 1000,
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -248,7 +247,7 @@ export default function Dashboard() {
 
   // Diagnostic log after all data hooks
   console.log("[Dashboard] render", { 
-    authLoading, 
+    authStatus,
     hasUser: !!user,
     isLoadingAccount,
     isLoadingCapabilities,

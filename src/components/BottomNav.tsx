@@ -14,6 +14,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
@@ -27,17 +28,25 @@ export const BottomNav = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isNearBottom, setIsNearBottom] = useState(false);
+  const [isTopOverlayOpen, setIsTopOverlayOpen] = useState(false);
   const { isAdmin, isEditor, user } = useAuth();
+  const hasAdminAccess = isAdmin || isEditor;
+  const isMobile = useIsMobile();
   const { data: categories } = useCategories();
   const { isAdminMode, toggleAdminMode } = useAdmin();
 
   useEffect(() => {
+    const onTopOverlay = (event: Event) => {
+      const customEvent = event as CustomEvent<{ open?: boolean }>;
+      setIsTopOverlayOpen(Boolean(customEvent.detail?.open));
+    };
+    window.addEventListener("streetpoly:top-overlay", onTopOverlay as EventListener);
+    return () => window.removeEventListener("streetpoly:top-overlay", onTopOverlay as EventListener);
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
-      // Only use scroll logic on mobile
-      if (window.innerWidth >= 768) {
-        setIsVisible(true);
-        return;
-      }
+      if (!isMobile) return;
 
       const currentScrollY = window.scrollY;
       const windowHeight = window.innerHeight;
@@ -74,23 +83,11 @@ export const BottomNav = () => {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  }, [isMobile, lastScrollY]);
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      // If mouse is within 100px of the bottom of the viewport
-      if (window.innerHeight - e.clientY < 100) {
-        setIsVisible(true);
-      } else if (window.innerWidth >= 768 && !menuOpen) {
-        // On desktop (>= md), hide it if mouse is not at the bottom
-        // and menu (sheet) is not open
-        setIsVisible(false);
-      }
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [menuOpen]);
+  if (!isMobile || isTopOverlayOpen) {
+    return null;
+  }
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -134,7 +131,7 @@ export const BottomNav = () => {
               </Link>
             ))}
 
-            {isAdmin && (
+            {hasAdminAccess && (
               <button
                 type="button"
                 onClick={toggleAdminMode}
@@ -152,7 +149,7 @@ export const BottomNav = () => {
               </button>
             )}
 
-            {isAdmin && (
+            {hasAdminAccess && (
               <Link
                 to="/admin"
                 className={cn(
@@ -296,7 +293,7 @@ export const BottomNav = () => {
                       >
                         <span className="text-lg font-medium">Contact</span>
                       </Link>
-                      {isAdmin && (
+                      {hasAdminAccess && (
                         <>
                           <button
                             type="button"

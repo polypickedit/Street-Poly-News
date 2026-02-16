@@ -1,5 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { safeQuery } from "@/lib/supabase-debug";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useMemo, useRef } from "react";
 
 export interface Account {
   id: string;
@@ -10,85 +13,101 @@ export interface Account {
   created_at: string;
 }
 
+type AccountFetchState =
+  | "initializing"
+  | "unauthenticated"
+  | "loading"
+  | "ready"
+  | "error";
+
 export function useAccount() {
-  const { data: activeAccount, isLoading, error } = useQuery({
-    queryKey: ["active-account"],
+  const { status: authStatus, user } = useAuth();
+  const userId = user?.id ?? null;
+  const enabled = authStatus === "authenticated" && !!userId;
+  const previousStateRef = useRef<AccountFetchState | null>(null);
+
+  const { data: activeAccount, isLoading, error, refetch } = useQuery({
+    queryKey: ["active-account", userId],
+    enabled,
     queryFn: async ({ signal }) => {
       try {
-        console.log("useAccount: Fetching account...");
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          console.log("useAccount: No user found.");
+        if (!userId) {
           return null;
         }
-
-        console.log("useAccount: User found:", user.id);
+        console.log("%cACCOUNT TRANSITION", "color: #60a5fa; font-weight: bold;", "fetch.start", { userId });
 
         // First try to find an account where the user is an owner
-        const query = supabase
-          .from("accounts")
-          .select("*")
-          .eq("owner_user_id", user.id)
-          .eq("status", "active")
-          .limit(1) as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: Account[] | null; error: { code: string; message: string } | null }> };
+        const accounts = await safeQuery(
+          (supabase
+            .from("accounts")
+            .select("*")
+            .eq("owner_user_id", userId)
+            .eq("status", "active")
+            .limit(1) as unknown as { abortSignal: (s?: AbortSignal) => unknown }).abortSignal(signal)
+        ) as Account[] | null;
 
-        const result = await query.abortSignal(signal);
-        const accounts = result.data;
-        const error = result.error;
-
-        if (error) {
-          // Only log if it's not an RLS recursion error which we are fixing via migration
-          if (error.code !== '42P17') {
-            console.error("Error fetching account by owner:", error);
-          }
-          // If error, don't return null yet, try member lookup
-        }
-
-        if (accounts && accounts.length > 0) {
-          console.log("useAccount: Account found (owner):", accounts[0]);
+        if (accounts?.length) {
+          console.log("%cACCOUNT TRANSITION", "color: #60a5fa; font-weight: bold;", "fetch.owner_found", {
+            userId,
+            accountId: accounts[0].id,
+          });
           return accounts[0] as Account;
         }
 
         // If no account found as owner, check account_members
-        console.log("useAccount: No owned account, checking memberships...");
-        
-        const { data: memberships, error: memberError } = await supabase
-          .from("account_members")
-          .select("account_id, accounts(*)")
-          .eq("user_id", user.id)
-          .limit(1);
+        const memberships = await safeQuery(
+          (supabase
+            .from("account_members")
+            .select("account_id, accounts(*)")
+            .eq("user_id", userId)
+            .limit(1) as unknown as { abortSignal: (s?: AbortSignal) => unknown }).abortSignal(signal)
+        ) as Array<{ accounts: Account | null }> | null;
 
-        if (memberError) {
-          console.error("Error fetching account memberships:", memberError);
-          return null;
+        if (memberships?.length && memberships[0].accounts) {
+          const memberAccount = memberships[0].accounts as Account;
+          if (memberAccount.status === "active") {
+            console.log("%cACCOUNT TRANSITION", "color: #60a5fa; font-weight: bold;", "fetch.member_found", {
+              userId,
+              accountId: memberAccount.id,
+            });
+            return memberAccount;
+          }
         }
 
-        if (memberships && memberships.length > 0 && memberships[0].accounts) {
-           const memberAccount = memberships[0].accounts as unknown as Account;
-           // Ensure it's active
-           if (memberAccount.status === 'active') {
-             console.log("useAccount: Account found (member):", memberAccount);
-             return memberAccount;
-           }
-        }
-
-        console.log("useAccount: No active account found for user.");
+        console.log("%cACCOUNT TRANSITION", "color: #60a5fa; font-weight: bold;", "fetch.none", { userId });
         return null;
       } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+        if (err instanceof Error && (err.name === "AbortError" || err.message?.includes("abort"))) {
           return null;
         }
-        console.error("useAccount error:", err);
-        return null;
+        throw err;
       }
     },
-    // Force refetch on mount to ensure fresh data
-    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
+  const state: AccountFetchState = useMemo(() => {
+    if (authStatus === "initializing") return "initializing";
+    if (authStatus !== "authenticated" || !userId) return "unauthenticated";
+    if (isLoading) return "loading";
+    if (error) return "error";
+    return "ready";
+  }, [authStatus, error, isLoading, userId]);
+
+  useEffect(() => {
+    if (previousStateRef.current === state) return;
+    previousStateRef.current = state;
+    console.log("%cACCOUNT TRANSITION", "color: #60a5fa; font-weight: bold;", state, {
+      userId,
+      hasAccount: !!activeAccount,
+    });
+  }, [activeAccount, state, userId]);
+
   return {
-    activeAccount,
-    isLoading,
+    activeAccount: activeAccount ?? null,
+    isLoading: state === "loading" || state === "initializing",
     error,
+    state,
+    refetch,
   };
 }

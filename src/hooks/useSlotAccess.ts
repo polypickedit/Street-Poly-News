@@ -4,9 +4,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { Slot, SlotAccess, Entitlement } from '@/types/slots';
 
 export const useSlotAccess = (slotSlug: string) => {
-  const { session, isAdmin } = useAuth();
+  const { session, isAdmin, rolesLoaded, status } = useAuth();
 
-  const { data: access, isLoading: loading } = useQuery({
+  // Deterministic readiness check:
+  // 1. If unauthenticated, we are ready (user is guest)
+  // 2. If authenticated, we must wait for roles to load
+  const isAuthReady = status === 'unauthenticated' || (status === 'authenticated' && rolesLoaded);
+
+  const { data: access, isLoading: queryLoading } = useQuery({
     queryKey: ['slot-access', slotSlug, session?.user?.id, isAdmin],
     queryFn: async ({ signal }) => {
       // Mock data for development when database records are missing
@@ -52,11 +57,11 @@ export const useSlotAccess = (slotSlug: string) => {
 
         if (slotError || !slot) {
           // Check if we have a mock fallback for this slug
-          if (MOCK_SLOTS[slotSlug]) {
+          if (import.meta.env.DEV && MOCK_SLOTS[slotSlug]) {
             return { hasAccess: true, slot: MOCK_SLOTS[slotSlug] };
           }
           console.error('Slot not found:', slotSlug);
-          return { hasAccess: true }; // Fallback
+          return { hasAccess: false, reason: 'slot_unavailable' };
         }
 
         const typedSlot = slot as unknown as Slot;
@@ -119,15 +124,18 @@ export const useSlotAccess = (slotSlug: string) => {
           throw err; // Let React Query handle it
         }
         console.error('Error checking slot access:', err);
-        return { hasAccess: true }; // Fallback on error
+        return { hasAccess: false, reason: 'access_check_failed' };
       }
     },
+    enabled: isAuthReady,
     staleTime: 60000, // 1 minute cache
     retry: false,
   });
 
+  const loading = !isAuthReady || queryLoading;
+
   return { 
-    hasAccess: access?.hasAccess ?? true, 
+    hasAccess: access?.hasAccess ?? false, 
     reason: access?.reason, 
     slot: access?.slot, 
     loading 

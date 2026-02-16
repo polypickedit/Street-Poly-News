@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SubmissionDetail {
   id: string;
@@ -53,24 +54,8 @@ export default function OrderDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const checkAdmin = async () => {
-      try {
-        const hasAccess = await safeQuery(
-          supabase.rpc("is_admin_or_editor").abortSignal(controller.signal)
-        );
-        setIsAdmin(!!hasAccess);
-      } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) return;
-        // safeQuery already logs the error
-      }
-    };
-    checkAdmin();
-    return () => controller.abort();
-  }, []);
+  const { isAdmin, isEditor } = useAuth();
+  const hasAdminAccess = isAdmin || isEditor;
 
   const { data: submissionData, isLoading, error } = useQuery({
     queryKey: ["submission", id],
