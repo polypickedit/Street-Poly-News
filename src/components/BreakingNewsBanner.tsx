@@ -16,26 +16,25 @@ export function BreakingNewsBanner() {
         if (placements && placements.length > 0) {
           const ids = placements.map(p => parseInt(p.content_id!)).filter(id => !isNaN(id));
           if (ids.length > 0) {
-            const query = (supabase as SupabaseClient)
+            const { data, error } = await (supabase as SupabaseClient)
                .from("posts")
                .select("*")
-               .in("id", ids) as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: { id: string; title: string }[] | null; error: { code: string; message: string } | null }> };
- 
-             const { data, error } = await query.abortSignal(signal);
+               .in("id", ids)
+               .abortSignal(signal);
+
              if (error) throw error;
              return data || [];
            }
          }
  
          // Fallback: Latest breaking posts
-         const fallbackQuery = (supabase as SupabaseClient)
+         const { data, error } = await (supabase as SupabaseClient)
            .from("posts")
            .select("*")
            .eq("is_breaking", true)
            .order("created_at", { ascending: false })
-           .limit(10) as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: { id: string; title: string }[] | null; error: { code: string; message: string } | null }> };
- 
-         const { data, error } = await fallbackQuery.abortSignal(signal);
+           .abortSignal(signal)
+           .limit(10);
  
          if (error) throw error;
          return data || [];

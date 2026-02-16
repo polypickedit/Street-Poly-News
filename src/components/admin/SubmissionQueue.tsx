@@ -39,6 +39,10 @@ type SubmissionRow = {
     name: string;
     price: number;
   } | null;
+  payments: {
+    stripe_payment_intent_id: string;
+    metadata: Record<string, unknown>;
+  }[] | null;
 };
 
 type SubmissionFilter = "all" | SubmissionStatus;
@@ -77,7 +81,7 @@ export const SubmissionQueue = () => {
       try {
         let baseQuery = (supabase as SupabaseClient)
           .from("submissions")
-          .select("*, artists ( name, email ), slots ( name, price )")
+          .select("*, artists ( name, email ), slots ( name, price ), payments ( stripe_payment_intent_id, metadata )")
           .order("created_at", { ascending: false });
 
         if (filter !== "all") {
@@ -231,7 +235,16 @@ export const SubmissionQueue = () => {
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell>{renderPaymentBadge(submission.payment_status)}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      {renderPaymentBadge(submission.payment_status)}
+                      {submission.payments && submission.payments.length > 0 && (
+                        <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]" title={submission.payments[0].stripe_payment_intent_id}>
+                          {submission.payments[0].stripe_payment_intent_id}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{renderStatusBadge(submission.status)}</TableCell>
                   <TableCell className="text-right text-sm text-muted-foreground">
                     {format(new Date(submission.created_at), "MMM d, yyyy")}

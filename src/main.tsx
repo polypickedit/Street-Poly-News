@@ -3,13 +3,17 @@ import { injectSpeedInsights } from "@vercel/speed-insights";
 import App from "./App.tsx";
 import "./index.css";
 
+console.log("ENV:", import.meta.env.VITE_SUPABASE_URL);
+
 if (import.meta.env.PROD && typeof window !== "undefined") {
   const host = window.location.hostname;
   const isLocal = host === "localhost" || host === "127.0.0.1" || host === "::1";
   if (!isLocal) {
     try {
       injectSpeedInsights();
-    } catch { void 0; }
+    } catch {
+      void 0;
+    }
   }
 }
 

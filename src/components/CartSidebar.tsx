@@ -1,10 +1,11 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
-import { Minus, Plus, Trash2, ShoppingBag, Loader2 } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, Loader2, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { createMerchCheckoutSession } from "@/lib/stripe";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 export const CartSidebar = () => {
   const { items, isOpen, setIsOpen, removeItem, updateQuantity, totalPrice, clearCart } = useCart();
@@ -106,21 +107,19 @@ export const CartSidebar = () => {
                   ${totalPrice.toFixed(2)}
                 </span>
               </div>
+              
               <Button
-                className="w-full bg-dem hover:bg-dem/90 text-white font-body uppercase tracking-wider"
+                asChild
+                className="w-full bg-dem hover:bg-dem/90 text-white font-body uppercase tracking-wider h-12"
                 size="lg"
-                onClick={handleCheckout}
-                disabled={isCheckingOut || items.length === 0}
+                onClick={() => setIsOpen(false)}
               >
-                {isCheckingOut ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Checkout"
-                )}
+                <Link to="/checkout" className="flex items-center justify-center gap-2">
+                  Proceed to Checkout
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
               </Button>
+
               <Button
                 variant="ghost"
                 className="w-full text-white/40 hover:text-white hover:bg-white/5 font-body"

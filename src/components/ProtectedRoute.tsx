@@ -4,39 +4,31 @@ import { useAuth } from "../hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { session, loading } = useAuth();
+  const { session, loading, authReady } = useAuth();
   const location = useLocation();
 
   useEffect(() => {
-    if (!loading) {
-      console.log("ProtectedRoute Gate:", {
-        hasSession: !!session,
-        pathname: location.pathname
+    // Only log significant state changes
+    if (authReady) {
+      console.log("ProtectedRoute Check:", {
+        authenticated: !!session,
+        path: location.pathname
       });
     }
-  }, [loading, session, location]);
+  }, [authReady, session, location.pathname]);
 
-  if (loading) {
+  // Wait for auth to be fully ready before making decisions
+  if (!authReady || loading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-dem mx-auto mb-4" />
-          <p className="text-white/40 animate-pulse">Verifying access...</p>
-          <div className="mt-8">
-            <p className="text-xs text-white/30 mb-2">Taking longer than usual?</p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="text-xs text-dem hover:text-dem/80 underline transition-colors"
-            >
-              Refresh page
-            </button>
-          </div>
-        </div>
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-white">
+        <Loader2 className="h-8 w-8 animate-spin text-dem mb-4" />
+        <p className="text-white/60 text-sm animate-pulse">Verifying access...</p>
       </div>
     );
   }
 
   if (!session) {
+    console.log("ProtectedRoute: No session found, redirecting to login from", location.pathname);
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

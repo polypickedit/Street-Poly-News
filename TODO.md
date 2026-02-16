@@ -12,6 +12,16 @@
 
 ---
 
+## Top Priorities (work in order)
+
+1. **Fix the Stripe booking/payment flow** (edge function + cart) so the checkout session is created and returns a URL.
+2. **Clean up secrets/ env hygiene**: remove the tracked `.env`, document/journal where `VITE_*`, `SUPABASE_*`, and `STRIPE_*` keys live, and ensure production secrets are set in Lovable/Vercel/Supabase and rotated if anything leaked.
+3. **Rebuild schema & policies**: run all Supabase migrations, confirm helpers (`public.is_admin_or_editor()`, etc.) exist, and seed roles/admins so the `/admin` UI actually renders.
+4. **Authenticate safely**: finish the Google OAuth setup (redirects + secrets) and verify `Login`/`AdminRoute` remain locked behind `auth.uid()` + the new `admin_users` identity.
+5. **Document the launch & observability checklist** once the above are stable.
+
+---
+
 ## 1. Secrets & Runtime Config
 
 - Remove the tracked `.env` file (it currently exposes `STRIPE_SECRET_KEY` and Supabase keys) and add it to `.gitignore`; keep real secrets in `.env.local` or, better, in the deployment platform’s secret store, then rotate any leaked credentials.
@@ -46,3 +56,45 @@
     - Optimized AdminDashboard and Dashboard queries by moving them to a higher level in the component tree.
     - Explicitly disabled `abortSignal` for lightweight background queries (stats, activities) to prevent browser console noise during component unmounts.
 - [x] **Sign-out Auth Requests**: Added error handling to sign-out flows to ensure requests complete before redirection.
+
+## 7. Action Plan
+
+### Fix the Stripe booking/payment flow
+- [ ] Reproduce the checkout failure locally and capture the `create-checkout-session` logs.
+- [ ] Confirm server env vars (`STRIPE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) are available to the function and logged payloads are complete.
+- [ ] Adjust the edge function or client payload so Stripe can create the session and the response includes `{ url }`.
+- [ ] Step through booking form → cart → `/checkout` → webhook and ensure submissions transition `unpaid` → `paid` → `pending_review`.
+
+### Secrets & runtime config
+- [ ] Remove tracked `.env` (or any file exposing live secrets) and ensure `.gitignore` covers all `.env*` entries.
+- [ ] Create a `.env.local` copy of `.env.example` with placeholder keys for local dev.
+- [ ] Document the required `VITE_*`, `SUPABASE_*`, and `STRIPE_*` env vars in `ENVIRONMENT.md` (and any deployment docs).
+- [ ] Set secrets in deployment platforms (Lovable/Vercel/Supabase) and redeploy the Supabase functions so they pick them up.
+- [ ] Update `supabase/config.toml` redirect entries to match the actual origins (localhost ports, staging/prod) and redeploy the config.
+
+### Rebuild schema & policies
+- [ ] Run all migrations (`supabase db reset/push`) so `supabase/migrations/*.sql` and the new `20260214000000_admin_identity.sql` are applied.
+- [ ] Insert your UID into `public.admin_users` and verify `public.is_owner_admin()` returns true for you.
+- [ ] Confirm `public.is_admin_or_editor()` now references `public.is_owner_admin()` so RLS policies automatically honor the new admin identity.
+- [ ] Optionally run `scripts/sql/generate_policy_diffs.sql` to compare the current policies to `OR public.is_owner_admin()` variants and apply the selected diffs (start with SELECT policies).
+
+### Authenticate safely
+- [ ] Reconfigure the Google OAuth provider (client ID/secret + redirect URLs) in Supabase Auth and ensure the same URLs are listed in `supabase/config.toml`.
+- [ ] Exercise email/password and OAuth login flows locally; watch the `useAuth` logs to confirm the session resolves and `AdminRoute` redirects appropriately.
+- [ ] Test accessing `/admin` as a normal user (should be denied) and as the owner (should load fully).
+
+### Launch & observability
+- [ ] Run `npm run build` and the relevant test suites (`test:unit`, and optionally `test:integration/test:e2e`) after the above changes.
+- [ ] Complete an end-to-end booking → Stripe payment → webhook run and verify `submissions`, `payments`, `slot_entitlements`, and `submission_distribution` rows update as expected.
+- [ ] Capture a deployment checklist (extend `RELEASE_CHECKLIST.md` or `TODO.md`) that lists secrets/migrations/function deploys/webhook checks and a quick admin verification step.
+- [ ] Confirm admin-only UI (Control Room, audit view) is gated behind `public.is_owner_admin()` so only the explicit owner sees it.
+
+## 8. Security Validation Checklist
+- [ ] Log in as a standard user and confirm `/admin` is blocked while normal pages still render (AdminRoute is UX only).
+- [ ] As that same user, run `supabase.from('merch_orders').select('*')` and verify you either get 0 rows or a policy rejection.
+- [ ] Run the same query as an admin; you should see real merch orders with shipping/contact details.
+- [ ] Confirm `merch_orders`, `merch_inventory`, and admin-oriented views/policies explicitly include `auth.uid() = user_id` or `public.is_owner_admin()` guards.
+- [ ] Ensure no `anon` access is granted to admin tables—`merch_inventory` and audit views should only be readable through the owner check.
+- [ ] If any direct SQL returns rows for a non-admin, fix the policy / view filter immediately.
+
+## 6. Network & Observability (Technical Debt)

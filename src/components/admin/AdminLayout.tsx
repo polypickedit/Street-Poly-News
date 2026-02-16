@@ -11,6 +11,8 @@ import {
   LogOut,
   Inbox,
   Share2,
+  ShoppingBag,
+  ClipboardList,
   Menu,
   Home
 } from "lucide-react";
@@ -30,6 +32,8 @@ const navItems = [
   { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
   { name: "Queue", path: "/admin/queue", icon: Inbox },
   { name: "Submissions", path: "/admin/submissions", icon: ListMusic },
+  { name: "Merch Orders", path: "/admin/merch-orders", icon: ShoppingBag },
+  { name: "Inventory", path: "/admin/inventory", icon: ClipboardList },
   { name: "Outlets", path: "/admin/outlets", icon: Share2 },
   { name: "Placements", path: "/admin/placements", icon: History },
   { name: "Settings", path: "/admin/settings", icon: Settings },

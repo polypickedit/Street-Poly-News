@@ -162,13 +162,10 @@ CREATE POLICY "Admins and Editors can manage playlists" ON public.playlists
 CREATE POLICY "Admins and Editors can manage placements" ON public.placements
     FOR ALL USING (public.is_admin_or_editor());
 
--- Payments: Admin only
-CREATE POLICY "Admins can view and manage payments" ON public.payments
-    FOR ALL USING (EXISTS (
-        SELECT 1 FROM public.user_roles ur
-        JOIN public.roles r ON ur.role_id = r.id
-        WHERE ur.user_id = auth.uid() AND r.name = 'admin'
-    ));
+-- Payments: Admin can manage all, users will have access defined in later migrations
+DROP POLICY IF EXISTS "Admins can view and manage payments" ON public.payments;
+CREATE POLICY "Admins can manage all payments" ON public.payments
+    FOR ALL USING (public.is_admin_or_editor());
 
 -- Admin Actions: Admin/Editor can view, System inserts
 CREATE POLICY "Admins and Editors can view admin actions" ON public.admin_actions

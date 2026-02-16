@@ -15,8 +15,14 @@ export function useAccount() {
     queryKey: ["active-account"],
     queryFn: async ({ signal }) => {
       try {
+        console.log("useAccount: Fetching account...");
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return null;
+        if (!user) {
+          console.log("useAccount: No user found.");
+          return null;
+        }
+
+        console.log("useAccount: User found:", user.id);
 
         // First try to find an account where the user is an owner
         const query = supabase
@@ -33,15 +39,40 @@ export function useAccount() {
         if (error) {
           // Only log if it's not an RLS recursion error which we are fixing via migration
           if (error.code !== '42P17') {
-            console.error("Error fetching account:", error);
+            console.error("Error fetching account by owner:", error);
           }
-          return null;
+          // If error, don't return null yet, try member lookup
         }
 
         if (accounts && accounts.length > 0) {
+          console.log("useAccount: Account found (owner):", accounts[0]);
           return accounts[0] as Account;
         }
 
+        // If no account found as owner, check account_members
+        console.log("useAccount: No owned account, checking memberships...");
+        
+        const { data: memberships, error: memberError } = await supabase
+          .from("account_members")
+          .select("account_id, accounts(*)")
+          .eq("user_id", user.id)
+          .limit(1);
+
+        if (memberError) {
+          console.error("Error fetching account memberships:", memberError);
+          return null;
+        }
+
+        if (memberships && memberships.length > 0 && memberships[0].accounts) {
+           const memberAccount = memberships[0].accounts as unknown as Account;
+           // Ensure it's active
+           if (memberAccount.status === 'active') {
+             console.log("useAccount: Account found (member):", memberAccount);
+             return memberAccount;
+           }
+        }
+
+        console.log("useAccount: No active account found for user.");
         return null;
       } catch (err) {
         if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
@@ -51,6 +82,8 @@ export function useAccount() {
         return null;
       }
     },
+    // Force refetch on mount to ensure fresh data
+    refetchOnMount: true,
   });
 
   return {

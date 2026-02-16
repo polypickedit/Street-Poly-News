@@ -3,8 +3,15 @@ import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router-dom";
 import { 
   Upload, Music, Mic2, Calendar as CalendarIcon, User, Mail, 
-  MessageSquare, CreditCard, Share2, Loader2, CheckCircle2 
+  MessageSquare, CreditCard, Share2, Loader2, CheckCircle2,
+  Radio, Ticket, ChevronDown
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -27,8 +34,9 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "../hooks/useAuth";
-import { getProductBySlotSlug } from "@/config/pricing";
+import { getProductBySlotSlug, PRODUCTS } from "@/config/pricing";
 import { submissionService, SubmissionPayload } from "@/lib/submissionService";
+import { useCart } from "@/hooks/use-cart";
 
 interface BookingFormProps {
   type: "music" | "interview";
@@ -52,6 +60,7 @@ interface Outlet {
   name: string;
   price_cents: number;
   outlet_type: string;
+  accepted_content_types?: string[];
 }
 
 interface Slot {
@@ -61,6 +70,29 @@ interface Slot {
   price: number;
   type: "music" | "interview";
 }
+
+const FALLBACK_SLOTS: Record<"music" | "interview", Slot[]> = {
+  music: [
+    {
+      id: "00000000-0000-0000-0000-000000000001",
+      name: "New Music Mondays",
+      slug: "new-music-monday",
+      price: (PRODUCTS.MUSIC_MONDAY.price_cents ?? 30000) / 100,
+      type: "music",
+    },
+  ],
+  interview: [
+    {
+      id: "00000000-0000-0000-0000-000000000002",
+      name: "Featured Interview",
+      slug: "featured-interview",
+      price: (PRODUCTS.INTERVIEW.price_cents ?? 15000) / 100,
+      type: "interview",
+    },
+  ],
+};
+
+import { safeQuery } from "@/lib/supabase-debug";
 
 export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   const [searchParams] = useSearchParams();
@@ -72,9 +104,27 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const { user, isAdmin, isEditor } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'capability'>('stripe');
+  const { addItem, setIsOpen: setCartOpen } = useCart();
+
+  const canUseCapability = isAdmin || isEditor;
+
+  const defaultValues: BookingFormData = {
+    name: "",
+    email: "",
+    artistName: "",
+    slotType: "", // Will be set dynamically by fetchSlots
+    preferredDate: "",
+    description: "",
+    links: "",
+    selectedOutlets: [],
+    submissionType: type === "music" ? "music" : "story",
+  };
+
+  const form = useForm<BookingFormData>({
+    defaultValues,
+  });
 
   const requiredCapability = selectedSlot ? getProductBySlotSlug(selectedSlot.slug).grants[0] : 'post.submit';
-  const canUseCapability = isAdmin || isEditor;
 
   useEffect(() => {
     // Default to stripe even for admins so they can see prices/test the flow.
@@ -103,8 +153,11 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
     const submissionId = searchParams.get('submissionId');
-    if (sessionId && submissionId) {
-      verifyPayment(submissionId, sessionId);
+
+    if (sessionId) {
+      verifyPayment(submissionId ?? undefined, sessionId);
+    } else if (submissionId) {
+      verifyPayment(submissionId);
     }
   }, [searchParams, verifyPayment]);
 
@@ -113,96 +166,114 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
 
     const fetchSlots = async () => {
       setIsLoadingSlots(true);
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
       try {
-        // Try to fetch using the new 'type' column first (World-class filtering)
-        let { data, error } = await (supabase.from("slots") as any) // eslint-disable-line @typescript-eslint/no-explicit-any
+        const data = await safeQuery(
+          supabase
+          .from("slots")
           .select("id, name, slug, price, type")
           .eq("is_active", true)
-          .eq("type", type);
+          .eq("type", type)
+          .abortSignal(controller.signal)
+        );
         
-        // Fallback to legacy inference if the 'type' column doesn't exist yet
-        if (error && (error.message?.includes('type') || error.code === 'PGRST204')) {
-          const { data: legacyData, error: legacyError } = await supabase
-            .from("slots")
-            .select("id, name, slug, price, display_category")
-            .eq("is_active", true);
-          
-          if (legacyError) throw legacyError;
-          
-          data = (legacyData || []).filter(s => {
-            const inferred = (s.slug?.includes('interview') || s.display_category === 'interview') ? 'interview' : 'music';
-            return inferred === type;
-          });
-          error = null;
-        }
+        clearTimeout(timeoutId);
 
-        if (error) throw error;
+        const fetchedSlots = (data || []).map(s => ({
+          id: s.id,
+          name: s.name,
+          slug: s.slug,
+          price: Number(s.price),
+          type: s.type as "music" | "interview"
+        })) as Slot[];
 
-        if (data) {
-          const fetchedSlots = (data as any[]).map(s => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
-            id: s.id,
-            name: s.name,
-            slug: s.slug,
-            price: Number(s.price),
-            type: (s.type || ((s.slug?.includes('interview') || s.display_category === 'interview') ? 'interview' : 'music')) as "music" | "interview"
-          })) as Slot[];
+        const slotCandidates = fetchedSlots.length > 0 ? fetchedSlots : FALLBACK_SLOTS[type];
+        setSlots(slotCandidates);
+
+        if (slotCandidates.length > 0) {
+          const slotFromUrl = searchParams.get('slot');
+          const defaultSlot = slotFromUrl 
+            ? (slotCandidates.find(s => s.slug === slotFromUrl) || slotCandidates[0])
+            : slotCandidates[0];
           
-          setSlots(fetchedSlots);
-          
-          // Set initial selected slot dynamically from DB results
-          if (fetchedSlots.length > 0) {
-            const defaultSlot = fetchedSlots[0];
-            form.setValue("slotType", defaultSlot.slug);
-            setSelectedSlot(defaultSlot);
-          }
+          form.setValue("slotType", defaultSlot.slug);
+          setSelectedSlot(defaultSlot);
         }
       } catch (err) {
-        console.error("Error fetching slots:", err);
-        toast.error("Failed to load available service options.");
+        clearTimeout(timeoutId);
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          console.log("BookingForm: Slots fetch timed out or aborted, using fallback");
+        } else {
+          console.error("Error fetching slots:", err);
+          toast.error("Failed to load available service options.");
+        }
+        const fallbackSlots = FALLBACK_SLOTS[type];
+        setSlots(fallbackSlots);
+        if (fallbackSlots.length > 0) {
+          const slotFromUrl = searchParams.get('slot');
+          const defaultSlot = slotFromUrl 
+            ? (fallbackSlots.find(s => s.slug === slotFromUrl) || fallbackSlots[0])
+            : fallbackSlots[0];
+          
+          form.setValue("slotType", defaultSlot.slug);
+          setSelectedSlot(defaultSlot);
+        }
       } finally {
         setIsLoadingSlots(false);
       }
     };
 
     const fetchOutlets = async () => {
-      const query = supabase.from("media_outlets").select("id, name, price_cents, outlet_type").eq("active", true);
-      const { data } = await (query as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: Outlet[] | null }> }).abortSignal(controller.signal);
-      if (data) setOutlets(data || []);
+      try {
+        const data = await safeQuery(
+          supabase
+          .from("media_outlets")
+          .select("id, name, price_cents, outlet_type, accepted_content_types")
+          .eq("active", true)
+          .abortSignal(controller.signal)
+        );
+      
+        if (data) setOutlets(data as Outlet[]);
+      } catch (err) {
+         console.error("BookingForm: Error fetching outlets:", err);
+      }
     };
 
     fetchSlots();
     fetchOutlets();
 
     return () => controller.abort();
-  }, [type]);
+  }, [type, form, searchParams]);
 
-  const defaultValues: BookingFormData = {
-    name: "",
-    email: "",
-    artistName: "",
-    slotType: "", // Will be set dynamically by fetchSlots
-    preferredDate: "",
-    description: "",
-    links: "",
-    selectedOutlets: [],
-    submissionType: type === "music" ? "music" : "story",
-  };
-
-  const form = useForm<BookingFormData>({
-    defaultValues,
-  });
+  const watchSlotType = form.watch("slotType");
+  const watchSubmissionType = form.watch("submissionType");
 
   useEffect(() => {
-    const slotType = form.watch("slotType");
-    const slot = slots.find(s => s.slug === slotType);
+    const slot = slots.find(s => s.slug === watchSlotType);
     setSelectedSlot(slot || null);
-  }, [form, slots]);
+  }, [watchSlotType, slots]);
+
+  const services = [
+    { name: "New Music Monday", slug: "new-music-monday", icon: Music, description: "$300 - Featured Live Review" },
+    { name: "Featured Interview", slug: "featured-interview", icon: Mic2, description: "$150 - 1-on-1 Session" },
+    { name: "Radio Promo", slug: "radio-promo", icon: Radio, description: "$200 - On-Air Promotion" },
+    { name: "Show Promo", slug: "show-promo", icon: Ticket, description: "$250 - Event Marketing" },
+    { name: "Quick Payment", slug: "payment", icon: CreditCard, description: "Custom Service Payment" },
+  ];
+
+  const filteredOutlets = outlets.filter(o => 
+    !o.accepted_content_types || 
+    o.accepted_content_types.length === 0 || 
+    o.accepted_content_types.includes(watchSubmissionType)
+  );
 
   const watchOutlets = form.watch("selectedOutlets");
   const outletsTotal = (watchOutlets || []).reduce((acc, id) => {
     const outlet = outlets.find(o => o.id === id);
     return acc + (outlet?.price_cents || 0);
   }, 0) / 100;
+  const selectedOutletsDetails = outlets.filter((outlet) => (watchOutlets || []).includes(outlet.id));
 
   const totalPrice = (selectedSlot?.price || 0) + outletsTotal;
 
@@ -248,34 +319,9 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
     );
   }
 
-  const uploadMedia = async (submissionId: string): Promise<string[]> => {
-    const urls: string[] = [];
-    for (const file of files) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${submissionId}/${crypto.randomUUID()}.${fileExt}`;
-      const filePath = `submissions/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('media')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        console.error("Upload error:", uploadError);
-        continue;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('media')
-        .getPublicUrl(filePath);
-
-      urls.push(publicUrl);
-    }
-    return urls;
-  };
-
   const onSubmit = async (data: BookingFormData) => {
     if (!user) {
-      toast.error("You must be signed in to submit.");
+      toast.error("Please sign in to complete your booking");
       return;
     }
 
@@ -285,7 +331,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
       return;
     }
 
-    if (!selectedSlot || !selectedSlot.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+    if (!selectedSlot) {
       toast.error("Please select a valid service option.");
       return;
     }
@@ -314,17 +360,33 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
         toast.info("Uploading media assets...");
       }
 
-      const submissionId = await submissionService.submit(payload, user.id, {
+      await submissionService.submit(payload, user?.id || null, {
         paymentMethod,
         capability: requiredCapability,
-        files
+        files,
+        skipRedirect: paymentMethod === 'stripe' // Add to cart instead of redirecting
+      }).then((submissionId) => {
+        if (paymentMethod === 'stripe') {
+          // Add to cart
+          addItem({
+            id: `booking-${submissionId}`,
+            name: `${selectedSlot?.name} - ${data.artistName || data.name}`,
+            type: "booking",
+            price: totalPrice,
+            image: "/placeholder.svg", // Default image for bookings
+          });
+          
+          setCartOpen(true);
+          if (onSuccess) onSuccess();
+          toast.success("Added to cart!");
+        }
       });
 
       if (paymentMethod === 'capability') {
         setPaymentStatus('paid');
         toast.success("Submission successful!");
+        if (onSuccess) onSuccess();
       }
-      // Stripe flow handles redirect inside submissionService.createWithStripe
     } catch (error) {
       console.error("Submission error:", error);
       const message = error instanceof Error ? error.message : "Failed to create submission.";
@@ -342,9 +404,44 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
           name="slotType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <CreditCard className="w-4 h-4" />
-                Select Your Service Option
+              <FormLabel className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-4 h-4" />
+                  Select Your Service Option
+                </div>
+                
+                {/* Services Dropdown - Moved from Navbar to here */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button type="button" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-all text-[10px] font-bold uppercase tracking-widest outline-none">
+                      Services
+                      <ChevronDown size={12} />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-64 bg-dem-dark border-dem/50 text-white p-2 z-[60]">
+                    {services.map((service) => (
+                      <DropdownMenuItem 
+                        key={service.name} 
+                        className="focus:bg-white/10 focus:text-white rounded-lg p-3 cursor-pointer"
+                        onClick={() => {
+                          if (service.slug === 'payment') {
+                            window.location.href = '/booking?action=payment';
+                          } else {
+                            field.onChange(service.slug);
+                          }
+                        }}
+                      >
+                        <div className="flex items-start gap-3 w-full">
+                          <service.icon className="w-5 h-5 text-dem mt-0.5" />
+                          <div className="flex flex-col">
+                            <span className="font-display text-sm uppercase tracking-wider">{service.name}</span>
+                            <span className="text-[10px] text-white/50 font-body">{service.description}</span>
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
@@ -390,27 +487,52 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
             )}
           </div>
           
-          <div className="space-y-3 mb-6">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground font-medium">Market Value</span>
-              <span className="text-muted-foreground line-through font-bold">${marketValue.toFixed(2)}</span>
+        <div className="space-y-3 mb-6">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-muted-foreground font-medium">Market Value</span>
+            <span className="text-muted-foreground line-through font-bold">${marketValue.toFixed(2)}</span>
+          </div>
+          <div className="space-y-3 border-t border-muted-foreground/20 pt-3">
+            <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.4em] text-muted-foreground font-semibold">
+              <span>Estimated Total</span>
+              <span className="text-[9px] font-black text-dem uppercase tracking-[0.6em]">Checkout</span>
             </div>
-            <div className="flex justify-between items-end">
-              <div>
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">
-                  Your Price
-                </p>
-                <p className="text-3xl font-black text-foreground tracking-tighter">
-                  {paymentMethod === 'capability' ? "FREE" : `$${totalPrice.toFixed(2)}`}
-                </p>
+            <div className="flex justify-between text-sm font-medium text-foreground">
+              <span className="text-muted-foreground font-medium">
+                {selectedSlot?.name || "Selected Service"}
+              </span>
+              <span>${(selectedSlot?.price || 0).toFixed(2)}</span>
+            </div>
+            {selectedOutletsDetails.length > 0 ? (
+              selectedOutletsDetails.map((outlet) => (
+                <div key={outlet.id} className="flex justify-between text-[11px] text-muted-foreground">
+                  <span>{outlet.name}</span>
+                  <span>+${(outlet.price_cents / 100).toFixed(2)}</span>
+                </div>
+              ))
+            ) : (
+              <div className="flex justify-between text-[11px] text-muted-foreground">
+                <span>Syndication add-ons</span>
+                <span>$0.00</span>
               </div>
-              <div className="text-right">
-                <p className="text-[10px] text-dem font-black uppercase tracking-widest bg-dem/10 px-2 py-1 rounded">
-                  {paymentMethod === 'capability' ? "100% Covered" : `Save $${(marketValue - totalPrice).toFixed(2)}`}
-                </p>
-              </div>
+            )}
+          </div>
+          <div className="flex justify-between items-end">
+            <div>
+              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">
+                Your Price
+              </p>
+              <p className="text-3xl font-black text-foreground tracking-tighter">
+                {paymentMethod === 'capability' ? "FREE" : `$${totalPrice.toFixed(2)}`}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] text-dem font-black uppercase tracking-widest bg-dem/10 px-2 py-1 rounded">
+                {paymentMethod === 'capability' ? "100% Covered" : `Save $${(marketValue - totalPrice).toFixed(2)}`}
+              </p>
             </div>
           </div>
+        </div>
 
           {canUseCapability && (
             <div className="pt-5 border-t border-dem/10 flex gap-3">
@@ -445,7 +567,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {outlets.map((outlet) => (
+            {filteredOutlets.map((outlet) => (
               <FormField
                 key={outlet.id}
                 control={form.control}

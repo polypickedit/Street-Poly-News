@@ -7,6 +7,7 @@ export interface AuthContextType {
   isAdmin: boolean;
   isEditor: boolean;
   loading: boolean;
+  authReady: boolean;
   refreshAuth: () => Promise<void>;
 }
 
@@ -16,5 +17,6 @@ export const AuthContext = createContext<AuthContextType>({
   isAdmin: false,
   isEditor: false,
   loading: true,
+  authReady: false,
   refreshAuth: async () => {},
 });

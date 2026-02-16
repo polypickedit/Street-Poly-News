@@ -37,15 +37,12 @@ const PostDetail = () => {
     queryKey: ["post", id],
     queryFn: async ({ signal }) => {
       try {
-        const query = supabase
+        const { data, error } = await supabase
           .from("posts")
           .select("*")
           .eq("id", parseInt(id!))
-          .single() as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: Post | null; error: { code: string; message: string } | null }> };
-
-        const result = await query.abortSignal(signal);
-        const data = result.data;
-        const error = result.error;
+          .abortSignal(signal)
+          .single();
 
         if (error) throw error;
         return data as Post;
@@ -64,17 +61,16 @@ const PostDetail = () => {
     queryKey: ["post-categories", id],
     queryFn: async ({ signal }) => {
       try {
-        const query = supabase
+        const { data, error } = await supabase
           .from("post_categories")
           .select("category_id, categories(id, name, slug, color)")
-          .eq("post_id", parseInt(id!)) as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: { categories: PostCategory }[] | null; error: { code: string; message: string } | null }> };
-
-        const result = await query.abortSignal(signal);
-        const data = result.data;
-        const error = result.error;
+          .eq("post_id", parseInt(id!))
+          .abortSignal(signal);
 
         if (error) throw error;
-        return data?.map((pc) => pc.categories).filter(Boolean) || [];
+        
+        const castedData = data as unknown as Array<{ categories: { id: string; name: string; slug: string; color: string | null } | null }>;
+        return castedData?.map((pc) => pc.categories).filter((c): c is { id: string; name: string; slug: string; color: string | null } => !!c) || [];
       } catch (err) {
         if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
           return [];
@@ -90,17 +86,16 @@ const PostDetail = () => {
     queryKey: ["post-people", id],
     queryFn: async ({ signal }) => {
       try {
-        const query = supabase
+        const { data, error } = await supabase
           .from("post_people")
           .select("person_id, people(id, name, slug)")
-          .eq("post_id", parseInt(id!)) as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: { people: PostPerson }[] | null; error: { code: string; message: string } | null }> };
-
-        const result = await query.abortSignal(signal);
-        const data = result.data;
-        const error = result.error;
+          .eq("post_id", parseInt(id!))
+          .abortSignal(signal);
 
         if (error) throw error;
-        return data?.map((pp) => pp.people).filter(Boolean) || [];
+        
+        const castedData = data as unknown as Array<{ people: { id: string; name: string; slug: string } | null }>;
+        return castedData?.map((pp) => pp.people).filter((p): p is { id: string; name: string; slug: string } => !!p) || [];
       } catch (err) {
         if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
           return [];
@@ -290,10 +285,11 @@ const PostDetail = () => {
               {/* Body Content */}
               {post.body_content && (
                 <div className="prose prose-invert prose-lg max-w-none">
-                  <div 
-                    className="font-body text-foreground leading-relaxed space-y-4 text-lg"
-                    dangerouslySetInnerHTML={{ __html: post.body_content.replace(/\n/g, '<br/>') }} 
-                  />
+                  <div className="font-body text-foreground leading-relaxed space-y-4 text-lg">
+                    {post.body_content.split('\n').map((line, i) => (
+                      <p key={i}>{line}</p>
+                    ))}
+                  </div>
                 </div>
               )}
 

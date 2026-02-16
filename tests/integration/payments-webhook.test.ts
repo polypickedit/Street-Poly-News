@@ -67,11 +67,13 @@ function createMockSupabase() {
     return tableChains[table];
   });
 
+  const rpc = vi.fn().mockResolvedValue({ error: null });
+
   const auth = {
     getUser: vi.fn().mockResolvedValue({ data: { user: { id: "admin-id" } }, error: null }),
   };
 
-  return { from, auth, tableChains };
+  return { from, rpc, auth, tableChains };
 }
 
 describe("Stripe webhook handler", () => {
@@ -92,7 +94,7 @@ describe("Stripe webhook handler", () => {
     await processStripeWebhookEvent(checkoutSessionCompleted, mockSupabase as any);
 
     expect(mockSupabase.from).toHaveBeenCalledWith("slot_entitlements");
-    expect(mockSupabase.tableChains.slot_entitlements.insert).toHaveBeenCalled();
+    expect(mockSupabase.tableChains.slot_entitlements.upsert).toHaveBeenCalled();
   });
 
   it("handles payment_intent.succeeded events gracefully", async () => {

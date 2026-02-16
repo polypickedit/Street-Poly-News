@@ -875,7 +875,10 @@ export interface Database {
           slug: string
           price: number
           is_active: boolean
+          type: "music" | "interview" | "ad" | "feature"
+          visibility: "public" | "account" | "paid"
           display_category: string | null
+          description: string | null
           created_at: string
         }
         Insert: {
@@ -884,7 +887,10 @@ export interface Database {
           slug: string
           price: number
           is_active?: boolean
+          type?: "music" | "interview" | "ad" | "feature"
+          visibility?: "public" | "account" | "paid"
           display_category?: string | null
+          description?: string | null
           created_at?: string
         }
         Update: {
@@ -893,7 +899,10 @@ export interface Database {
           slug?: string
           price?: number
           is_active?: boolean
+          type?: "music" | "interview" | "ad" | "feature"
+          visibility?: "public" | "account" | "paid"
           display_category?: string | null
+          description?: string | null
           created_at?: string
         }
         Relationships: []
@@ -902,24 +911,33 @@ export interface Database {
         Row: {
           id: string
           name: string
+          slug: string
+          description: string | null
           price_cents: number
           outlet_type: string
+          accepted_content_types: string[] | null
           active: boolean
           created_at: string
         }
         Insert: {
           id?: string
           name: string
+          slug: string
+          description?: string | null
           price_cents: number
           outlet_type: string
+          accepted_content_types?: string[] | null
           active?: boolean
           created_at?: string
         }
         Update: {
           id?: string
           name?: string
+          slug?: string
+          description?: string | null
           price_cents?: number
           outlet_type?: string
+          accepted_content_types?: string[] | null
           active?: boolean
           created_at?: string
         }

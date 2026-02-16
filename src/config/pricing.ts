@@ -42,6 +42,27 @@ export const PRODUCTS = {
     priceId: "price_music_monday",
     grants: ["playlist.place"],
     price_cents: 30000
+  },
+
+  // RADIO PROMO capability
+  RADIO_PROMO: {
+    priceId: "price_radio_promo",
+    grants: ["ad.feature"],
+    price_cents: 10000
+  },
+
+  // SHOW PROMO capability
+  SHOW_PROMO: {
+    priceId: "price_show_promo",
+    grants: ["ad.feature"],
+    price_cents: 5000
+  },
+
+  // OTHER capability
+  OTHER: {
+    priceId: "price_other",
+    grants: ["post.submit"],
+    price_cents: 10000
   }
 } as const;
 
@@ -61,5 +82,8 @@ export function getProductByPriceId(priceId: string) {
 export function getProductBySlotSlug(slug: string) {
   if (slug === 'featured-interview' || slug === 'interview') return PRODUCTS.INTERVIEW;
   if (slug === 'new-music-mondays' || slug === 'new-music-monday') return PRODUCTS.MUSIC_MONDAY;
+  if (slug === 'radio-promo') return PRODUCTS.RADIO_PROMO;
+  if (slug === 'show-promo') return PRODUCTS.SHOW_PROMO;
+  if (slug === 'other') return PRODUCTS.OTHER;
   return PRODUCTS.POST_SUBMIT;
 }

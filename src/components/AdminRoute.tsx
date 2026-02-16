@@ -4,11 +4,11 @@ import { useAuth } from "../hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
 export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { session, loading, isAdmin, isEditor } = useAuth();
+  const { session, loading, authReady, isAdmin, isEditor } = useAuth();
   const location = useLocation();
 
   useEffect(() => {
-    if (!loading) {
+    if (authReady && !loading) {
       console.log("AdminRoute Gate:", {
         hasSession: !!session,
         isAdmin,
@@ -16,9 +16,9 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
         pathname: location.pathname
       });
     }
-  }, [loading, session, isAdmin, isEditor, location]);
+  }, [loading, authReady, session, isAdmin, isEditor, location]);
 
-  if (loading) {
+  if (loading || !authReady) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-black">
         <Loader2 className="h-8 w-8 animate-spin text-dem" />

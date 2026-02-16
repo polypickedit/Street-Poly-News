@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ShoppingBag, Search, Zap, Loader2 } from "lucide-react";
+import { Menu, X, ShoppingBag, Search, Zap, Loader2, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "../hooks/useAuth";
@@ -13,6 +13,12 @@ import { useAdmin } from "@/hooks/useAdmin";
 import logo from "/logo.svg";
 import mobileSeal from "../assets/mobile-seal.png";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { useEntitlements } from "../hooks/useEntitlements";
 
@@ -30,7 +36,7 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [mobileLogoErrored, setMobileLogoErrored] = useState(false);
-  const { session, isAdmin, loading: authLoading } = useAuth();
+  const { session, isAdmin, isEditor, loading: authLoading } = useAuth();
   const isAuthenticated = !!session;
   const { data: categories } = useCategories();
   const isVisible = useHeaderVisible();
@@ -50,6 +56,19 @@ export function Navbar() {
   };
 
   const { activeAccount, isLoading: isLoadingAccount } = useAccount();
+
+  useEffect(() => {
+    console.log('Navbar Debug:', {
+      hasSession: !!session,
+      userId: session?.user?.id,
+      authLoading,
+      isAdmin,
+      activeAccount,
+      isLoadingAccount
+    });
+  }, [session, authLoading, isAdmin, activeAccount, isLoadingAccount]);
+
+
 
   const currentNavLinks = isAuthenticated ? [] : [];
 
@@ -92,20 +111,16 @@ export function Navbar() {
                         className="hidden md:block w-full h-full object-contain"
                       />
                     </div>
-
                     <span className="font-display text-2xl md:text-5xl tracking-widest text-dem leading-none">
                       STREETPOLY <span className="text-rep ml-1">NEWS</span>
                     </span>
-
                   </Link>
                 </div>
-
-
 
                   {/* Actions (Search & Cart) */}
                   <div className="flex items-center gap-2">
                     {/* Admin Link (Desktop Only) */}
-                    {isAdmin && (
+                    {(isAdmin || isEditor) && (
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
@@ -137,31 +152,74 @@ export function Navbar() {
 
                     {/* User Info & Debug Indicator */}
                     {session?.user && (
-                      <div className="flex flex-col items-end mr-2 px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] text-dem uppercase leading-tight backdrop-blur-sm">
-                        <div className="flex items-center gap-2">
-                          {!isAdmin && (
-                            <div className="flex gap-1.5">
-                              <span className={cn(
-                                "px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider",
-                                entitlements.length > 0 ? "bg-dem/20 text-dem border border-dem/30" : "bg-white/5 text-dem/40 border border-white/10"
-                              )}>
-                                {entitlements.length > 0 ? "PARTNER" : "VIEWER"}
-                              </span>
-                              {entitlements.length > 0 && (
-                                <span className="bg-white/5 text-dem/40 border border-white/10 px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider">
-                                  VIEWER
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="flex flex-col items-end mr-2 px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] text-yellow-400 uppercase leading-tight backdrop-blur-sm hover:bg-white/10 transition-colors focus:outline-none">
+                            <div className="flex items-center gap-2">
+                              {!isAdmin && (
+                                <div className="flex gap-1.5">
+                                  <span className={cn(
+                                    "px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider",
+                                    entitlements.length > 0 ? "bg-dem/20 text-dem border border-dem/30" : "bg-white/5 text-yellow-400/40 border border-white/10"
+                                  )}>
+                                    {entitlements.length > 0 ? "PARTNER" : "VIEWER"}
+                                  </span>
+                                  {entitlements.length > 0 && (
+                                    <span className="bg-white/5 text-yellow-400/40 border border-white/10 px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider">
+                                      VIEWER
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              {isAdmin && (
+                                <span className="bg-rep/20 text-rep border border-rep/30 px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider">
+                                  ADMIN
+                                </span>
+                              )}
+                              {activeAccount && (
+                                <span className="bg-purple-500/20 text-purple-400 border border-purple-500/30 px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider">
+                                  OWNER
                                 </span>
                               )}
                             </div>
-                          )}
+                            <div className="flex items-center gap-1 mt-1">
+                              <span className="opacity-70 text-[8px] font-black lowercase tracking-normal text-yellow-400">{session.user.email}</span>
+                              <ChevronDown size={10} className="text-yellow-400/50" />
+                            </div>
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 bg-dem-dark border-dem/50 text-white z-[60]">
+                          <DropdownMenuItem asChild>
+                            <Link to="/dashboard" className="w-full cursor-pointer hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white font-display uppercase tracking-wider">
+                              My Dashboard
+                            </Link>
+                          </DropdownMenuItem>
                           {isAdmin && (
-                            <span className="bg-rep/20 text-rep border border-rep/30 px-1.5 py-0.5 rounded-sm font-bold text-[8px] tracking-wider">
-                              ADMIN
-                            </span>
+                            <DropdownMenuItem asChild>
+                              <Link to="/admin" className="w-full cursor-pointer hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white font-display uppercase tracking-wider">
+                                Admin Panel
+                              </Link>
+                            </DropdownMenuItem>
                           )}
-                        </div>
-                        <span className="opacity-70 text-[8px] font-black mt-1 lowercase tracking-normal text-dem">{session.user.email}</span>
-                      </div>
+                          <DropdownMenuItem 
+                            onClick={handleSignOut}
+                            className="w-full cursor-pointer text-rep hover:text-rep hover:bg-white/10 focus:text-rep focus:bg-white/10 font-display uppercase tracking-wider font-bold"
+                          >
+                            Sign Out
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+
+
+                    {/* Sign In Button (Unauthenticated) */}
+                    {!isAuthenticated && (
+                      <Link
+                        to="/login?redirectTo=/"
+                        className="text-xs font-bold uppercase tracking-widest text-white hover:text-rep transition-colors px-2"
+                      >
+                        Sign In
+                      </Link>
                     )}
 
                     {/* Search Toggle (Desktop only shows if search hidden, Mobile always shows) */}
@@ -291,18 +349,9 @@ export function Navbar() {
                           {link.name}
                         </Link>
                       ))}
+
                       {/* Mobile Actions */}
                       <div className="flex flex-col items-center gap-4 mt-8 pt-8 border-t border-dem/30 w-full max-w-[200px]">
-                        {!isAuthenticated && (
-                          <Link
-                            to="/login"
-                            onClick={() => setIsOpen(false)}
-                            className="text-xs uppercase tracking-[0.3em] text-dem/70 hover:text-rep font-bold transition-colors"
-                          >
-                            Sign In
-                          </Link>
-                        )}
-                        
                         {isAuthenticated && (
                           <>
                             <Link

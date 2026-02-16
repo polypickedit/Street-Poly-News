@@ -1,22 +1,27 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ListMusic, History, AlertCircle, TrendingUp, Loader2, User } from "lucide-react";
+import { ListMusic, AlertCircle, TrendingUp, Loader2, User, Zap, Percent, Clock, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAdmin } from "@/hooks/useAdmin";
-import { useAdminStats, useAdminActivities, useVisibilityMetrics } from "@/hooks/useAdminStats";
-import { Zap, Percent, Clock } from "lucide-react";
+import { useAdminStats, useVisibilityMetrics } from "@/hooks/useAdminStats";
 
-interface ActivityLog {
+interface CommerceEvent {
   id: string;
-  action_type: string;
-  target_type: string;
+  user_id: string | null;
+  stripe_session_id: string | null;
+  type: string;
+  status: string;
+  amount_total: number | null;
+  currency: string | null;
   created_at: string;
-  profiles: { full_name: string | null } | null;
 }
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
   const { setIsAdminMode } = useAdmin();
+  const [commerceEvents, setCommerceEvents] = useState<CommerceEvent[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
 
   const { data: stats = {
     pendingReview: 0,
@@ -26,16 +31,63 @@ export const AdminDashboard = () => {
     failedPayments: 0
   }, isLoading: isLoadingStats } = useAdminStats(true);
 
-  // Use React Query for activities
-  const { data: activities = [], isLoading: isLoadingActivities } = useAdminActivities(true);
-
   // Use React Query for visibility metrics
   const { data: metrics, isLoading: isLoadingMetrics } = useVisibilityMetrics(true);
 
-  const loading = isLoadingStats || isLoadingActivities || isLoadingMetrics;
+  useEffect(() => {
+    const fetchCommerceEvents = async () => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any)
+          .from('commerce_events')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(20);
+        
+        if (error) throw error;
+        setCommerceEvents((data as unknown as CommerceEvent[]) || []);
+      } catch (err) {
+        console.error('Error fetching commerce events:', err);
+      } finally {
+        setIsLoadingEvents(false);
+      }
+    };
+
+    fetchCommerceEvents();
+    
+    // Subscribe to new commerce events
+    const channel = supabase
+      .channel('commerce_events_changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'commerce_events' }, (payload) => {
+        setCommerceEvents(prev => [payload.new as CommerceEvent, ...prev].slice(0, 20));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const loading = isLoadingStats || isLoadingMetrics;
 
   const formatAction = (type: string) => {
     return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'completed':
+      case 'paid':
+      case 'succeeded':
+        return 'bg-dem/10 text-dem';
+      case 'failed':
+      case 'error':
+        return 'bg-rep/10 text-rep';
+      case 'pending':
+        return 'bg-yellow-500/10 text-yellow-500';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
   };
 
   if (loading) {
@@ -129,47 +181,61 @@ export const AdminDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Recent Activity */}
+        {/* Commerce Health Panel */}
         <Card className="lg:col-span-2 bg-card border-border shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="font-black text-xl text-foreground">Recent Admin Activity</CardTitle>
-              <History className="w-4 h-4 text-muted-foreground" />
+              <CardTitle className="font-black text-xl text-foreground">Commerce Health</CardTitle>
+              <Activity className="w-4 h-4 text-dem" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {activities.length > 0 ? (
-                activities.map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted transition-colors border border-transparent hover:border-border">
-                    <div className="mt-1 bg-muted p-2 rounded-full">
-                      <TrendingUp className="w-4 h-4 text-dem" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-bold text-foreground">
-                          {formatAction(activity.action_type)}
-                        </p>
-                        <span className="text-sm text-muted-foreground font-black uppercase tracking-widest">
-                          {new Date(activity.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground font-bold mt-0.5">
-                        {activity.profiles?.full_name || 'System Admin'} modified {activity.target_type}
-                      </p>
-                    </div>
-                  </div>
-                ))
+              {isLoadingEvents ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-dem" />
+                </div>
+              ) : commerceEvents.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-left">
+                        <th className="pb-2 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Type</th>
+                        <th className="pb-2 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Status</th>
+                        <th className="pb-2 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Amount</th>
+                        <th className="pb-2 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Time</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {commerceEvents.map((event) => (
+                        <tr key={event.id} className="hover:bg-muted/50 transition-colors">
+                          <td className="py-3 font-bold text-foreground">{formatAction(event.type)}</td>
+                          <td className="py-3">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${getStatusColor(event.status)}`}>
+                              {event.status}
+                            </span>
+                          </td>
+                          <td className="py-3 font-bold text-foreground">
+                            {event.amount_total ? `${(event.amount_total / 100).toFixed(2)} ${event.currency?.toUpperCase()}` : '-'}
+                          </td>
+                          <td className="py-3 text-muted-foreground text-xs">
+                            {new Date(event.created_at).toLocaleTimeString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-sm text-muted-foreground font-black italic">No recent activity recorded.</p>
+                  <p className="text-sm text-muted-foreground font-black italic">No commerce events recorded.</p>
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
+        {/* Quick Access */}
         <Card className="bg-card border-border shadow-sm">
           <CardHeader>
             <CardTitle className="font-black text-xl text-foreground">Quick Access</CardTitle>
@@ -214,3 +280,5 @@ export const AdminDashboard = () => {
     </div>
   );
 };
+
+export default AdminDashboard;

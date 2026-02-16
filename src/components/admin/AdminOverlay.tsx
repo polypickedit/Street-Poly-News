@@ -206,7 +206,7 @@ export function AdminOverlay() {
       )}
 
       {/* Style Injection for highlighting */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style>{`
         [data-slot] {
           position: relative !important;
           transition: all 0.2s ease-in-out !important;
@@ -245,7 +245,7 @@ export function AdminOverlay() {
           transform: scale(1.1);
           transform-origin: top left;
         }
-      `}} />
+      `}</style>
     </>
   );
 }

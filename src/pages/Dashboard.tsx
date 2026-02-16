@@ -72,6 +72,7 @@ export default function Dashboard() {
   const isLoadingAccount = accountQuery.isLoading;
   const capabilities = capabilityQuery.capabilities;
   const isLoadingCapabilities = capabilityQuery.isLoading;
+  const refetchCapabilities = capabilityQuery.refetch;
   
   // Keep admin stats and activities alive at the dashboard level to prevent aborts on tab switch
   useAdminStats(isAdmin);
@@ -232,6 +233,18 @@ export default function Dashboard() {
   });
   const payments = paymentsQuery.data || [];
   const loadingPayments = paymentsQuery.isLoading;
+
+  // Force capability refresh on checkout return
+  useEffect(() => {
+    const sessionId = new URLSearchParams(window.location.search).get("session_id");
+    if (sessionId) {
+      console.log("Checkout return detected on dashboard, refetching capabilities...");
+      refetchCapabilities();
+      // Also refetch submissions and payments since they might have updated
+      refetchSubmissions();
+      paymentsQuery.refetch();
+    }
+  }, [refetchCapabilities, refetchSubmissions, paymentsQuery]);
 
   // Diagnostic log after all data hooks
   console.log("[Dashboard] render", { 

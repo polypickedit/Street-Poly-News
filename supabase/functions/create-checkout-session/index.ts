@@ -18,10 +18,19 @@ serve(async (req: Request) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error("Missing Authorization header");
+      throw new Error("Authentication required");
+    }
+
+    const body = await req.json();
+    console.log("Request received with body:", JSON.stringify(body));
+
     const { 
       slotId, 
       slotSlug, 
-      userId, 
+      userId: _userId, 
       userEmail, 
       returnUrl, 
       submissionId, 
@@ -30,20 +39,67 @@ serve(async (req: Request) => {
       packId, // for credits
       amount, // for quick payment
       description, // for quick payment
-    } = await req.json();
+      items, // for merch
+      shippingAddress,
+      contactMethod,
+      contactValue
+    } = body;
+
+    console.log(`Processing checkout type: ${type} for user: ${userEmail}`);
 
     // 1. Initialize Supabase Client
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("Missing Supabase environment variables");
+      throw new Error("Server configuration error: Missing Supabase keys");
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+    // 1.5 Verify Auth Session
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(authHeader.replace('Bearer ', ''));
+    if (authError || !user) {
+      console.error("Auth error:", authError);
+      throw new Error("Invalid session. Please sign in again.");
+    }
+
+    // Use the verified user ID and email
+    const verifiedUserId = user.id;
+    const verifiedUserEmail = user.email;
+
+    // Strict check: if a submissionId is provided, verify it belongs to this user
+    if (submissionId) {
+      const { data: submission, error: subError } = await supabaseClient
+        .from("submissions")
+        .select("user_id")
+        .eq("id", submissionId)
+        .single();
+      
+      if (subError || !submission) {
+        throw new Error("Submission not found");
+      }
+      
+      if (submission.user_id !== verifiedUserId) {
+        throw new Error("Unauthorized: This submission belongs to another user");
+      }
+    }
+
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
+    console.log(`Stripe Key status: ${stripeKey ? 'Present (starts with ' + stripeKey.substring(0, 7) + '...)' : 'MISSING'}`);
+    if (!stripeKey) {
+      console.error("Missing STRIPE_SECRET_KEY");
+      throw new Error("Server configuration error: Missing Stripe key");
+    }
 
     let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
     let mode: "payment" | "subscription" = "payment";
     let metadata: Record<string, string> = {
-      userId: userId || "",
+      userId: verifiedUserId,
       type: type || "",
     };
+    let merchOrderId: string | null = null;
 
     if (type === 'credits') {
       // Fetch credit pack details
@@ -86,7 +142,7 @@ serve(async (req: Request) => {
               name: description || "Quick Payment",
               description: "Custom service or offline item payment",
             },
-            unit_amount: Math.round(amount * 100), // convert to cents
+            unit_amount: Math.round((Number(amount) || 0) * 100), // convert to cents
           },
           quantity: 1,
         },
@@ -98,6 +154,110 @@ serve(async (req: Request) => {
         amount: amount.toString(),
       };
 
+    } else if (type === 'merch') {
+      console.log("Merch checkout items:", JSON.stringify(items));
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        throw new Error("No items provided for merch checkout");
+      }
+
+      interface MerchItem {
+        id: string | number;
+        name: string;
+        price: number;
+        quantity: number;
+        image?: string;
+        size?: string;
+        color?: string;
+      }
+
+      const normalizedItems = (items as MerchItem[]).map((item) => {
+        const unitPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price || 0));
+        const unitAmount = Math.round(unitPrice * 100);
+        const quantity = item.quantity || 1;
+
+        // Ensure images is only populated with valid absolute URLs
+        const images: string[] = [];
+        if (item.image && typeof item.image === 'string' && item.image.startsWith('http')) {
+          images.push(item.image);
+        }
+
+        return {
+          item,
+          unitAmount,
+          quantity,
+          images,
+        };
+      });
+
+      lineItems = normalizedItems.map(({ item, unitAmount, quantity, images }) => {
+        console.log(`Processing item: ${item.name}, Price: ${item.price}, Qty: ${quantity}`);
+        return {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: item.name,
+              images: images.length > 0 ? images : undefined,
+            },
+            unit_amount: unitAmount,
+          },
+          quantity,
+        };
+      });
+
+      const totalAmount = normalizedItems.reduce((sum, current) => sum + current.unitAmount * current.quantity, 0);
+
+      const { data: merchOrder, error: merchOrderError } = await supabaseClient
+        .from('merch_orders')
+        .insert({
+          user_id: verifiedUserId,
+          contact_email: verifiedUserEmail || null,
+          contact_phone: contactMethod === 'phone' ? contactValue || null : null,
+          shipping_address: shippingAddress || null,
+          preferred_contact_method: contactMethod || null,
+          preferred_contact_value: contactValue || null,
+          status: 'pending',
+          total_amount_cents: totalAmount,
+          currency: 'usd',
+        })
+        .select('id')
+        .single();
+
+      if (merchOrderError || !merchOrder) {
+        console.error('Failed to create merch order:', merchOrderError);
+        throw new Error('Failed to create merch order');
+      }
+
+      merchOrderId = merchOrder.id;
+      const orderItemsPayload = normalizedItems.map(({ item, unitAmount, quantity }) => ({
+        order_id: merchOrderId,
+        item_name: item.name,
+        size: item.size || null,
+        color: item.color || null,
+        quantity,
+        price_cents: unitAmount,
+      }));
+
+      const { error: orderItemsError } = await supabaseClient.from('merch_order_items').insert(orderItemsPayload);
+      if (orderItemsError) {
+        console.error('Failed to insert merch order items:', orderItemsError);
+        throw orderItemsError;
+      }
+
+      metadata = {
+        ...metadata,
+        items: JSON.stringify(items.map((i: MerchItem) => ({ id: i.id, q: i.quantity }))),
+        shippingAddress: shippingAddress || '',
+        contactMethod: contactMethod || '',
+        contactValue: contactValue || '',
+        merchOrderId: merchOrderId || '',
+      };
+
+      // Promotion: if there's exactly one booking in the cart, promote its ID to top-level metadata
+      // for easier processing in simple webhook handlers.
+      const bookingItems = items.filter((i: MerchItem) => typeof i.id === 'string' && i.id.startsWith('booking-'));
+      if (bookingItems.length === 1) {
+        metadata.submissionId = (bookingItems[0].id as string).replace('booking-', '');
+      }
     } else {
       // Fetch slot details
       const { data: slot, error: slotError } = await supabaseClient
@@ -108,6 +268,11 @@ serve(async (req: Request) => {
 
       if (slotError || !slot) throw new Error("Slot not found");
 
+      // Verify slot slug matches for extra integrity
+      if (slot.slug !== slotSlug) {
+        console.warn(`Mismatch: Requested slug ${slotSlug} but slot ${slotId} has slug ${slot.slug}`);
+      }
+
       lineItems = [
         {
           price_data: {
@@ -116,7 +281,7 @@ serve(async (req: Request) => {
               name: slot.name,
               description: slot.description || undefined,
             },
-            unit_amount: Math.round(slot.price * 100), // convert to cents
+            unit_amount: Math.round((Number(slot.price) || 0) * 100), // convert to cents (Server-side price authority)
             recurring: slot.monetization_model === "subscription" 
               ? { interval: slot.billing_interval || "month" } 
               : undefined,
@@ -152,36 +317,89 @@ serve(async (req: Request) => {
                   name: `Syndication: ${outlet.name}`,
                   description: outlet.description || undefined,
                 },
-                unit_amount: outlet.price_cents,
+                unit_amount: outlet.price_cents, // Server-side price authority
               },
               quantity: 1,
             });
           }
         }
       }
+
+      // Add payment link metadata if it's a subscription mode to help with success page
+      if (mode === "subscription") {
+        metadata.is_subscription = "true";
+      }
     }
 
     // 4. Create Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      customer_email: userEmail,
-      line_items: lineItems,
-      mode: mode,
-      success_url: returnUrl,
-      cancel_url: returnUrl,
-      payment_intent_data: mode === "payment" ? {
+    console.log("Creating Stripe session with lineItems:", JSON.stringify(lineItems));
+    console.log("Metadata:", JSON.stringify(metadata));
+
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        customer_email: verifiedUserEmail || undefined,
+        line_items: lineItems,
+        mode: mode,
+        allow_promotion_codes: true,
+        shipping_address_collection: {
+          allowed_countries: ["US", "CA", "GB"], // Add more as needed
+        },
+        billing_address_collection: 'required',
+        phone_number_collection: {
+          enabled: true,
+        },
+        success_url: `${returnUrl || (req.headers.get("origin") + "/booking")}?session_id={CHECKOUT_SESSION_ID}&submissionId=${submissionId || ""}&slotType=${type}${slotSlug ? `&slot=${slotSlug}` : ""}`,
+        cancel_url: `${req.headers.get("origin")}/booking?status=cancelled`,
+        payment_intent_data: mode === "payment" ? {
+          metadata: metadata,
+        } : undefined,
         metadata: metadata,
-      } : undefined,
-      metadata: metadata,
-    });
+      });
+    } catch (stripeError) {
+      const err = stripeError as Error & { message?: string };
+      console.error("Stripe Session Creation Error:", err);
+      throw new Error(`Stripe error: ${err.message || "Unknown Stripe error"}`);
+    }
+
+    console.log("Stripe session created successfully:", session.id);
+
+    if (merchOrderId) {
+      try {
+        await supabaseClient.from('merch_orders').update({
+          stripe_session_id: session.id,
+          currency: session.currency ?? 'usd'
+        }).eq('id', merchOrderId);
+      } catch (orderUpdateError) {
+        console.error('Failed to update merch order session ID:', orderUpdateError);
+      }
+    }
+
+    // 5. Log Commerce Event (Ledger)
+    try {
+      await supabaseClient.from("commerce_events").insert({
+        user_id: verifiedUserId || null,
+        stripe_session_id: session.id,
+        type: "checkout_created",
+        status: "pending",
+        amount_total: session.amount_total,
+        currency: session.currency,
+        metadata: metadata,
+        raw_payload: session,
+      });
+    } catch (logError) {
+      console.error("Failed to log commerce event:", logError);
+      // Don't fail the checkout if logging fails, but it's captured in logs
+    }
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error("Checkout error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+  } catch (err: unknown) {
+    const error = err as Error;
+    console.error("Error creating checkout session:", error.message);
+    return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
     });

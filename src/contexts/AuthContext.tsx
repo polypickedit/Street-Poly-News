@@ -1,207 +1,283 @@
-
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Session, User } from '@supabase/supabase-js';
+import type { Session, User } from '@supabase/supabase-js';
 import { AuthContext } from './AuthContextInternal';
+import { safeQuery } from '@/lib/supabase-debug';
+
+type SessionResponse = Awaited<ReturnType<typeof supabase.auth.getSession>>;
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isEditor, setIsEditor] = useState(false);
+  const lastRoleCheckRef = useRef<number>(0);
 
-  const [lastCheckTime, setLastCheckTime] = useState<number>(0);
+  const sessionFetchPromiseRef = useRef<Promise<SessionResponse> | null>(null);
+  const sessionFetchControllerRef = useRef<AbortController | null>(null);
 
-  const checkRoles = useCallback(async (userId: string) => {
-    // Prevent checking more than once every 2 seconds to avoid race conditions
-    const now = Date.now();
-    if (now - lastCheckTime < 2000) return;
-    setLastCheckTime(now);
+  const resetRoles = useCallback(() => {
+    setIsAdmin(false);
+    setIsEditor(false);
+  }, []);
 
-    try {
-      console.log("Auth: Checking roles for", userId);
-      
-      const controller = new AbortController();
-      const rolePromise = (async () => {
-        // 1. Try the optimized RPC first
-        // We use the safe versions from MASTER_FIX
-        const rpcQuery = supabase.rpc("is_admin_or_editor") as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: boolean | null; error: unknown }> };
-        const { data: hasAccess, error: rpcError } = await rpcQuery.abortSignal(controller.signal);
-        console.log("Auth: RPC 'is_admin_or_editor' result:", { hasAccess, rpcError });
-
-        if (!rpcError && hasAccess === true) {
-          console.log("Auth: RPC confirmed admin/editor access");
-          setIsAdmin(true);
-          setIsEditor(true);
-          return true;
-        }
-
-        if (rpcError) {
-          console.warn("Auth: RPC check failed or not found, falling back to table query:", rpcError);
-        }
-
-        // 2. If RPC says no or fails, do a more detailed check
-        const tableQuery = supabase
-          .from("user_roles")
-          .select("role_id, roles(name)")
-          .eq("user_id", userId) as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: Array<{ role_id: string, roles: { name: string } | null }> | null; error: unknown }> };
-
-        const { data: roles, error: rolesError } = await tableQuery.abortSignal(controller.signal);
-
-        if (rolesError) {
-          console.error("Auth: Error fetching roles from table:", rolesError);
-          return false;
-        }
-
-        if (roles) {
-          const admin = roles?.some(r => r.roles?.name === "admin");
-          const editor = roles?.some(r => r.roles?.name === "editor");
-          
-          console.log("Auth: Role results from table:", { admin, editor });
-          setIsAdmin(admin);
-          setIsEditor(editor);
-          return true;
-        }
-        return false;
-      })();
-
-      // 10 second timeout for role checks
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => {
-          controller.abort();
-          reject(new Error("Role check timeout"));
-        }, 10000)
-      );
-
-      await Promise.race([rolePromise, timeoutPromise]);
-      console.log("Auth: Role check completed successfully");
-    } catch (err) {
-      // Don't log AbortError as a full error as it's often just HMR
-      if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-        console.log("Auth: Role check aborted (likely page refresh or timeout)");
-      } else {
-        console.error("Auth: Error checking roles:", err);
+  const hydrateRole = useCallback(
+    async (userId: string, { force = false } = {}) => {
+      const now = Date.now();
+      if (!force && now - lastRoleCheckRef.current < 2000) {
+        return;
       }
-      // Default to non-privileged state on error
-      setIsAdmin(false);
-      setIsEditor(false);
+      lastRoleCheckRef.current = now;
+
+      try {
+        console.log('Auth: Hydrating roles for', userId, { force });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+        try {
+          const [adminAccess, editorAccess] = await Promise.all([
+            safeQuery(supabase.rpc('is_admin').abortSignal(controller.signal)),
+            safeQuery(supabase.rpc('is_admin_or_editor').abortSignal(controller.signal)),
+          ]);
+          
+          clearTimeout(timeoutId);
+
+          console.log('Auth: RPC role hydration results:', { adminAccess, editorAccess });
+          setIsAdmin(!!adminAccess);
+          setIsEditor(!!editorAccess);
+          return;
+        } catch (rpcErr) {
+          clearTimeout(timeoutId);
+          console.warn('Auth: RPC role hydration failed, falling back to table query:', rpcErr);
+        }
+
+        try {
+          const roles = await safeQuery(
+            supabase
+            .from('user_roles')
+            .select('role_id, roles(name)')
+            .eq('user_id', userId)
+            .abortSignal(controller.signal)
+          );
+
+          if (roles) {
+            const typedRoles = roles as { roles: { name: string } | null }[];
+            const admin = typedRoles.some((r) => r.roles?.name === 'admin');
+            const editor = admin || typedRoles.some((r) => r.roles?.name === 'editor');
+            console.log('Auth: Table role hydration results:', { admin, editor });
+            setIsAdmin(admin);
+            setIsEditor(editor);
+            return;
+          }
+        } catch (tableErr) {
+           console.error('Auth: Error fetching roles from table:', tableErr);
+           // proceed to resetRoles
+        }
+        
+        resetRoles();
+      } catch (err) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+          console.log('Auth: Role hydration aborted (timeout or page refresh)');
+        } else {
+          console.error('Auth: Error hydrating roles:', err);
+        }
+        resetRoles();
+      }
+    },
+    [resetRoles]
+  );
+
+  const fetchSessionOnce = useCallback(async (): Promise<SessionResponse> => {
+    if (sessionFetchPromiseRef.current) {
+      return sessionFetchPromiseRef.current;
     }
-  }, [lastCheckTime]);
+
+    const controller = new AbortController();
+    sessionFetchControllerRef.current = controller;
+
+    const promise = (async () => {
+      try {
+        return await supabase.auth.getSession();
+      } finally {
+        sessionFetchControllerRef.current = null;
+        sessionFetchPromiseRef.current = null;
+      }
+    })();
+
+    sessionFetchPromiseRef.current = promise;
+    return promise;
+  }, []);
+
+  const abortPendingSessionFetch = useCallback(() => {
+    sessionFetchControllerRef.current?.abort();
+  }, []);
 
   const refreshAuth = useCallback(async () => {
     try {
-      console.log("Auth: refreshAuth started");
-      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) throw sessionError;
-      
+      console.log('Auth: refreshAuth started');
+      setLoading(true);
+      const {
+        data: { session: currentSession },
+        error: sessionError,
+      } = await fetchSessionOnce();
+
+      if (sessionError) {
+        throw sessionError;
+      }
+
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-      
-      // We've got the session, so we can stop the main loading state
-      setLoading(false);
-      console.log("Auth: session resolved, loading set to false");
-      
-      if (currentSession?.user) {
-        // Run role checks in the background without blocking 'loading'
-        checkRoles(currentSession.user.id).catch(err => 
-          console.error("Auth: Background role check error:", err)
-        );
+
+      if (currentSession?.user?.id) {
+        await hydrateRole(currentSession.user.id, { force: true });
       } else {
-        setIsAdmin(false);
-        setIsEditor(false);
+        resetRoles();
       }
     } catch (error) {
-      console.error("Auth: Refresh error:", error);
+      console.error('Auth: Refresh error:', error);
+    } finally {
       setLoading(false);
     }
-  }, [checkRoles]);
+  }, [fetchSessionOnce, hydrateRole, resetRoles]);
 
   useEffect(() => {
     let mounted = true;
 
-    const initAuth = async () => {
-      console.log("Auth: Starting initAuth");
+    const initializeAuth = async () => {
+      let shouldSetReady = true;
       try {
-        // getSession is usually fast and reliable
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (mounted) {
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
-          
-          if (currentSession?.user) {
-            // Start role check but don't await it here
-            checkRoles(currentSession.user.id);
+        console.log('Auth: Initializing...');
+        const response = await fetchSessionOnce();
+        const { data: { session: initialSession }, error } = response;
+
+        if (error) {
+          // Check for AbortError or DOMException from Supabase navigatorLock
+          if (
+            error.name === 'AbortError' || 
+            error.message?.includes('AbortError') ||
+            error.message?.includes('The operation was aborted')
+          ) {
+            console.log('Auth: Session fetch aborted (likely due to OAuth redirect race). Waiting for listener...');
+            shouldSetReady = false;
+            return;
           }
+          console.error('Auth: Initial session error:', error);
+        }
+
+        if (!mounted) {
+          return;
+        }
+
+        console.log('Auth: Initial session fetched', { hasSession: !!initialSession, userId: initialSession?.user?.id });
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+
+        if (initialSession?.user?.id) {
+          console.log('Auth: Hydrating roles for initial session...');
+          await hydrateRole(initialSession.user.id, { force: true });
+        } else {
+          resetRoles();
         }
       } catch (err) {
-        console.error("Auth: initAuth error:", err);
+        // Check for AbortError or DOMException
+        if (
+          err instanceof Error && (
+            err.name === 'AbortError' || 
+            err.message.includes('AbortError') ||
+            err.message.includes('The operation was aborted')
+          )
+        ) {
+          console.log('Auth: Initialization aborted. Waiting for listener...');
+          shouldSetReady = false;
+          return;
+        }
+        console.error('Auth: Initialization failed:', err);
       } finally {
-        if (mounted) {
-          console.log("Auth: initAuth completed, setting loading false");
+        if (mounted && shouldSetReady) {
+          console.log('Auth: Initialization complete. Setting authReady=true');
+          setAuthReady(true);
           setLoading(false);
         }
       }
     };
 
-    initAuth();
+    initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      if (!mounted) return;
-      
-      console.log("Auth: State change event:", event);
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      
-      if (currentSession?.user) {
-        // Check roles in the background
-        checkRoles(currentSession.user.id);
-      } else {
-        setIsAdmin(false);
-        setIsEditor(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        if (!mounted) return;
+
+        console.log('Auth: State change event:', event, {
+          hasSession: !!currentSession,
+          userId: currentSession?.user?.id,
+        });
+
+        setLoading(true);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        try {
+          if (currentSession?.user?.id) {
+            await hydrateRole(currentSession.user.id, { force: true });
+          } else {
+            resetRoles();
+          }
+        } catch (err) {
+          console.error('Auth: State change hydration error:', err);
+        } finally {
+          if (mounted) {
+            setLoading(false);
+            setAuthReady(true); // Ensure auth is marked ready after state change
+          }
+        }
       }
-
-      // Any auth state change event means we've finished the initial check
-      console.log("Auth: Resolving loading state from event", event);
-      setLoading(false);
-    });
+    );
 
     return () => {
       mounted = false;
+      abortPendingSessionFetch();
       subscription.unsubscribe();
     };
-  }, [refreshAuth, checkRoles]);
+  }, [abortPendingSessionFetch, fetchSessionOnce, hydrateRole, resetRoles]);
 
-  // Safety valve: Ensure loading eventually resolves even if everything else fails
+  // Fail-safe timeout to prevent infinite loading
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (loading) {
-        console.warn("Auth: Safety valve triggered, forcing loading to false");
-        setLoading(false);
-      }
-    }, 10000); // Increased to 10s to allow for slower role checks
+      setLoading((currentLoading) => {
+        if (currentLoading) {
+           console.error("⚠️ Auth stuck in loading state for > 5s. Forcing ready.");
+           setAuthReady(true);
+           return false;
+        }
+        return currentLoading;
+      });
+    }, 5000);
     return () => clearTimeout(timer);
-  }, [loading]);
+  }, []);
 
-  const value = {
-    session,
-    user,
-    isAdmin,
-    isEditor,
-    loading,
-    refreshAuth,
-  };
+  const value = useMemo(
+    () => ({
+      session,
+      user,
+      isAdmin,
+      isEditor,
+      loading,
+      authReady,
+      refreshAuth,
+    }),
+    [session, user, isAdmin, isEditor, loading, authReady, refreshAuth]
+  );
 
-  // Temporary debug logging for runtime verification
   useEffect(() => {
-    console.log("Auth State Update:", {
+    console.log('Auth State Update:', {
       loading,
       hasSession: !!session,
       isAdmin,
       isEditor,
       userId: user?.id,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }, [loading, session, isAdmin, isEditor, user]);
 

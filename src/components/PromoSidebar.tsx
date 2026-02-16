@@ -8,7 +8,7 @@ import stripClubSlotsAd from "@/assets/Strip_Club_Slots_ad-removebg-preview.png"
 import streetPolyMerchAd from "@/assets/StreetPolyMerch_Ad.jpeg";
 import { Slot } from "./Slot";
 
-const SUPABASE_URL = "https://duldhllwapsjytdzpjfz.supabase.co";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "http://localhost:54321";
 
 interface Promo {
   title: string;
@@ -137,13 +137,12 @@ const SkyscraperRenderer = ({ promo }: { promo: Promo }) => {
     queryFn: async ({ signal }) => {
       if (!promo.affiliateName) return null;
       try {
-        const query = (supabase as SupabaseClient)
+        const { data, error } = await (supabase as SupabaseClient)
           .from("affiliate_links")
           .select("id, click_count")
           .eq("name", promo.affiliateName)
-          .maybeSingle() as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: { id: string; click_count: number } | null; error: { code: string; message: string } | null }> };
-
-        const { data, error } = await query.abortSignal(signal);
+          .abortSignal(signal)
+          .maybeSingle();
 
         if (error) return null;
         return data;

@@ -29,14 +29,23 @@ export interface SeedFixture {
 let cachedFixture: SeedFixture | null = null;
 
 async function ensureUser(email: string): Promise<FixtureUser> {
-  const { data: existing } = await serviceRoleClient.auth.admin.getUserByEmail(email);
-  if (existing?.user) {
-    await serviceRoleClient.auth.admin.updateUserById(existing.user.id, { password: TEST_PASSWORD });
-    return {
-      id: existing.user.id,
-      email,
-      password: TEST_PASSWORD,
-    };
+  try {
+    const { data: users, error: listError } = await serviceRoleClient.auth.admin.listUsers();
+    if (listError) {
+      console.warn("listUsers failed, attempting direct create/getUser:", listError);
+    } else {
+      const existing = users.users.find(u => u.email === email);
+      if (existing) {
+        await serviceRoleClient.auth.admin.updateUserById(existing.id, { password: TEST_PASSWORD });
+        return {
+          id: existing.id,
+          email,
+          password: TEST_PASSWORD,
+        };
+      }
+    }
+  } catch (e) {
+    console.warn("listUsers exception:", e);
   }
 
   const { data: created } = await serviceRoleClient.auth.admin.createUser({

@@ -18,6 +18,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Gallery from "./pages/Gallery";
 import Booking from "./pages/Booking";
+import Checkout from "./pages/Checkout";
 import Dashboard from "./pages/Dashboard";
 import OrderDetails from "./pages/OrderDetails";
 import Admin from "./pages/Admin";
@@ -29,8 +30,11 @@ import { PlacementManager } from "@/components/admin/PlacementManager";
 import { OutletManager } from "@/components/admin/OutletManager";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { UnifiedQueue } from "@/components/admin/UnifiedQueue";
+import MerchOrdersPage from "./pages/admin/MerchOrdersPage";
+import InventoryPage from "./pages/admin/InventoryPage";
 import { AdminOverlay } from "@/components/admin/AdminOverlay";
 import { AdminRoute } from "@/components/AdminRoute";
+import { DevDebugBanner } from "@/components/DevDebugBanner";
 import Search from "./pages/Search";
 import Category from "./pages/Category";
 import Categories from "./pages/Categories";
@@ -38,7 +42,26 @@ import Person from "./pages/Person";
 import NotFound from "./pages/NotFound";
 import Community from "./pages/Community";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error: unknown) => {
+        // Retry on network errors or unreachable addresses
+        const err = error as { message?: string; code?: string };
+        const isNetworkError = 
+          err?.message?.includes('Failed to fetch') || 
+          err?.message?.includes('net::ERR_') ||
+          err?.code === 'PGRST205'; // Also retry transient Postgres errors
+        
+        return failureCount < 3 && isNetworkError;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+      staleTime: 1000 * 60 * 5, // Default to 5 minutes to reduce request volume
+      refetchOnWindowFocus: false, // Prevent bursts of requests on focus
+      refetchOnMount: false, // Don't refetch on mount by default, individual queries can override
+    },
+  },
+});
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -52,6 +75,7 @@ const AnimatedRoutes = () => {
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/community" element={<Community />} />
         <Route path="/booking" element={<Booking />} />
+        <Route path="/checkout" element={<Checkout />} />
         <Route
           path="/dashboard"
           element={
@@ -97,6 +121,26 @@ const AnimatedRoutes = () => {
             <AdminRoute>
               <AdminLayout>
                 <SubmissionQueue />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/merch-orders"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <MerchOrdersPage />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/inventory"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <InventoryPage />
               </AdminLayout>
             </AdminRoute>
           }
@@ -169,6 +213,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <div className="min-h-screen bg-white text-foreground font-sans selection:bg-dem/30">
+                <DevDebugBanner />
                 <AdminOverlay />
                 <AnimatedRoutes />
                 <CartSidebar />

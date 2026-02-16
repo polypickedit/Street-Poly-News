@@ -27,22 +27,24 @@ export const submissionService = {
    */
   async submit(
     payload: SubmissionPayload, 
-    userId: string, 
+    userId: string | null, 
     options: { 
       paymentMethod: 'stripe' | 'capability';
       capability?: string;
       files?: File[];
       onUploadProgress?: (progress: number) => void;
+      skipRedirect?: boolean;
     }
   ) {
     let submissionId: string;
 
     // 1. Create the submission (Atomic RPC)
     if (options.paymentMethod === 'capability') {
+      if (!userId) throw new Error("User ID required for capability payment");
       if (!options.capability) throw new Error("Capability name required");
       submissionId = await this.createWithCapability(payload, userId, options.capability);
     } else {
-      submissionId = await this.createWithStripe(payload, userId);
+      submissionId = await this.createWithStripe(payload, userId, options.skipRedirect);
     }
 
     // 2. Handle Media Uploads if files are provided
@@ -92,7 +94,7 @@ export const submissionService = {
    * Creates a submission intended for Stripe payment.
    * Uses the atomic create_submission_v2 RPC to ensure consistency.
    */
-  async createWithStripe(payload: SubmissionPayload, userId: string) {
+  async createWithStripe(payload: SubmissionPayload, userId: string | null, skipRedirect = false) {
     const { data: submissionId, error } = await supabase.rpc("create_submission_v2", {
       p_user_id: userId,
       p_slot_id: payload.slot_id,
@@ -122,13 +124,15 @@ export const submissionService = {
 
     if (error) throw error;
 
-    // Trigger Stripe Checkout
-    await createSlotCheckoutSession(
-      payload.slot_id,
-      payload.slot_slug,
-      submissionId,
-      payload.distribution_targets
-    );
+    // Trigger Stripe Checkout if not skipped
+    if (!skipRedirect) {
+      await createSlotCheckoutSession(
+        payload.slot_id,
+        payload.slot_slug,
+        submissionId,
+        payload.distribution_targets
+      );
+    }
 
     return submissionId;
   },
@@ -174,15 +178,22 @@ export const submissionService = {
    * Verifies a payment session after redirect.
    * Calls an edge function to verify directly with Stripe for trustless confirmation.
    */
-  async verifyPayment(submissionId: string, sessionId?: string) {
+  async verifyPayment(submissionId?: string, sessionId?: string) {
     if (sessionId) {
       // Call edge function for direct verification
       const { data, error } = await supabase.functions.invoke("verify-payment", {
         body: { sessionId, submissionId }
       });
       
-      if (error) throw error;
-      return data.status === "paid";
+      if (error) {
+        console.error("verify-payment invocation error:", error);
+        throw error;
+      }
+      return data?.status === "paid" || data?.payment_status === "paid";
+    }
+
+    if (!submissionId) {
+      throw new Error("Submission ID is required to verify payment when no session is available.");
     }
 
     // Fallback to DB check if no session ID

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Entitlement } from "@/types/slots";
+import { safeQuery } from "@/lib/supabase-debug";
 
 export function useEntitlements() {
   const { data: entitlements = [], isLoading, refetch } = useQuery({
@@ -10,15 +11,16 @@ export function useEntitlements() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return [];
 
-        const { data, error } = await supabase
+        const data = await safeQuery(
+          supabase
           .from("slot_entitlements")
           .select("*")
           .eq("user_id", user.id)
           .eq("is_active", true)
-          .abortSignal(signal);
+          .abortSignal(signal)
+        );
 
-        if (error) throw error;
-        return data as Entitlement[];
+        return (data || []) as Entitlement[];
       } catch (err) {
         if (err instanceof Error && (err.name === "AbortError" || err.message?.includes("abort"))) {
           return [];

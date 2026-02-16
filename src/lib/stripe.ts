@@ -13,7 +13,7 @@ export const createSlotCheckoutSession = async (
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
-      throw new Error('You must be signed in to make a purchase');
+      throw new Error('You must be signed in to purchase this service');
     }
 
     // Call Supabase Edge Function to create the checkout session
@@ -25,7 +25,7 @@ export const createSlotCheckoutSession = async (
         selectedOutlets,
         userId: session.user.id,
         userEmail: session.user.email,
-        returnUrl: window.location.origin + `/booking?session_id={CHECKOUT_SESSION_ID}&slotType=${slotSlug}&submissionId=${submissionId}`
+        returnUrl: window.location.origin + `/booking?slotType=${slotSlug}&submissionId=${submissionId}&session_id={CHECKOUT_SESSION_ID}`
       }
     });
 
@@ -74,12 +74,29 @@ export const createCreditPackCheckoutSession = async (packId: string) => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const createMerchCheckoutSession = async (items: any[]) => {
+export interface MerchCheckoutOptions {
+  shippingAddress?: string;
+  contactMethod?: 'email' | 'phone';
+  contactValue?: string;
+}
+
+export const createMerchCheckoutSession = async (items: any[], options?: MerchCheckoutOptions) => {
+  const { shippingAddress, contactMethod, contactValue } = options || {};
+
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
-      throw new Error('You must be signed in to make a purchase');
+      throw new Error('You must be signed in to complete your purchase');
+    }
+
+    // Determine return URL - if it's a single booking, go back to booking page for confirmation
+    const bookingItem = items.find(i => typeof i.id === 'string' && i.id.startsWith('booking-'));
+    let returnUrl = window.location.origin + '/merch?session_id={CHECKOUT_SESSION_ID}';
+    
+    if (items.length === 1 && bookingItem) {
+      const submissionId = bookingItem.id.replace('booking-', '');
+      returnUrl = window.location.origin + `/booking?submissionId=${submissionId}&session_id={CHECKOUT_SESSION_ID}`;
     }
 
     const { data, error } = await supabase.functions.invoke('create-checkout-session', {
@@ -88,7 +105,10 @@ export const createMerchCheckoutSession = async (items: any[]) => {
         type: 'merch',
         userId: session.user.id,
         userEmail: session.user.email,
-        returnUrl: window.location.origin + '/merch?session_id={CHECKOUT_SESSION_ID}'
+        returnUrl,
+        shippingAddress,
+        contactMethod,
+        contactValue,
       }
     });
 

@@ -37,14 +37,11 @@ export function FeaturedSection() {
             .select("*");
 
         // First try to get featured posts
-        const featuredQuery = baseQuery
+        const { data: featuredData, error: featuredError } = await baseQuery
           .eq("is_featured", true)
           .order("created_at", { ascending: false })
-          .limit(7) as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: Post[] | null; error: { code: string; message: string } | null }> };
-
-        const result = await featuredQuery.abortSignal(signal);
-        const featuredData = result.data;
-        const featuredError = result.error;
+          .abortSignal(signal)
+          .limit(7);
 
         if (featuredError) throw featuredError;
 
@@ -71,13 +68,10 @@ export function FeaturedSection() {
             .from("posts")
             .select("*");
 
-        const finalFallbackQuery = fallbackQuery
+        const { data: fallbackData, error: fallbackError } = await fallbackQuery
           .order("created_at", { ascending: false })
-          .limit(7) as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: Post[] | null; error: { code: string; message: string } | null }> };
-
-        const fallbackResult = await finalFallbackQuery.abortSignal(signal);
-        const fallbackData = fallbackResult.data;
-        const fallbackError = fallbackResult.error;
+          .abortSignal(signal)
+          .limit(7);
 
         if (fallbackError) throw fallbackError;
         return fallbackData as Post[];

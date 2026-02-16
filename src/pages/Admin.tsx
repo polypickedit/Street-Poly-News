@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { PostgrestError } from "@supabase/supabase-js";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +19,21 @@ import { useHeaderVisible } from "@/hooks/useHeaderVisible";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ContactSubmissions } from "@/components/ContactSubmissions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Pencil, Trash2, LayoutGrid, Database as DatabaseIcon } from "lucide-react";
+
+interface Slot {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  type: "music" | "interview" | "story" | "announcement" | "quick_payment" | "credit_pack" | "merch" | "ad" | "feature";
+  is_active: boolean;
+  visibility: "public" | "account" | "paid";
+}
 
 const Admin = () => {
   const isVisible = useHeaderVisible();
@@ -82,6 +98,131 @@ const Admin = () => {
   const queryClient = useQueryClient();
   const { data: categories } = useCategories();
   const { data: people } = usePeople();
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [isSlotsLoading, setIsSlotsLoading] = useState(true);
+  const [slotFormData, setSlotFormData] = useState<Partial<Slot>>({
+    id: "",
+    name: "",
+    slug: "",
+    price: 0,
+    type: "music",
+    is_active: true,
+    visibility: "public",
+  });
+  const [isEditingSlot, setIsEditingSlot] = useState(false);
+
+  const fetchSlots = useCallback(async () => {
+    setIsSlotsLoading(true);
+    const { data, error } = await supabase
+      .from("slots")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to fetch services", variant: "destructive" });
+    } else {
+      const mappedSlots = (data || []).map(s => {
+        const slotData = s as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+        return {
+          id: s.id,
+          name: s.name,
+          slug: s.slug,
+          price: s.price,
+          is_active: s.is_active,
+          type: slotData.type || "music",
+          visibility: slotData.visibility || "public"
+        };
+      }) as Slot[];
+      setSlots(mappedSlots);
+    }
+    setIsSlotsLoading(false);
+  }, [toast]);
+
+  useEffect(() => {
+    fetchSlots();
+  }, [fetchSlots]);
+
+  const handleSeedDefaults = async () => {
+    setIsSubmitting(true);
+    const defaults = [
+      { id: "00000000-0000-0000-0000-000000000001", name: "New Music Monday", slug: "new-music-monday", price: 300, type: "music" as const, is_active: true, visibility: "public" as const },
+      { id: "00000000-0000-0000-0000-000000000002", name: "Featured Interview", slug: "featured-interview", price: 150, type: "interview" as const, is_active: true, visibility: "public" as const },
+    ];
+
+    const { error } = await supabase.from("slots").upsert(defaults, { onConflict: 'slug' });
+    
+    if (error) {
+      toast({ title: "Error", description: "Failed to seed default services", variant: "destructive" });
+    } else {
+      toast({ title: "Success", description: "Default services restored!" });
+      fetchSlots();
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleSlotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const payload = {
+      name: slotFormData.name as string,
+      slug: slotFormData.slug || slotFormData.name?.toLowerCase().replace(/\s+/g, "-") as string,
+      price: slotFormData.price as number,
+      type: slotFormData.type as "music" | "interview" | "ad" | "feature",
+      is_active: slotFormData.is_active as boolean,
+      visibility: slotFormData.visibility as "public" | "account" | "paid",
+    };
+
+    let error: PostgrestError | null = null;
+    if (isEditingSlot && slotFormData.id) {
+      const { error: updateError } = await supabase
+        .from("slots")
+        .update(payload)
+        .eq("id", slotFormData.id);
+      error = updateError;
+    } else {
+      const { error: insertError } = await supabase
+        .from("slots")
+        .insert([payload]);
+      error = insertError;
+    }
+
+    if (error) {
+      toast({ title: "Error", description: `Failed to ${isEditingSlot ? "update" : "create"} service`, variant: "destructive" });
+    } else {
+      toast({ title: "Success", description: `Service ${isEditingSlot ? "updated" : "create"} successfully!` });
+      setSlotFormData({ id: "", name: "", slug: "", price: 0, type: "music", is_active: true, visibility: "public" });
+      setIsEditingSlot(false);
+      fetchSlots();
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleEditSlot = (slot: Slot) => {
+    setSlotFormData({
+      id: slot.id,
+      name: slot.name,
+      slug: slot.slug,
+      price: slot.price,
+      type: slot.type,
+      is_active: slot.is_active,
+      visibility: slot.visibility,
+    });
+    setIsEditingSlot(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDeleteSlot = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this service?")) return;
+
+    const { error } = await supabase.from("slots").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: "Failed to delete service", variant: "destructive" });
+    } else {
+      toast({ title: "Success", description: "Service deleted successfully!" });
+      fetchSlots();
+    }
+  };
 
   const extractYouTubeId = (url: string): string | null => {
     const patterns = [
@@ -285,10 +426,186 @@ const Admin = () => {
           </div>
 
           <Tabs defaultValue="posts" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 max-w-[400px] bg-muted border border-border">
+            <TabsList className="grid w-full grid-cols-3 max-w-[600px] bg-muted border border-border">
               <TabsTrigger value="posts" className="data-[state=active]:bg-dem data-[state=active]:text-foreground font-black uppercase tracking-widest text-xs">Create Post</TabsTrigger>
+              <TabsTrigger value="services" className="data-[state=active]:bg-dem data-[state=active]:text-foreground font-black uppercase tracking-widest text-xs">Services</TabsTrigger>
               <TabsTrigger value="messages" className="data-[state=active]:bg-dem data-[state=active]:text-foreground font-black uppercase tracking-widest text-xs">Messages</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="services" className="space-y-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Slot Form */}
+                <div className="lg:col-span-1">
+                  <Card className="bg-card border-border sticky top-24">
+                    <CardHeader>
+                      <CardTitle className="font-display text-xl text-dem font-black uppercase">
+                        {isEditingSlot ? "Edit Service" : "Add Service"}
+                      </CardTitle>
+                      <CardDescription>
+                        Manage booking options and pricing
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={handleSlotSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="slot-name" className="text-xs font-black uppercase tracking-widest">Name</Label>
+                          <Input
+                            id="slot-name"
+                            required
+                            value={slotFormData.name}
+                            onChange={(e) => setSlotFormData({ ...slotFormData, name: e.target.value })}
+                            placeholder="e.g. New Music Monday"
+                            className="bg-muted"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="slot-price" className="text-xs font-black uppercase tracking-widest">Price ($)</Label>
+                          <Input
+                            id="slot-price"
+                            type="number"
+                            required
+                            value={slotFormData.price}
+                            onChange={(e) => setSlotFormData({ ...slotFormData, price: parseFloat(e.target.value) })}
+                            className="bg-muted"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="slot-type" className="text-xs font-black uppercase tracking-widest">Category</Label>
+                          <Select
+                            value={slotFormData.type}
+                            onValueChange={(value: Slot["type"]) => setSlotFormData({ ...slotFormData, type: value })}
+                          >
+                            <SelectTrigger className="bg-muted">
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="music">Music</SelectItem>
+                              <SelectItem value="interview">Interview</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50 border border-border/50">
+                          <Label htmlFor="slot-active" className="text-xs font-black uppercase tracking-widest cursor-pointer">Active Status</Label>
+                          <Switch
+                            id="slot-active"
+                            checked={slotFormData.is_active}
+                            onCheckedChange={(checked) => setSlotFormData({ ...slotFormData, is_active: checked })}
+                          />
+                        </div>
+                        <div className="flex gap-2 pt-2">
+                          <Button type="submit" disabled={isSubmitting} className="flex-1 bg-dem hover:bg-dem/90 font-black uppercase tracking-widest text-xs">
+                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (isEditingSlot ? "Update" : "Create")}
+                          </Button>
+                          {isEditingSlot && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                setIsEditingSlot(false);
+                                setSlotFormData({ id: "", name: "", slug: "", price: 0, type: "music", is_active: true, visibility: "public" });
+                              }}
+                              className="font-black uppercase tracking-widest text-xs"
+                            >
+                              Cancel
+                            </Button>
+                          )}
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Slot List */}
+                <div className="lg:col-span-2">
+                  <Card className="bg-card border-border">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <div>
+                        <CardTitle className="font-display text-xl text-dem font-black uppercase">Current Services</CardTitle>
+                        <CardDescription>Active booking options shown to users</CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleSeedDefaults}
+                          disabled={isSubmitting}
+                          className="text-[10px] font-black uppercase tracking-tighter h-8"
+                        >
+                          <DatabaseIcon className="w-3 h-3 mr-1" />
+                          Restore Defaults
+                        </Button>
+                        <LayoutGrid className="w-5 h-5 text-muted-foreground opacity-50" />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="rounded-md border border-border">
+                        <Table>
+                          <TableHeader className="bg-muted/50">
+                            <TableRow>
+                              <TableHead className="text-xs font-black uppercase tracking-widest">Service</TableHead>
+                              <TableHead className="text-xs font-black uppercase tracking-widest">Category</TableHead>
+                              <TableHead className="text-xs font-black uppercase tracking-widest text-right">Price</TableHead>
+                              <TableHead className="text-xs font-black uppercase tracking-widest text-center">Status</TableHead>
+                              <TableHead className="text-xs font-black uppercase tracking-widest text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {isSlotsLoading ? (
+                              <TableRow>
+                                <TableCell colSpan={5} className="text-center py-8">
+                                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-dem" />
+                                </TableCell>
+                              </TableRow>
+                            ) : slots.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground font-medium italic">
+                                  No services found. Add one to get started.
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              slots.map((slot) => (
+                                <TableRow key={slot.id} className="hover:bg-muted/30 transition-colors">
+                                  <TableCell className="font-bold">{slot.name}</TableCell>
+                                  <TableCell>
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter bg-dem/10 text-dem border border-dem/20">
+                                      {slot.type || 'music'}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell className="text-right font-mono font-bold">${slot.price}</TableCell>
+                                  <TableCell className="text-center">
+                                    <span className={`inline-flex w-2 h-2 rounded-full ${slot.is_active ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-500 opacity-50'}`} />
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <div className="flex justify-end gap-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleEditSlot(slot)}
+                                        className="h-8 w-8 text-muted-foreground hover:text-dem hover:bg-dem/10"
+                                      >
+                                        <Pencil className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDeleteSlot(slot.id)}
+                                        className="h-8 w-8 text-muted-foreground hover:text-rep hover:bg-rep/10"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </TabsContent>
 
             <TabsContent value="posts">
               <div className="max-w-2xl mx-auto">

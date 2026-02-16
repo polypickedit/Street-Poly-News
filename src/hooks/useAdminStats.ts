@@ -34,10 +34,10 @@ export function useAdminStats(enabled: boolean) {
         ] = await Promise.all([
           (supabase.from("submissions").select("*", { count: 'exact', head: true }).eq('status', 'pending_review') as unknown as AbortableCountQuery).abortSignal(signal),
           (supabase.from("submissions").select("*", { count: 'exact', head: true }).eq('status', 'unpaid') as unknown as AbortableCountQuery).abortSignal(signal),
-          (supabase.from("placements").select("*", { count: 'exact', head: true }).gt('end_date', new Date().toISOString()) as unknown as AbortableCountQuery).abortSignal(signal),
-          (supabase.from("placements").select("*", { count: 'exact', head: true })
-            .gt('end_date', new Date().toISOString())
-            .lt('end_date', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()) as unknown as AbortableCountQuery).abortSignal(signal),
+          (supabase.from("content_placements").select("*", { count: 'exact', head: true }).gt('ends_at', new Date().toISOString()) as unknown as AbortableCountQuery).abortSignal(signal),
+          (supabase.from("content_placements").select("*", { count: 'exact', head: true })
+            .gt('ends_at', new Date().toISOString())
+            .lt('ends_at', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()) as unknown as AbortableCountQuery).abortSignal(signal),
           (supabase.from("payments").select("*", { count: 'exact', head: true }).eq('status', 'failed') as unknown as AbortableCountQuery).abortSignal(signal)
         ]);
 
@@ -68,12 +68,20 @@ export interface VisibilityMetrics {
   conversionRate: number;
   avgLagTimeHours: number;
   submissionsByStatus: Record<string, number>;
+  revenueBySlot: Record<string, number>;
+}
+
+interface StatusHistory {
+  submission_id: string;
+  from_status: string;
+  to_status: string;
+  created_at: string;
 }
 
 export function useVisibilityMetrics(enabled: boolean) {
   return useQuery({
     queryKey: ["admin-visibility-metrics"],
-    queryFn: async ({ signal }): Promise<VisibilityMetrics> => {
+    queryFn: async ({ signal: _signal }): Promise<VisibilityMetrics> => {
       try {
         // 1. Get submissions by status
         const { data: statusCounts, error: statusError } = await supabase
@@ -92,14 +100,14 @@ export function useVisibilityMetrics(enabled: boolean) {
         const paid = total - (counts['unpaid'] || 0);
         const conversionRate = total > 0 ? (paid / total) * 100 : 0;
 
-        // 3. Calculate avg lag time (paid -> approved/declined) from history
-        const { data: history, error: historyError } = await supabase
-          .from("submission_status_history")
+        const { data: historyData, error: historyError } = await supabase
+          .from("submission_status_history" as "submissions")
           .select("submission_id, from_status, to_status, created_at")
           .order("created_at", { ascending: true });
 
         if (historyError) throw historyError;
 
+        const history = historyData as unknown as StatusHistory[];
         const lagTimes: number[] = [];
         const paidEvents: Record<string, string> = {};
 
@@ -118,10 +126,30 @@ export function useVisibilityMetrics(enabled: boolean) {
           ? lagTimes.reduce((a, b) => a + b, 0) / lagTimes.length 
           : 0;
 
+        // 3. Get revenue by slot
+        const { data: revenueData, error: revenueError } = await supabase
+          .from("submissions")
+          .select("slot_id, payments(amount_cents)")
+          .eq("payment_status", "paid");
+
+        if (revenueError) throw revenueError;
+
+        interface RevenueRow {
+          slot_id: string;
+          payments: { amount_cents: number }[];
+        }
+
+        const revenueBySlot: Record<string, number> = {};
+        (revenueData as unknown as RevenueRow[])?.forEach((sub) => {
+          const total = sub.payments?.reduce((acc, p) => acc + (p.amount_cents || 0), 0) || 0;
+          revenueBySlot[sub.slot_id] = (revenueBySlot[sub.slot_id] || 0) + (total / 100);
+        });
+
         return {
           conversionRate,
           avgLagTimeHours,
-          submissionsByStatus: counts
+          submissionsByStatus: counts,
+          revenueBySlot
         };
       } catch (err) {
         console.error("Error fetching visibility metrics:", err);
@@ -162,7 +190,7 @@ export function useAdminActivities(enabled: boolean) {
             action_type,
             target_type,
             created_at,
-            profiles (full_name)
+            profiles!admin_user_id (full_name)
           `)
           .order("created_at", { ascending: false })
           .limit(5) as unknown as AbortableActivityQuery).abortSignal(signal);

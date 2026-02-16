@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import donTripAd from "@/assets/Don Trip ad.jpeg";
 
-const SUPABASE_URL = "https://duldhllwapsjytdzpjfz.supabase.co";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "http://localhost:54321";
 
 interface Promo {
   title: string;
@@ -47,13 +47,12 @@ export const PromoBanner = ({ className = "", showLabel = true, type = "donTrip"
       if (!currentPromo.affiliateName) return null;
       
       try {
-        const query = (supabase as SupabaseClient)
+        const { data, error } = await (supabase as SupabaseClient)
           .from("affiliate_links")
           .select("id, click_count")
           .eq("name", currentPromo.affiliateName)
-          .maybeSingle() as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: { id: string; click_count: number } | null; error: { code: string; message: string } | null }> };
-
-        const { data, error } = await query.abortSignal(signal);
+          .abortSignal(signal)
+          .maybeSingle();
 
         if (error) return null;
         return data;

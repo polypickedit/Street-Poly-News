@@ -18,11 +18,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setIsOpen(true);
   };
 
-  const removeItem = (id: number) => {
+  const removeItem = (id: string | number) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
   };
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = (id: string | number, quantity: number) => {
     if (quantity <= 0) {
       removeItem(id);
       return;

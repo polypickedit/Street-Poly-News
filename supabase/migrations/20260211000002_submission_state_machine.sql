@@ -72,14 +72,21 @@ BEGIN
     INSERT INTO public.submission_status_history (submission_id, from_status, to_status, changed_by, reason)
     VALUES (p_submission_id, v_current_status, p_new_status, p_user_id, p_reason);
 
-    -- Log to Admin Actions
-    INSERT INTO public.admin_actions (user_id, action_type, entity_type, entity_id, metadata)
-    VALUES (
-        p_user_id, 
-        'submission.' || p_new_status, 
-        'submission', 
-        p_submission_id, 
-        jsonb_build_object('from_status', v_current_status, 'reason', p_reason)
-    );
+    -- Log to Admin Actions (Only for actual admin decisions)
+    IF p_user_id IS NOT NULL AND p_new_status IN ('approved', 'declined') THEN
+        INSERT INTO public.admin_actions (admin_user_id, action_type, target_type, target_id, metadata)
+        VALUES (
+            p_user_id, 
+            CASE 
+                WHEN p_new_status = 'approved' THEN 'approve_submission'
+                WHEN p_new_status = 'declined' THEN 'decline_submission'
+            END, 
+            'submission', 
+            p_submission_id, 
+            jsonb_build_object('from_status', v_current_status, 'reason', p_reason)
+        );
+    END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.update_submission_status(UUID, TEXT, UUID, TEXT) TO anon, authenticated, service_role;

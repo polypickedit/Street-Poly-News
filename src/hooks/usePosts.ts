@@ -49,17 +49,16 @@ async function fetchPosts({
         .from("posts")
         .select("*");
 
-    const query = baseQuery
+    const { data, error } = await baseQuery
       .order("created_at", { ascending: false })
-      .range(from, to) as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: Post[] | null; error: unknown }> };
-
-    const { data, error } = await query.abortSignal(signal);
+      .abortSignal(signal)
+      .range(from, to);
 
     if (error) throw error;
     
     return {
-      posts: data as Post[],
-      nextPage: data.length === POSTS_PER_PAGE ? pageParam + 1 : undefined,
+      posts: (data || []) as Post[],
+      nextPage: data && data.length === POSTS_PER_PAGE ? pageParam + 1 : undefined,
     };
   } catch (err) {
     if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
@@ -83,13 +82,12 @@ export function usePost(id: string) {
     queryKey: ["post", id],
     queryFn: async ({ signal }) => {
       try {
-        const query = (supabase as SupabaseClient)
+        const { data, error } = await (supabase as SupabaseClient)
           .from("posts")
           .select("*")
           .eq("id", parseInt(id))
-          .single() as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: Post | null; error: unknown }> };
-
-        const { data, error } = await query.abortSignal(signal);
+          .abortSignal(signal)
+          .single();
 
         if (error) throw error;
         return { posts: [data as Post], nextPage: undefined };

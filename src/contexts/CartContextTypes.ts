@@ -1,7 +1,7 @@
 import { createContext } from "react";
 
 export interface CartItem {
-  id: number;
+  id: string | number;
   name: string;
   type: string;
   price: number;
@@ -14,8 +14,8 @@ export interface CartItem {
 export interface CartContextType {
   items: CartItem[];
   addItem: (item: Omit<CartItem, "quantity">) => void;
-  removeItem: (id: number) => void;
-  updateQuantity: (id: number, quantity: number) => void;
+  removeItem: (id: string | number) => void;
+  updateQuantity: (id: string | number, quantity: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;

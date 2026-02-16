@@ -70,7 +70,8 @@ export function StockTicker() {
           
           if (!response.ok) {
             if (response.status === 429) {
-              console.warn("StockTicker: Rate limited by CoinGecko");
+              // Silently fail on rate limit and use fallbacks
+              return {}; 
             }
             throw new Error(`Fetch failed with status: ${response.status}`);
           }
@@ -125,9 +126,12 @@ export function StockTicker() {
         return FALLBACK_TICKERS;
       }
     },
-    refetchInterval: 300000, // Refresh every 5 minutes instead of 1
+    refetchInterval: 600000, // Refresh every 10 minutes instead of 5
+    staleTime: 300000, // Data is fresh for 5 minutes
+    gcTime: 600000, // Keep in cache for 10 minutes
     initialData: FALLBACK_TICKERS,
     retry: false, // Handle retries manually in queryFn
+    refetchOnWindowFocus: false, // Don't refetch on window focus to save API calls
   });
 
   // Always use tickers (either from API or fallback)

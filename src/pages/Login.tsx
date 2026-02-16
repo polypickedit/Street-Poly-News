@@ -17,15 +17,17 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const { session, loading: isAuthLoading } = useAuth();
+  const { session, loading: isAuthLoading, authReady } = useAuth();
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+  // Default to home screen per user request, unless specific redirect requested
+  const redirectTo = searchParams.get("redirectTo") || "/";
 
   useEffect(() => {
-    if (session) {
+    if (authReady && session) {
+      console.log("Login: Session ready, redirecting to", redirectTo);
       navigate(redirectTo, { replace: true });
     }
-  }, [session, navigate, redirectTo]);
+  }, [authReady, session, navigate, redirectTo]);
 
 
   const mapAuthError = (error: { message: string }) => {
@@ -41,6 +43,12 @@ const Login = () => {
     }
     if (message.includes("password is too short")) {
       return "Password must be at least 6 characters long.";
+    }
+    if (message.includes("unsupported provider")) {
+      return "This login method is currently disabled. Please contact support if you believe this is an error.";
+    }
+    if (message.includes("service unavailable") || message.includes("fetch failed")) {
+      return "Unable to connect to the server. Please check your internet connection and try again.";
     }
     return error.message;
   };
@@ -153,8 +161,17 @@ const Login = () => {
 
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-dem" />
+        <div className="text-center">
+          <p className="text-white/40 animate-pulse text-sm">Verifying access...</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 text-xs text-dem hover:text-dem/80 underline transition-colors"
+          >
+            Taking too long? Refresh
+          </button>
+        </div>
       </div>
     );
   }
