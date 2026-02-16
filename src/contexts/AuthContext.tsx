@@ -1,96 +1,102 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
 import { AuthContext } from './AuthContextInternal';
-import { safeQuery } from '@/lib/supabase-debug';
+import { AuthState } from '@/types/auth';
+import { fetchSession, AuthServiceResult } from '@/services/authService';
+import { hydrateRoles, RoleHydrationResult } from '@/services/roleService';
+import { generateTraceId } from '@/utils/trace';
+import { DevAuthStateOverlay } from '@/components/dev/AuthStateOverlay';
 
-type SessionResponse = Awaited<ReturnType<typeof supabase.auth.getSession>>;
+const initialAuthState: AuthState = 'initializing';
+const stateReadySet: AuthState[] = ['ready', 'unauthenticated', 'error'];
+const stateLoadingSet: AuthState[] = ['initializing', 'hydratingRoles'];
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [authReady, setAuthReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isEditor, setIsEditor] = useState(false);
-  const lastRoleCheckRef = useRef<number>(0);
+  const [authState, setAuthState] = useState<AuthState>(initialAuthState);
+  const [authTraceId, setAuthTraceId] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<Error | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
 
-  const sessionFetchPromiseRef = useRef<Promise<SessionResponse> | null>(null);
+  const prevStateRef = useRef<AuthState>(initialAuthState);
+  const hydratedUserRef = useRef<string | null>(null);
+  const sessionFetchPromiseRef = useRef<Promise<AuthServiceResult> | null>(null);
   const sessionFetchControllerRef = useRef<AbortController | null>(null);
+  const roleHydrationControllerRef = useRef<AbortController | null>(null);
+  
+  // Single-Entry Bootstrap Refs
+  const bootstrappedRef = useRef(false);
+  const initializingRef = useRef(false);
+
+  const setState = useCallback((nextState: AuthState, traceId: string | null, meta: Record<string, unknown> = {}) => {
+    setAuthTraceId(traceId);
+    setAuthState((current) => {
+      if (current === nextState) return current;
+      console.log('AUTH TRANSITION:', current, '→', nextState, { traceId, ...meta });
+      prevStateRef.current = nextState;
+      return nextState;
+    });
+    setLoading(stateLoadingSet.includes(nextState));
+    setAuthReady(stateReadySet.includes(nextState));
+  }, []);
 
   const resetRoles = useCallback(() => {
     setIsAdmin(false);
     setIsEditor(false);
   }, []);
 
-  const hydrateRole = useCallback(
-    async (userId: string, { force = false } = {}) => {
-      const now = Date.now();
-      if (!force && now - lastRoleCheckRef.current < 2000) {
-        return;
-      }
-      lastRoleCheckRef.current = now;
-
-      try {
-        console.log('Auth: Hydrating roles for', userId, { force });
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout (must be < global 5s timeout)
-
-        try {
-          console.log('Auth: RPC hydration started');
-          const [adminAccess, editorAccess] = await Promise.all([
-            safeQuery(supabase.rpc('is_admin').abortSignal(controller.signal)),
-            safeQuery(supabase.rpc('is_admin_or_editor').abortSignal(controller.signal)),
-          ]);
-          
-          clearTimeout(timeoutId);
-
-          console.log('Auth: RPC role hydration results:', { adminAccess, editorAccess });
-          setIsAdmin(!!adminAccess);
-          setIsEditor(!!editorAccess);
-          return;
-        } catch (rpcErr) {
-          clearTimeout(timeoutId);
-          console.warn('Auth: RPC role hydration failed, falling back to table query:', rpcErr);
-        }
-
-        try {
-          const roles = await safeQuery(
-            supabase
-            .from('user_roles')
-            .select('role_id, roles(name)')
-            .eq('user_id', userId)
-            .abortSignal(controller.signal)
-          );
-
-          if (roles) {
-            const typedRoles = roles as { roles: { name: string } | null }[];
-            const admin = typedRoles.some((r) => r.roles?.name === 'admin');
-            const editor = admin || typedRoles.some((r) => r.roles?.name === 'editor');
-            console.log('Auth: Table role hydration results:', { admin, editor });
-            setIsAdmin(admin);
-            setIsEditor(editor);
-            return;
-          }
-        } catch (tableErr) {
-           console.error('Auth: Error fetching roles from table:', tableErr);
-           // proceed to resetRoles
-        }
-        
-        resetRoles();
-      } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          console.log('Auth: Role hydration aborted (timeout or page refresh)');
-        } else {
-          console.error('Auth: Error hydrating roles:', err);
-        }
-        resetRoles();
-      }
+  const handleUnauthenticated = useCallback(
+    (traceId: string, reason: string) => {
+      hydratedUserRef.current = null;
+      setSession(null);
+      setUser(null);
+      setAuthError(null);
+      resetRoles();
+      setState('unauthenticated', traceId, { reason });
     },
-    [resetRoles]
+    [resetRoles, setState]
   );
 
-  const fetchSessionOnce = useCallback(async (): Promise<SessionResponse> => {
+  const hydrateRolesForUser = useCallback(
+    async (userId: string, traceId: string) => {
+      if (hydratedUserRef.current === userId) {
+        setState('ready', traceId, { userId, note: 'roles_cached' });
+        return true;
+      }
+
+      roleHydrationControllerRef.current?.abort();
+      const controller = new AbortController();
+      roleHydrationControllerRef.current = controller;
+
+      setAuthError(null);
+      setState('hydratingRoles', traceId, { userId });
+
+      const result = await hydrateRoles(userId, { signal: controller.signal });
+      roleHydrationControllerRef.current = null;
+
+      if (result.ok) {
+        setIsAdmin(result.isAdmin);
+        setIsEditor(result.isEditor);
+        hydratedUserRef.current = userId;
+        setState('ready', traceId, { userId, roles: { admin: result.isAdmin, editor: result.isEditor } });
+        return true;
+      }
+
+      setAuthError(result.error);
+      resetRoles();
+      hydratedUserRef.current = null;
+      setState('error', traceId, { userId, error: result.error.message });
+      return false;
+    },
+    [resetRoles, setState]
+  );
+
+  const fetchSessionOnce = useCallback(async (): Promise<AuthServiceResult> => {
     if (sessionFetchPromiseRef.current) {
       return sessionFetchPromiseRef.current;
     }
@@ -99,21 +105,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     sessionFetchControllerRef.current = controller;
 
     const promise = (async () => {
-      let timeoutId: ReturnType<typeof setTimeout>;
-      
       try {
-        const timeoutPromise = new Promise<SessionResponse>((_, reject) => {
-          timeoutId = setTimeout(() => reject(new Error('Session fetch timed out')), 4000);
-        });
-
-        const sessionPromise = supabase.auth.getSession();
-        
-        const result = await Promise.race([sessionPromise, timeoutPromise]);
-        clearTimeout(timeoutId!);
-        return result;
-      } catch (err) {
-        clearTimeout(timeoutId!);
-        throw err;
+        return await fetchSession({ signal: controller.signal });
       } finally {
         sessionFetchControllerRef.current = null;
         sessionFetchPromiseRef.current = null;
@@ -128,148 +121,94 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     sessionFetchControllerRef.current?.abort();
   }, []);
 
+  const handleSessionPayload = useCallback(
+    async (incomingSession: Session | null, traceId?: string) => {
+      const lifecycleId = traceId ?? generateTraceId();
+      if (!incomingSession?.user?.id) {
+        handleUnauthenticated(lifecycleId, 'session_missing');
+        return;
+      }
+
+      setSession(incomingSession);
+      setUser(incomingSession.user);
+      setState('authenticated', lifecycleId, { userId: incomingSession.user.id });
+      await hydrateRolesForUser(incomingSession.user.id, lifecycleId);
+    },
+    [handleUnauthenticated, hydrateRolesForUser, setState]
+  );
+
+  const initializeAuth = useCallback(async () => {
+      const lifecycleId = generateTraceId();
+      setAuthError(null);
+      setState('initializing', lifecycleId, { source: 'bootstrap' });
+
+      try {
+        const result = await fetchSessionOnce();
+        
+        if (!result.ok) {
+             console.warn('Auth: Session fetch failed', result.error);
+             handleUnauthenticated(lifecycleId, 'session_fetch_failed');
+             return;
+        }
+
+        await handleSessionPayload(result.response.data.session, lifecycleId);
+      } catch (err) {
+          console.error("Auth bootstrap failed:", err);
+          handleUnauthenticated(lifecycleId, 'bootstrap_error');
+      }
+  }, [fetchSessionOnce, handleSessionPayload, handleUnauthenticated, setState]);
+
   const refreshAuth = useCallback(async () => {
+    abortPendingSessionFetch();
     try {
-      console.log('Auth: refreshAuth started');
-      setLoading(true);
-      const {
-        data: { session: currentSession },
-        error: sessionError,
-      } = await fetchSessionOnce();
-
-      if (sessionError) {
-        throw sessionError;
+      const result = await fetchSessionOnce();
+      if (!result.ok) {
+        throw result.error;
       }
-
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-
-      if (currentSession?.user?.id) {
-        await hydrateRole(currentSession.user.id, { force: true });
-      } else {
-        resetRoles();
-      }
+      await handleSessionPayload(result.response.data.session, result.traceId);
     } catch (error) {
       console.error('Auth: Refresh error:', error);
-    } finally {
-      setLoading(false);
     }
-  }, [fetchSessionOnce, hydrateRole, resetRoles]);
+  }, [abortPendingSessionFetch, fetchSessionOnce, handleSessionPayload]);
 
+  // Single-Entry Bootstrap Effect
   useEffect(() => {
-    let mounted = true;
+    if (bootstrappedRef.current) {
+        console.log("Auth: bootstrap skipped (already initialized)");
+        return;
+    }
+    if (initializingRef.current) {
+        console.log("Auth: bootstrap skipped (initialization in progress)");
+        return;
+    }
 
-    const initializeAuth = async () => {
-      let shouldSetReady = true;
-      try {
-        console.log('Auth: Initializing...');
-        const response = await fetchSessionOnce();
-        const { data: { session: initialSession }, error } = response;
+    bootstrappedRef.current = true;
+    initializingRef.current = true;
+    console.log("Auth: bootstrap starting (single-entry)");
 
-        if (error) {
-          // Check for AbortError or DOMException from Supabase navigatorLock
-          if (
-            error.name === 'AbortError' || 
-            error.message?.includes('AbortError') ||
-            error.message?.includes('The operation was aborted')
-          ) {
-            console.log('Auth: Session fetch aborted (likely due to OAuth redirect race). Waiting for listener...');
-            shouldSetReady = false;
-            return;
-          }
-          console.error('Auth: Initial session error:', error);
-        }
+    initializeAuth()
+      .catch((err) => {
+        console.error("Auth bootstrap failed:", err);
+      })
+      .finally(() => {
+        initializingRef.current = false;
+        console.log("Auth: bootstrap complete");
+      });
+  }, []); // strict []
 
-        if (!mounted) {
-          return;
-        }
-
-        console.log('Auth: Initial session fetched', { hasSession: !!initialSession, userId: initialSession?.user?.id });
-        setSession(initialSession);
-        setUser(initialSession?.user ?? null);
-
-        if (initialSession?.user?.id) {
-          console.log('Auth: Hydrating roles for initial session...');
-          await hydrateRole(initialSession.user.id, { force: true });
-        } else {
-          resetRoles();
-        }
-      } catch (err) {
-        // Check for AbortError or DOMException
-        if (
-          err instanceof Error && (
-            err.name === 'AbortError' || 
-            err.message.includes('AbortError') ||
-            err.message.includes('The operation was aborted')
-          )
-        ) {
-          console.log('Auth: Initialization aborted. Waiting for listener...');
-          shouldSetReady = false;
-          return;
-        }
-        console.error('Auth: Initialization failed:', err);
-      } finally {
-        if (mounted && shouldSetReady) {
-          console.log('Auth: Initialization complete. Setting authReady=true');
-          setAuthReady(true);
-          setLoading(false);
-        }
-      }
-    };
-
-    initializeAuth();
-
+  // Subscription Effect
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        if (!mounted) return;
-
-        console.log('Auth: State change event:', event, {
-          hasSession: !!currentSession,
-          userId: currentSession?.user?.id,
-        });
-
-        setLoading(true);
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-
-        try {
-          if (currentSession?.user?.id) {
-            await hydrateRole(currentSession.user.id, { force: true });
-          } else {
-            resetRoles();
-          }
-        } catch (err) {
-          console.error('Auth: State change hydration error:', err);
-        } finally {
-          if (mounted) {
-            setLoading(false);
-            setAuthReady(true); // Ensure auth is marked ready after state change
-          }
-        }
+        console.log('Auth: State change event:', event);
+        await handleSessionPayload(currentSession, generateTraceId());
       }
     );
 
     return () => {
-      mounted = false;
-      abortPendingSessionFetch();
       subscription.unsubscribe();
     };
-  }, [abortPendingSessionFetch, fetchSessionOnce, hydrateRole, resetRoles]);
-
-  // Fail-safe timeout to prevent infinite loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading((currentLoading) => {
-        if (currentLoading) {
-           console.error("⚠️ Auth stuck in loading state for > 5s. Forcing ready.");
-           setAuthReady(true);
-           return false;
-        }
-        return currentLoading;
-      });
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, []);
+  }, [handleSessionPayload]);
 
   const value = useMemo(
     () => ({
@@ -280,20 +219,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       loading,
       authReady,
       refreshAuth,
+      authState,
+      traceId: authTraceId,
+      authError,
     }),
-    [session, user, isAdmin, isEditor, loading, authReady, refreshAuth]
+    [session, user, isAdmin, isEditor, loading, authReady, refreshAuth, authState, authTraceId, authError]
   );
 
-  useEffect(() => {
-    console.log('Auth State Update:', {
-      loading,
-      hasSession: !!session,
-      isAdmin,
-      isEditor,
-      userId: user?.id,
-      timestamp: new Date().toISOString(),
-    });
-  }, [loading, session, isAdmin, isEditor, user]);
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      {isAdmin && (
+        <DevAuthStateOverlay
+            state={authState}
+            traceId={authTraceId}
+            userId={user?.id ?? null}
+            loading={loading}
+            isAdmin={isAdmin}
+            isEditor={isEditor}
+            error={authError?.message ?? null}
+        />
+      )}
+    </AuthContext.Provider>
+  );
 };
