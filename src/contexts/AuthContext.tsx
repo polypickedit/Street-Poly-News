@@ -2,15 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
 import { AuthContext } from './AuthContextInternal';
-import { AuthState } from '@/types/auth';
+import { AuthState } from './authTypes';
 import { fetchSession, AuthServiceResult } from '@/services/authService';
 import { hydrateRoles, RoleHydrationResult } from '@/services/roleService';
 import { generateTraceId } from '@/utils/trace';
-import { DevAuthStateOverlay } from '@/components/dev/AuthStateOverlay';
+import { DevAuthOverlay } from '@/components/DevAuthOverlay';
 
 const initialAuthState: AuthState = 'initializing';
 const stateReadySet: AuthState[] = ['ready', 'unauthenticated', 'error'];
-const stateLoadingSet: AuthState[] = ['initializing', 'hydratingRoles'];
+const stateLoadingSet: AuthState[] = ['initializing', 'hydrating_roles'];
+
+type SessionFetchPromise = Promise<AuthServiceResult>;
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
@@ -25,13 +27,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const prevStateRef = useRef<AuthState>(initialAuthState);
   const hydratedUserRef = useRef<string | null>(null);
-  const sessionFetchPromiseRef = useRef<Promise<AuthServiceResult> | null>(null);
+  const sessionFetchPromiseRef = useRef<SessionFetchPromise | null>(null);
   const sessionFetchControllerRef = useRef<AbortController | null>(null);
   const roleHydrationControllerRef = useRef<AbortController | null>(null);
-  
-  // Single-Entry Bootstrap Refs
-  const bootstrappedRef = useRef(false);
-  const initializingRef = useRef(false);
+  const alreadyInitializedRef = useRef(false);
 
   const setState = useCallback((nextState: AuthState, traceId: string | null, meta: Record<string, unknown> = {}) => {
     setAuthTraceId(traceId);
@@ -74,7 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       roleHydrationControllerRef.current = controller;
 
       setAuthError(null);
-      setState('hydratingRoles', traceId, { userId });
+      setState('hydrating_roles', traceId, { userId });
 
       const result = await hydrateRoles(userId, { signal: controller.signal });
       roleHydrationControllerRef.current = null;
@@ -87,13 +86,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return true;
       }
 
-      setAuthError(result.error);
+      const error = (result as { error: Error }).error;
+      setAuthError(error);
       resetRoles();
       hydratedUserRef.current = null;
-      setState('error', traceId, { userId, error: result.error.message });
+      setState('error', traceId, { userId, error: error.message });
       return false;
     },
-    [resetRoles, setState]
+    [hydrateRoles, resetRoles, setState]
   );
 
   const fetchSessionOnce = useCallback(async (): Promise<AuthServiceResult> => {
@@ -137,33 +137,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     [handleUnauthenticated, hydrateRolesForUser, setState]
   );
 
-  const initializeAuth = useCallback(async () => {
-      const lifecycleId = generateTraceId();
-      setAuthError(null);
-      setState('initializing', lifecycleId, { source: 'bootstrap' });
-
-      try {
-        const result = await fetchSessionOnce();
-        
-        if (!result.ok) {
-             console.warn('Auth: Session fetch failed', result.error);
-             handleUnauthenticated(lifecycleId, 'session_fetch_failed');
-             return;
-        }
-
-        await handleSessionPayload(result.response.data.session, lifecycleId);
-      } catch (err) {
-          console.error("Auth bootstrap failed:", err);
-          handleUnauthenticated(lifecycleId, 'bootstrap_error');
-      }
-  }, [fetchSessionOnce, handleSessionPayload, handleUnauthenticated, setState]);
-
   const refreshAuth = useCallback(async () => {
     abortPendingSessionFetch();
     try {
       const result = await fetchSessionOnce();
       if (!result.ok) {
-        throw result.error;
+        throw (result as { error: Error }).error;
       }
       await handleSessionPayload(result.response.data.session, result.traceId);
     } catch (error) {
@@ -171,44 +150,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [abortPendingSessionFetch, fetchSessionOnce, handleSessionPayload]);
 
-  // Single-Entry Bootstrap Effect
   useEffect(() => {
-    if (bootstrappedRef.current) {
-        console.log("Auth: bootstrap skipped (already initialized)");
-        return;
-    }
-    if (initializingRef.current) {
-        console.log("Auth: bootstrap skipped (initialization in progress)");
-        return;
+    if (import.meta.hot && alreadyInitializedRef.current) {
+      console.log('Auth: HMR active, skipping re-initialization');
+      return;
     }
 
-    bootstrappedRef.current = true;
-    initializingRef.current = true;
-    console.log("Auth: bootstrap starting (single-entry)");
+    alreadyInitializedRef.current = true;
+    let mounted = true;
 
-    initializeAuth()
-      .catch((err) => {
-        console.error("Auth bootstrap failed:", err);
-      })
-      .finally(() => {
-        initializingRef.current = false;
-        console.log("Auth: bootstrap complete");
-      });
-  }, []); // strict []
+    const initializeAuth = async () => {
+      const lifecycleId = generateTraceId();
+      setAuthError(null);
+      setState('initializing', lifecycleId, { source: 'bootstrap' });
 
-  // Subscription Effect
-  useEffect(() => {
+      const result = await fetchSessionOnce();
+      if (!mounted) return;
+
+      if (!result.ok) {
+        const error = (result as { error: Error }).error;
+        console.warn('Auth: Session fetch failed', error);
+        handleUnauthenticated(result.traceId, 'session_fetch_failed');
+        return;
+      }
+
+      await handleSessionPayload(result.response.data.session, result.traceId);
+    };
+
+    initializeAuth();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
+        if (!mounted) return;
         console.log('Auth: State change event:', event);
         await handleSessionPayload(currentSession, generateTraceId());
       }
     );
 
     return () => {
+      mounted = false;
+      abortPendingSessionFetch();
+      roleHydrationControllerRef.current?.abort();
       subscription.unsubscribe();
     };
-  }, [handleSessionPayload]);
+  }, [abortPendingSessionFetch, fetchSessionOnce, handleSessionPayload, handleUnauthenticated, setState]);
 
   const value = useMemo(
     () => ({
@@ -229,17 +214,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <AuthContext.Provider value={value}>
       {children}
-      {isAdmin && (
-        <DevAuthStateOverlay
-            state={authState}
-            traceId={authTraceId}
-            userId={user?.id ?? null}
-            loading={loading}
-            isAdmin={isAdmin}
-            isEditor={isEditor}
-            error={authError?.message ?? null}
-        />
-      )}
+      {isAdmin && <DevAuthOverlay />}
     </AuthContext.Provider>
   );
 };
