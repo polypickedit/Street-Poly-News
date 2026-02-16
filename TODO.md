@@ -16,6 +16,9 @@
 - [x] **Admin role source-of-truth alignment**: `SubmissionQueue` and `AdminProvider` now consume `useAuth` role/session state instead of duplicating `getUser` + role RPC checks.
 - [x] **User-scoped query keys**: dashboard user data queries (`submissions`, `placements`, `payments`) are now keyed by `userId` to avoid cross-session cache bleed.
 - [x] **Checkout/session consistency**: checkout flow now uses auth context state; Stripe helpers use centralized session fetch guard (`fetchSession`) with timeout.
+- [x] **Admin access parity in mobile nav**: bottom nav now treats `admin` and `editor` as valid admin-menu access and exposes `/admin` entry consistently.
+- [x] **Top/bottom overlay coordination**: opening top overlays (mobile menu/search/user dropdown) now suppresses bottom nav rendering to prevent blocked taps in dropdown lower regions.
+- [x] **Conduction drawer UX simplification (first pass)**: `ConductDrawer` now prioritizes current live preview + replacement flow, moves advanced scheduling/targeting into an accordion, removes internal IDs, and keeps save/invalidate behavior intact.
 
 ## 🔄 Auth/System Gaps Remaining
 
@@ -23,6 +26,8 @@
 - [ ] Normalize role hydration typing in `roleService` (remove `any` cast from `get_user_roles` response).
 - [ ] Migrate remaining direct `supabase.auth.getUser/getSession` usage in non-admin hooks/components to auth-context-backed flows where applicable.
 - [ ] Add e2e coverage for OAuth redirect + role hydration timing (post-redirect auth transition, admin route gating while roles load).
+- [ ] Remove transient role resets for same-user auth events (avoid setting `isAdmin/isEditor` to false during re-auth/refresh before hydration completes).
+- [ ] Add DB-side role observability checks (`get_user_roles` contract, RLS visibility, seeded `user_roles`) to quickly diagnose "admin fades" reports.
 
 ---
 
@@ -65,7 +70,6 @@
 - Confirm Supabase migrations and functions deploy without errors, the Stripe webhook is receiving events, and admins can manage submissions/slots via the dashboard.
 - Once everything is wired up, document (or script) the deploy steps so future maintainers can reproduce the environment in Lovable/Vercel/Supabase.
 
-## 6. Network & Observability (Technical Debt)
 - [x] **Address `net::ERR_ABORTED` logs**: 
     - Optimized AdminDashboard and Dashboard queries by moving them to a higher level in the component tree.
     - Explicitly disabled `abortSignal` for lightweight background queries (stats, activities) to prevent browser console noise during component unmounts.
@@ -110,5 +114,3 @@
 - [ ] Confirm `merch_orders`, `merch_inventory`, and admin-oriented views/policies explicitly include `auth.uid() = user_id` or `public.is_owner_admin()` guards.
 - [ ] Ensure no `anon` access is granted to admin tables—`merch_inventory` and audit views should only be readable through the owner check.
 - [ ] If any direct SQL returns rows for a non-admin, fix the policy / view filter immediately.
-
-## 6. Network & Observability (Technical Debt)

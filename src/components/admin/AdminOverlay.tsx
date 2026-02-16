@@ -3,7 +3,8 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { ConductDrawer } from "./ConductDrawer";
 import { ConductWalkthrough } from "./ConductWalkthrough";
 import { ContentType } from "@/types/cms";
-import { HelpCircle, Hammer, X } from "lucide-react";
+import { HelpCircle, Hammer, X, Minus, GripVertical } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /**
  * The AdminOverlay component.
@@ -25,6 +26,12 @@ export function AdminOverlay() {
   const clickTimeout = useRef<number | null>(null);
   const pendingSlot = useRef<{ key: string; accepts: ContentType[] } | null>(null);
 
+  // Floating Bar State
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
+  const elementRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+
   // Drawer State
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{
@@ -32,6 +39,42 @@ export function AdminOverlay() {
     accepts: ContentType[];
   } | null>(null);
   
+  // Drag Logic
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Prevent drag if clicking buttons
+    if ((e.target as HTMLElement).closest("button")) return;
+    
+    e.preventDefault();
+    isDragging.current = true;
+    
+    const rect = elementRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    // If position is null (default), set it to current rect
+    const currentX = position?.x ?? rect.left;
+    const currentY = position?.y ?? rect.top;
+
+    const offsetX = e.clientX - currentX;
+    const offsetY = e.clientY - currentY;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      setPosition({
+        x: e.clientX - offsetX,
+        y: e.clientY - offsetY
+      });
+    };
+
+    const handleMouseUp = () => {
+      isDragging.current = false;
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+
   useEffect(() => {
     return () => {
       if (clickTimeout.current) {
@@ -138,58 +181,104 @@ export function AdminOverlay() {
     <>
       {/* Global Indicator */}
       <div 
+        ref={elementRef}
         data-conduction-toggle
-        className="fixed top-4 right-4 z-[9999] flex items-center gap-3 bg-dem/95 text-white px-4 py-2 rounded-full shadow-2xl backdrop-blur-md border border-white/20 animate-in fade-in slide-in-from-top-4"
+        onMouseDown={handleMouseDown}
+        style={{
+          position: 'fixed',
+          left: position?.x ?? undefined,
+          top: position?.y ?? '1rem',
+          right: position ? undefined : '1rem',
+          zIndex: 10001
+        }}
+        className={cn(
+          "flex items-center gap-3 bg-dem/95 text-white shadow-2xl backdrop-blur-md border border-white/20 cursor-grab active:cursor-grabbing transition-all duration-200 ease-out",
+          isMinimized ? "p-3 rounded-full" : "px-4 py-2 rounded-full",
+          !position && "animate-in fade-in slide-in-from-top-4"
+        )}
       >
         <div className="flex items-center gap-2">
-          <Hammer className="w-4 h-4 animate-pulse" />
-          <span className="font-display font-black text-sm tracking-widest uppercase text-white">
-            Conduction Mode
-          </span>
+          {isMinimized ? (
+            <Hammer className="w-4 h-4 text-white" />
+          ) : (
+            <>
+              <GripVertical className="w-4 h-4 text-white/50 -ml-1" />
+              <Hammer className="w-4 h-4 animate-pulse" />
+              <span className="font-display font-black text-sm tracking-widest uppercase text-white select-none">
+                Conduction Mode
+              </span>
+            </>
+          )}
         </div>
 
-        {/* Presence Indicator */}
-        {activeAdmins.length > 1 && (
-          <div className="flex items-center gap-2 pl-2 border-l border-white/10">
-            <div className="flex -space-x-2">
-              {activeAdmins.slice(0, 3).map((admin, idx) => (
-                <div 
-                  key={admin.user_id || idx} 
-                  className="w-6 h-6 rounded-full border-2 border-dem bg-white/10 flex items-center justify-center text-[8px] font-black uppercase cursor-help shadow-lg text-white"
-                  title={`${admin.email} is in the booth`}
-                >
-                  {admin.email?.substring(0, 2)}
+        {!isMinimized && (
+          <>
+            {/* Presence Indicator */}
+            {activeAdmins.length > 1 && (
+              <div className="flex items-center gap-2 pl-2 border-l border-white/10">
+                <div className="flex -space-x-2">
+                  {activeAdmins.slice(0, 3).map((admin, idx) => (
+                    <div 
+                      key={admin.user_id || idx} 
+                      className="w-6 h-6 rounded-full border-2 border-dem bg-white/10 flex items-center justify-center text-[8px] font-black uppercase cursor-help shadow-lg text-white"
+                      title={`${admin.email} is in the booth`}
+                    >
+                      {admin.email?.substring(0, 2)}
+                    </div>
+                  ))}
+                  {activeAdmins.length > 3 && (
+                    <div className="w-6 h-6 rounded-full border-2 border-dem bg-white/10 flex items-center justify-center text-[8px] font-black text-white">
+                      +{activeAdmins.length - 3}
+                    </div>
+                  )}
                 </div>
-              ))}
-              {activeAdmins.length > 3 && (
-                <div className="w-6 h-6 rounded-full border-2 border-dem bg-white/10 flex items-center justify-center text-[8px] font-black text-white">
-                  +{activeAdmins.length - 3}
-                </div>
-              )}
+              </div>
+            )}
+
+            <div className="h-4 w-px bg-white/20 mx-1" />
+            
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setIsWalkthroughActive(true)}
+                className="flex items-center gap-1.5 text-white hover:text-white/70 transition-colors px-2 py-1 rounded-full hover:bg-white/10"
+                aria-label="Help and Walkthrough"
+                title="Help"
+              >
+                <HelpCircle className="w-4 h-4" />
+                <span className="text-xs font-black uppercase tracking-wider text-white">Help</span>
+              </button>
             </div>
-          </div>
+          </>
         )}
 
-        <div className="h-4 w-px bg-white/20 mx-1" />
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => setIsWalkthroughActive(true)}
-            className="flex items-center gap-1.5 text-white hover:text-white/70 transition-colors px-2 py-1 rounded-full hover:bg-white/10"
-            aria-label="Help and Walkthrough"
-            title="Help"
-          >
-            <HelpCircle className="w-4 h-4" />
-            <span className="text-xs font-black uppercase tracking-wider text-white">Help</span>
-          </button>
-          <button 
-            onClick={toggleAdminMode}
-            className="flex items-center gap-1.5 text-white hover:text-rep transition-colors px-2 py-1 rounded-full hover:bg-white/10"
-            aria-label="Close Conduction Mode"
-            title="Close"
-          >
-            <X className="w-4 h-4" />
-            <span className="text-xs font-black uppercase tracking-wider text-white">Close</span>
-          </button>
+        {/* Controls (Minimize/Close) */}
+        <div className={cn("flex items-center gap-1", !isMinimized && "border-l border-white/20 pl-2 ml-1")}>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMinimized(!isMinimized);
+              }}
+              className="flex items-center justify-center w-6 h-6 text-white hover:text-white/70 transition-colors rounded-full hover:bg-white/10"
+              aria-label={isMinimized ? "Expand" : "Minimize"}
+              title={isMinimized ? "Expand" : "Minimize"}
+            >
+              {isMinimized ? <Hammer className="w-3 h-3 animate-pulse" /> : <Minus className="w-4 h-4" />}
+            </button>
+            
+            {!isMinimized && (
+              <button 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    toggleAdminMode();
+                }}
+                className="flex items-center gap-1.5 text-white hover:text-rep transition-colors px-2 py-1 rounded-full hover:bg-white/10"
+                aria-label="Exit Conduction Mode"
+                title="Exit"
+              >
+                <X className="w-4 h-4" />
+                <span className="text-xs font-black uppercase tracking-wider text-white">Exit</span>
+              </button>
+            )}
         </div>
       </div>
 

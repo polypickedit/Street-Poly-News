@@ -15,8 +15,10 @@ type SupabaseMocks = {
   mockRpc: ReturnType<typeof vi.fn>;
 };
 
+let supabaseMocksCache: SupabaseMocks | undefined;
+
 function getSupabaseMocks(): SupabaseMocks {
-  if (!getSupabaseMocks.cache) {
+  if (!supabaseMocksCache) {
     const mockStorageUpload = vi.fn().mockResolvedValue({ error: null });
     const mockGetPublicUrl = vi.fn().mockReturnValue({
       data: { publicUrl: "https://storage.test/submission.mp3" },
@@ -28,7 +30,7 @@ function getSupabaseMocks(): SupabaseMocks {
       getPublicUrl: mockGetPublicUrl,
     }));
 
-    getSupabaseMocks.cache = {
+    supabaseMocksCache = {
       supabase: {
         rpc: mockRpc,
         storage: {
@@ -42,28 +44,22 @@ function getSupabaseMocks(): SupabaseMocks {
     };
   }
 
-  return getSupabaseMocks.cache;
-}
-
-namespace getSupabaseMocks {
-  export let cache: SupabaseMocks | undefined;
+  return supabaseMocksCache;
 }
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: getSupabaseMocks().supabase,
 }));
 
+let stripeMocksCache: { createSlotCheckoutSession: ReturnType<typeof vi.fn> } | undefined;
+
 function getStripeMocks() {
-  if (!getStripeMocks.cache) {
-    getStripeMocks.cache = {
+  if (!stripeMocksCache) {
+    stripeMocksCache = {
       createSlotCheckoutSession: vi.fn(),
     };
   }
-  return getStripeMocks.cache;
-}
-
-namespace getStripeMocks {
-  export let cache: { createSlotCheckoutSession: ReturnType<typeof vi.fn> } | undefined;
+  return stripeMocksCache;
 }
 
 vi.mock("@/lib/stripe", () => ({

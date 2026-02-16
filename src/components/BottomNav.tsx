@@ -131,23 +131,7 @@ export const BottomNav = () => {
               </Link>
             ))}
 
-            {hasAdminAccess && (
-              <button
-                type="button"
-                onClick={toggleAdminMode}
-                className={cn(
-                  "relative flex flex-col items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all min-w-[80px]",
-                  isAdminMode
-                    ? "text-dem animate-pulse"
-                    : "text-white/40 hover:text-dem"
-                )}
-              >
-                <Zap className={cn("h-8 w-8", isAdminMode && "fill-current")} />
-                <span className="text-sm font-bold uppercase tracking-wider font-display">
-                  {isAdminMode ? "On" : "Edit"}
-                </span>
-              </button>
-            )}
+
 
             {hasAdminAccess && (
               <Link

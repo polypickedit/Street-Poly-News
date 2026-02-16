@@ -43,7 +43,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isAdminMode, toggleAdminMode } = useAdmin();
+  const { isAdminMode, setIsAdminMode, toggleAdminMode } = useAdmin();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Keep admin stats and activities alive at the layout level to prevent aborts during navigation
@@ -94,6 +94,21 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
               <Home className="w-5 h-5 shrink-0" />
               {!isCollapsed && <span>Back to Site</span>}
             </Link>
+
+            <button
+              onClick={() => {
+                setIsAdminMode(true);
+                navigate('/');
+              }}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 text-sm font-bold bg-white/5 hover:bg-white/10 text-white rounded-lg transition-all border border-white/10 mb-4 w-full group",
+                isCollapsed && "justify-center px-0"
+              )}
+              title={isCollapsed ? "Site Editor" : undefined}
+            >
+              <Zap className={cn("w-5 h-5 shrink-0", isAdminMode && "fill-current text-dem")} />
+              {!isCollapsed && <span>Site Editor</span>}
+            </button>
 
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;

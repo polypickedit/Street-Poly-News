@@ -7,9 +7,15 @@ import { PageTransition } from "@/components/PageTransition";
 import { ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipsGrid } from "@/components/ClipsGrid";
 import { useSlotContents } from "@/hooks/usePlacements";
+import { useAdmin } from "@/hooks/useAdmin";
+import { VideoSlotEditor } from "@/components/admin/VideoSlotEditor";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { getYouTubeId } from "@/lib/utils";
+import { ContentType } from "@/types/cms";
 
 const Index = () => {
   const videoLinks = [
@@ -156,39 +162,115 @@ interface VideoLink {
 }
 
 const FallbackClips = ({ videoLinks }: { videoLinks: VideoLink[] }) => {
-  // If we had a mechanism to check if ClipsGrid rendered something, we'd use it here.
-  // For now, these only show up if the database is empty or the user hasn't added placements.
+  const { isAdminMode } = useAdmin();
+  const [editingVideo, setEditingVideo] = useState<VideoLink | null>(null);
+  const queryClient = useQueryClient();
+
+  const handleSave = async (data: { url: string; title: string; description: string; thumbnail: string; youtubeId: string }) => {
+    if (!editingVideo) return;
+
+    try {
+      // 1. Create all posts (including the edited one)
+      const postsToCreate = videoLinks.map(video => {
+        const isEdited = video.id === editingVideo.id;
+        return {
+          title: isEdited ? data.title : video.title,
+          subtitle: isEdited ? data.description : video.description,
+          youtube_id: isEdited ? data.youtubeId : (getYouTubeId(video.url) || video.id),
+          thumbnail_url: isEdited ? data.thumbnail : video.thumbnail,
+          content_type: 'video' as const,
+          created_at: new Date().toISOString()
+        };
+      });
+
+      const { data: createdPosts, error: postsError } = await supabase
+        .from('posts')
+        .insert(postsToCreate)
+        .select();
+
+      if (postsError) throw postsError;
+      if (!createdPosts) throw new Error("No posts returned");
+
+      // 2. Create placements for these posts
+      const placementsToCreate = createdPosts.map((post, index) => ({
+        slot_key: 'home.clips',
+        content_type: 'video' as ContentType,
+        content_id: post.id.toString(),
+        active: true,
+        priority: createdPosts.length - index, // Higher priority first
+        device_scope: 'all' as const,
+        metadata: {}
+      }));
+
+      const { error: placementsError } = await supabase
+        .from('content_placements')
+        .insert(placementsToCreate);
+
+      if (placementsError) throw placementsError;
+
+      // 3. Invalidate queries
+      await queryClient.invalidateQueries({ queryKey: ["slot-contents"] });
+      await queryClient.invalidateQueries({ queryKey: ["clip-posts"] });
+      setEditingVideo(null);
+      
+    } catch (error) {
+      console.error("Error creating placements:", error);
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-      {videoLinks.map((video) => (
-        <a
-          key={video.id}
-          href={video.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group flex flex-col rounded-2xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg"
-        >
-          <div className="overflow-hidden rounded-t-2xl bg-muted">
-            <img
-              src={video.thumbnail}
-              alt={video.title}
-              className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          </div>
-          <div className="p-4 flex flex-col gap-2">
-            <h3 className="font-display text-xl text-dem font-black uppercase transition-colors group-hover:text-dem">
-              {video.title}
-            </h3>
-            <p className="text-base text-muted-foreground font-body mt-2 line-clamp-2">
-              {video.description}
-            </p>
-            <span className="mt-3 text-sm font-black uppercase tracking-widest text-dem">
-              Watch on YouTube →
-            </span>
-          </div>
-        </a>
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        {videoLinks.map((video) => (
+          <a
+            key={video.id}
+            href={video.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              if (isAdminMode) {
+                e.preventDefault();
+                setEditingVideo(video);
+              }
+            }}
+            className="group flex flex-col rounded-2xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg relative"
+          >
+            {isAdminMode && (
+              <div className="absolute top-2 right-2 z-10 bg-black/80 text-white px-2 py-1 rounded text-xs font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+                Init Slot
+              </div>
+            )}
+            <div className="overflow-hidden rounded-t-2xl bg-muted">
+              <img
+                src={video.thumbnail}
+                alt={video.title}
+                className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div className="p-4 flex flex-col gap-2">
+              <h3 className="font-display text-xl text-dem font-black uppercase transition-colors group-hover:text-dem">
+                {video.title}
+              </h3>
+              <p className="text-base text-muted-foreground font-body mt-2 line-clamp-2">
+                {video.description}
+              </p>
+              <span className="mt-3 text-sm font-black uppercase tracking-widest text-dem">
+                {isAdminMode ? "Initialize Slot →" : "Watch on YouTube →"}
+              </span>
+            </div>
+          </a>
+        ))}
+      </div>
+
+      <VideoSlotEditor
+        open={!!editingVideo}
+        onOpenChange={(open) => !open && setEditingVideo(null)}
+        initialUrl={editingVideo?.url || ""}
+        initialTitle={editingVideo?.title || ""}
+        initialDescription={editingVideo?.description || ""}
+        onSave={handleSave}
+      />
+    </>
   );
 };
 

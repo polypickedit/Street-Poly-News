@@ -77,13 +77,13 @@ export const createCreditPackCheckoutSession = async (packId: string) => {
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface MerchCheckoutOptions {
   shippingAddress?: string;
   contactMethod?: 'email' | 'phone';
   contactValue?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createMerchCheckoutSession = async (items: any[], options?: MerchCheckoutOptions) => {
   const { shippingAddress, contactMethod, contactValue } = options || {};
 

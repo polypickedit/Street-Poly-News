@@ -35,6 +35,7 @@ const navLinks = [
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [mobileLogoErrored, setMobileLogoErrored] = useState(false);
   const { session, isAdmin, isEditor, loading: authLoading } = useAuth();
   const hasAdminAccess = isAdmin || isEditor;
@@ -59,11 +60,11 @@ export function Navbar() {
   const { activeAccount, isLoading: isLoadingAccount } = useAccount();
 
   useEffect(() => {
-    const topOverlayOpen = isOpen || showSearch;
+    const topOverlayOpen = isOpen || showSearch || isUserMenuOpen;
     window.dispatchEvent(
       new CustomEvent("streetpoly:top-overlay", { detail: { open: topOverlayOpen } })
     );
-  }, [isOpen, showSearch]);
+  }, [isOpen, showSearch, isUserMenuOpen]);
 
   useEffect(() => {
     console.log('Navbar Debug:', {
@@ -160,7 +161,7 @@ export function Navbar() {
 
                     {/* User Info & Debug Indicator */}
                     {session?.user && (
-                      <DropdownMenu>
+                      <DropdownMenu open={isUserMenuOpen} onOpenChange={setIsUserMenuOpen}>
                         <DropdownMenuTrigger asChild>
                           <button className="flex flex-col items-end mr-2 px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] text-yellow-400 uppercase leading-tight backdrop-blur-sm hover:bg-white/10 transition-colors focus:outline-none">
                             <div className="flex items-center gap-2">
@@ -203,11 +204,31 @@ export function Navbar() {
                             </Link>
                           </DropdownMenuItem>
                           {hasAdminAccess && (
-                            <DropdownMenuItem asChild>
-                              <Link to="/admin" className="w-full cursor-pointer hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white font-display uppercase tracking-wider">
-                                Admin Panel
-                              </Link>
-                            </DropdownMenuItem>
+                            <>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  toggleAdminMode();
+                                }}
+                                className="w-full cursor-pointer hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white font-display uppercase tracking-wider flex items-center justify-between group"
+                              >
+                                <span>Site Editor</span>
+                                <div className={cn(
+                                  "flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors",
+                                  isAdminMode 
+                                    ? "bg-dem text-white animate-pulse" 
+                                    : "bg-white/10 text-white/40 group-hover:text-white/70"
+                                )}>
+                                  <Zap className={cn("w-3 h-3", isAdminMode && "fill-current")} />
+                                  <span>{isAdminMode ? "ON" : "OFF"}</span>
+                                </div>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link to="/admin" className="w-full cursor-pointer hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white font-display uppercase tracking-wider">
+                                  Admin Panel
+                                </Link>
+                              </DropdownMenuItem>
+                            </>
                           )}
                           <DropdownMenuItem 
                             onClick={handleSignOut}
