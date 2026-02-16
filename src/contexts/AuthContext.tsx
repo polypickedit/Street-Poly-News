@@ -34,9 +34,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         console.log('Auth: Hydrating roles for', userId, { force });
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout (must be < global 5s timeout)
 
         try {
+          console.log('Auth: RPC hydration started');
           const [adminAccess, editorAccess] = await Promise.all([
             safeQuery(supabase.rpc('is_admin').abortSignal(controller.signal)),
             safeQuery(supabase.rpc('is_admin_or_editor').abortSignal(controller.signal)),
@@ -98,8 +99,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     sessionFetchControllerRef.current = controller;
 
     const promise = (async () => {
+      let timeoutId: ReturnType<typeof setTimeout>;
+      
       try {
-        return await supabase.auth.getSession();
+        const timeoutPromise = new Promise<SessionResponse>((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error('Session fetch timed out')), 4000);
+        });
+
+        const sessionPromise = supabase.auth.getSession();
+        
+        const result = await Promise.race([sessionPromise, timeoutPromise]);
+        clearTimeout(timeoutId!);
+        return result;
+      } catch (err) {
+        clearTimeout(timeoutId!);
+        throw err;
       } finally {
         sessionFetchControllerRef.current = null;
         sessionFetchPromiseRef.current = null;
