@@ -42,12 +42,26 @@ git clone https://github.com/polypickedit/Street-Poly-News.git
 cd street-politics-feed-main
 npm install
 
-# 2. Setup Environment
-# Copy .env.example to .env.local and fill in your Supabase & Stripe keys
+# 2. Setup Environment (CRITICAL)
+# Copy .env.example to .env.local and fill in your Supabase & Stripe keys.
+# The app will fail to start if these are missing.
+cp .env.example .env.local
 
 # 3. Launch
 npm run dev
 ```
+
+### Environment Variables
+
+The application requires the following environment variables in `.env.local`:
+
+| Variable | Description |
+| --- | --- |
+| `VITE_SUPABASE_URL` | Your Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Your Supabase anonymous key |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | (Optional) Stripe publishable key for payments |
+
+If these are missing, the application will display a "Fatal Configuration Error" screen on startup.
 
 ## 🚢 Deployment
 
