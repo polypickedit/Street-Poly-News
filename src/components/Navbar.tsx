@@ -203,6 +203,11 @@ export function Navbar() {
                               My Dashboard
                             </Link>
                           </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to="/settings/profile" className="w-full cursor-pointer hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white font-display uppercase tracking-wider">
+                              Profile Settings
+                            </Link>
+                          </DropdownMenuItem>
                           {hasAdminAccess && (
                             <>
                               <DropdownMenuItem

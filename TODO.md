@@ -19,6 +19,11 @@
 - [x] **Admin access parity in mobile nav**: bottom nav now treats `admin` and `editor` as valid admin-menu access and exposes `/admin` entry consistently.
 - [x] **Top/bottom overlay coordination**: opening top overlays (mobile menu/search/user dropdown) now suppresses bottom nav rendering to prevent blocked taps in dropdown lower regions.
 - [x] **Conduction drawer UX simplification (first pass)**: `ConductDrawer` now prioritizes current live preview + replacement flow, moves advanced scheduling/targeting into an accordion, removes internal IDs, and keeps save/invalidate behavior intact.
+- [x] **Identity model hardening**: added profile identity migration with username normalization (`username_normalized`), case-insensitive unique index, strict username regex checks, profile type (`artist`/`viewer`), and username change audit fields.
+- [x] **Profile lifecycle RPCs**: added `check_username_availability`, `complete_profile_setup`, and `update_username` (30-day cooldown enforced server-side).
+- [x] **Signup UX + validation upgrade**: signup now requires username and profile type, requires artist display name for artist signup, and shows real-time username availability checks.
+- [x] **Artist profile completion gate**: authenticated artists missing `display_name` are redirected to `/complete-profile` before browsing/submission surfaces.
+- [x] **Profile settings username cooldown UI**: added `/settings/profile` with username availability checks and cooldown countdown messaging.
 
 ## 🔄 Auth/System Gaps Remaining
 
@@ -28,6 +33,8 @@
 - [ ] Add e2e coverage for OAuth redirect + role hydration timing (post-redirect auth transition, admin route gating while roles load).
 - [ ] Remove transient role resets for same-user auth events (avoid setting `isAdmin/isEditor` to false during re-auth/refresh before hydration completes).
 - [ ] Add DB-side role observability checks (`get_user_roles` contract, RLS visibility, seeded `user_roles`) to quickly diagnose "admin fades" reports.
+- [ ] Add e2e coverage for new identity flows: signup username uniqueness, artist completion redirect, and pre/post 30-day username change attempts.
+- [ ] Replace placeholder OAuth usernames (`user_<id-prefix>`) with a mandatory first-login username capture flow for brand-new OAuth users.
 
 ---
 

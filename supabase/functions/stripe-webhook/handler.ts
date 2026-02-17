@@ -65,6 +65,8 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
     const amountMetadata = metadata?.["amount"] as string | undefined;
     const selectedOutlets = parseSelectedOutlets(metadata?.["selectedOutlets"]);
     const merchOrderId = metadata?.["merchOrderId"] as string | undefined;
+    const listeningSessionId = metadata?.["listeningSessionId"] as string | undefined;
+    const listeningTierId = metadata?.["listeningTierId"] as string | undefined;
 
     // For anonymous checkouts, userId might be missing.
     // We only enforce userId for specific payment types that require account association.
@@ -102,11 +104,12 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
       : (event.data.object as Record<string, unknown>)["payment_status"] as string | undefined;
 
     let processingError = null;
+    let paymentRecordId: string | null = null;
 
     try {
       if (piId) {
         // Idempotent payment recording
-        const { error: payError } = await supabase.from("payments").upsert({
+        const { data: paymentRow, error: payError } = await supabase.from("payments").upsert({
           user_id: userId || null,
           submission_id: submissionId ?? null,
           stripe_payment_intent_id: piId,
@@ -120,11 +123,42 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
             customer_phone: customerDetails?.["phone"],
             customer_email: customerDetails?.["email"]
           }
-        }, { onConflict: "stripe_payment_intent_id" });
+        }, { onConflict: "stripe_payment_intent_id" }).select("id").single();
         
         if (payError) {
           console.error("❌ Error recording payment:", payError);
           processingError = payError;
+        } else {
+          paymentRecordId = paymentRow?.id || null;
+        }
+      }
+
+      if (type === "listening_tier" && userId && listeningSessionId && listeningTierId && stripeSessionId) {
+        const { data: purchaseId, error: purchaseError } = await supabase.rpc("record_listening_tier_purchase", {
+          p_user_id: userId,
+          p_session_id: listeningSessionId,
+          p_tier_id: listeningTierId,
+          p_stripe_session_id: stripeSessionId,
+          p_status: "paid"
+        });
+
+        if (purchaseError) {
+          console.error("❌ Error recording listening tier purchase:", purchaseError);
+          processingError = purchaseError;
+        } else if (purchaseId && paymentRecordId) {
+          const { error: purchaseLinkError } = await supabase
+            .from("listening_session_purchases")
+            .update({
+              payment_id: paymentRecordId,
+              status: "paid",
+              paid_at: new Date().toISOString(),
+            })
+            .eq("id", purchaseId);
+
+          if (purchaseLinkError) {
+            console.error("❌ Error linking payment to listening purchase:", purchaseLinkError);
+            processingError = purchaseLinkError;
+          }
         }
       }
 

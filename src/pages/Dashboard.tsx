@@ -17,7 +17,8 @@ import {
   Globe,
   Loader2,
   Zap,
-  Plus
+  Plus,
+  Headphones
 } from "lucide-react";
 import { useAccount } from "../hooks/useAccount";
 import { useEntitlements } from "../hooks/useEntitlements";
@@ -535,7 +536,7 @@ export default function Dashboard() {
                         <div className="flex flex-wrap items-center justify-between gap-4">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded bg-dem/20 flex items-center justify-center border border-dem/40">
-                              <CheckCircle2 className="w-5 h-5 text-dem" />
+                              <Headphones className="w-5 h-5 text-dem" />
                             </div>
                             <div>
                               <h4 className="font-black text-lg text-dem">{p.submissions?.track_title}</h4>
@@ -551,7 +552,7 @@ export default function Dashboard() {
                               <Button variant="ghost" size="sm" asChild className="text-dem hover:text-dem/70 hover:bg-dem/10 font-black">
                                 <a href={p.playlists.spotify_playlist_url} target="_blank" rel="noopener noreferrer">
                                   <ExternalLink className="w-4 h-4 mr-2" />
-                                  View Playlist
+                                  View Session
                                 </a>
                               </Button>
                             )}

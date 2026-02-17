@@ -325,7 +325,7 @@ export const UnifiedQueue = () => {
               <TableHeader className="bg-muted">
                 <TableRow className="border-border">
                   <TableHead className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Track</TableHead>
-                  <TableHead className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Playlist</TableHead>
+                  <TableHead className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Session</TableHead>
                   <TableHead className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Ends In</TableHead>
                   <TableHead className="text-muted-foreground font-bold uppercase tracking-wider text-[10px] text-right">Link</TableHead>
                 </TableRow>
@@ -358,7 +358,7 @@ export const UnifiedQueue = () => {
               <TableHeader className="bg-muted">
                 <TableRow className="border-border">
                   <TableHead className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Track</TableHead>
-                  <TableHead className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Playlist</TableHead>
+                  <TableHead className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Session</TableHead>
                   <TableHead className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Expiry Date</TableHead>
                   <TableHead className="text-muted-foreground font-bold uppercase tracking-wider text-[10px] text-right">Status</TableHead>
                 </TableRow>

@@ -246,18 +246,43 @@ export interface Database {
           id: string
           full_name: string | null
           avatar_url: string | null
+          bio: string | null
+          is_public: boolean
+          username: string | null
+          username_normalized: string | null
+          display_name: string | null
+          profile_type: string | null
+          username_last_changed_at: string | null
+          username_change_count: number | null
+          updated_at: string | null
           created_at: string
         }
         Insert: {
           id: string
           full_name?: string | null
           avatar_url?: string | null
+          bio?: string | null
+          is_public?: boolean
+          username?: string | null
+          display_name?: string | null
+          profile_type?: string | null
+          username_last_changed_at?: string | null
+          username_change_count?: number | null
+          updated_at?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           full_name?: string | null
           avatar_url?: string | null
+          bio?: string | null
+          is_public?: boolean
+          username?: string | null
+          display_name?: string | null
+          profile_type?: string | null
+          username_last_changed_at?: string | null
+          username_change_count?: number | null
+          updated_at?: string | null
           created_at?: string
         }
         Relationships: [
@@ -1040,6 +1065,24 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+      check_username_availability: {
+        Args: {
+          p_username: string
+          p_current_user_id?: string | null
+        }
+        Returns: {
+          available: boolean
+          reason: string
+        }[]
+      }
+      complete_profile_setup: {
+        Args: {
+          p_username: string
+          p_profile_type: string
+          p_display_name?: string | null
+        }
+        Returns: Database["public"]["Tables"]["profiles"]["Row"]
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -1083,6 +1126,12 @@ export interface Database {
           p_capability?: string
         }
         Returns: string
+      }
+      update_username: {
+        Args: {
+          p_new_username: string
+        }
+        Returns: Database["public"]["Tables"]["profiles"]["Row"]
       }
     }
     Enums: {

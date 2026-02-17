@@ -30,6 +30,8 @@ serve(async (req: Request) => {
     const { 
       slotId, 
       slotSlug, 
+      listeningSessionId,
+      listeningTierId,
       userId: _userId, 
       userEmail, 
       returnUrl, 
@@ -258,6 +260,64 @@ serve(async (req: Request) => {
       if (bookingItems.length === 1) {
         metadata.submissionId = (bookingItems[0].id as string).replace('booking-', '');
       }
+    } else if (type === "listening_tier") {
+      if (!listeningSessionId || !listeningTierId) {
+        throw new Error("Missing listening session or tier");
+      }
+
+      const { data: listeningSession, error: sessionError } = await supabaseClient
+        .from("listening_sessions")
+        .select("id, title, status, scheduled_at")
+        .eq("id", listeningSessionId)
+        .single();
+
+      if (sessionError || !listeningSession) {
+        throw new Error("Listening session not found");
+      }
+
+      if (listeningSession.status !== "open") {
+        throw new Error("Listening session is not accepting submissions");
+      }
+
+      const { data: listeningTier, error: tierError } = await supabaseClient
+        .from("listening_session_tiers")
+        .select("id, tier_name, price_cents, description, slot_limit, slots_filled, manually_closed")
+        .eq("id", listeningTierId)
+        .eq("session_id", listeningSessionId)
+        .single();
+
+      if (tierError || !listeningTier) {
+        throw new Error("Listening tier not found");
+      }
+
+      if (listeningTier.manually_closed) {
+        throw new Error("This tier is currently closed");
+      }
+
+      if ((listeningTier.slots_filled || 0) >= listeningTier.slot_limit) {
+        throw new Error("This tier is sold out");
+      }
+
+      lineItems = [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `${listeningSession.title} - ${listeningTier.tier_name}`,
+              description: listeningTier.description || undefined,
+            },
+            unit_amount: listeningTier.price_cents,
+          },
+          quantity: 1,
+        },
+      ];
+
+      mode = "payment";
+      metadata = {
+        ...metadata,
+        listeningSessionId,
+        listeningTierId,
+      };
     } else {
       // Fetch slot details
       const { data: slot, error: slotError } = await supabaseClient
@@ -349,7 +409,7 @@ serve(async (req: Request) => {
         phone_number_collection: {
           enabled: true,
         },
-        success_url: `${returnUrl || (req.headers.get("origin") + "/booking")}?session_id={CHECKOUT_SESSION_ID}&submissionId=${submissionId || ""}&slotType=${type}${slotSlug ? `&slot=${slotSlug}` : ""}`,
+        success_url: `${returnUrl || (req.headers.get("origin") + "/booking")}?session_id={CHECKOUT_SESSION_ID}&submissionId=${submissionId || ""}&slotType=${type}${slotSlug ? `&slot=${slotSlug}` : ""}${listeningSessionId ? `&listeningSessionId=${listeningSessionId}` : ""}${listeningTierId ? `&listeningTierId=${listeningTierId}` : ""}`,
         cancel_url: `${req.headers.get("origin")}/booking?status=cancelled`,
         payment_intent_data: mode === "payment" ? {
           metadata: metadata,

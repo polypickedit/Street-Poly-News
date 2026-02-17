@@ -211,7 +211,7 @@ export const PlacementManager = () => {
               <TableHeader className="bg-muted">
                 <TableRow className="border-border hover:bg-transparent">
                   <TableHead className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Track</TableHead>
-                  <TableHead className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Playlist</TableHead>
+                  <TableHead className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Session</TableHead>
                   <TableHead className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Duration</TableHead>
                   <TableHead className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Time Left</TableHead>
                   <TableHead className="text-right text-muted-foreground font-black uppercase tracking-widest text-[10px]">Action</TableHead>
@@ -246,7 +246,7 @@ export const PlacementManager = () => {
                 <TableHeader className="bg-muted">
                   <TableRow className="border-border hover:bg-transparent">
                     <TableHead className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Track</TableHead>
-                    <TableHead className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Playlist</TableHead>
+                    <TableHead className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Session</TableHead>
                     <TableHead className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Duration</TableHead>
                     <TableHead className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Time Left</TableHead>
                     <TableHead className="text-right text-muted-foreground font-black uppercase tracking-widest text-[10px]">Action</TableHead>
@@ -266,7 +266,7 @@ export const PlacementManager = () => {
               <TableHeader className="bg-muted">
                 <TableRow className="border-border hover:bg-transparent">
                   <TableHead className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Track</TableHead>
-                  <TableHead className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Playlist</TableHead>
+                  <TableHead className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Session</TableHead>
                   <TableHead className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Ended</TableHead>
                   <TableHead className="text-right text-muted-foreground font-black uppercase tracking-widest text-[10px]">Action</TableHead>
                 </TableRow>

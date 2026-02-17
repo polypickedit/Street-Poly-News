@@ -148,11 +148,11 @@ export const PlacementEditDialog = ({
 
           <div className="grid gap-2">
             <Label className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest">
-              Channel / Partner (Playlist)
+              Channel / Partner (Session)
             </Label>
             <Select value={playlistId} onValueChange={setPlaylistId}>
               <SelectTrigger className="bg-muted border-border text-foreground focus:ring-dem">
-                <SelectValue placeholder="Select a playlist" />
+                <SelectValue placeholder="Select a session" />
               </SelectTrigger>
               <SelectContent className="bg-card border-border">
                 {loadingPlaylists ? (

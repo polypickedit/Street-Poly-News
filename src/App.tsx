@@ -25,7 +25,7 @@ import Admin from "./pages/Admin";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { SubmissionQueue } from "@/components/admin/SubmissionQueue";
-import { PlaylistManager } from "@/components/admin/PlaylistManager";
+import { ListeningSessionManager } from "@/components/admin/ListeningSessionManager";
 import { PlacementManager } from "@/components/admin/PlacementManager";
 import { OutletManager } from "@/components/admin/OutletManager";
 import { AdminSettings } from "@/components/admin/AdminSettings";
@@ -41,6 +41,9 @@ import Person from "./pages/Person";
 import NotFound from "./pages/NotFound";
 import Community from "./pages/Community";
 import { DevAuthOverlay } from "@/components/DevAuthOverlay";
+import CompleteProfile from "./pages/CompleteProfile";
+import ProfileSettings from "./pages/ProfileSettings";
+import { ArtistProfileGate } from "@/components/ArtistProfileGate";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -94,6 +97,22 @@ const AnimatedRoutes = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
         <Route
+          path="/complete-profile"
+          element={
+            <ProtectedRoute>
+              <CompleteProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings/profile"
+          element={
+            <ProtectedRoute>
+              <ProfileSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin"
           element={
             <AdminRoute>
@@ -144,11 +163,11 @@ const AnimatedRoutes = () => {
           }
         />
         <Route
-          path="/admin/playlists"
+          path="/admin/sessions"
           element={
             <AdminRoute>
               <AdminLayout>
-                <PlaylistManager />
+                <ListeningSessionManager />
               </AdminLayout>
             </AdminRoute>
           }
@@ -213,7 +232,9 @@ const App = () => (
             <BrowserRouter>
               <div className="min-h-screen bg-white text-foreground font-sans selection:bg-dem/30">
                 <AdminOverlay />
-                <AnimatedRoutes />
+                <ArtistProfileGate>
+                  <AnimatedRoutes />
+                </ArtistProfileGate>
                 <CartSidebar />
                 <TipButton />
               </div>

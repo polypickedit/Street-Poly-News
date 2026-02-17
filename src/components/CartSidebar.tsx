@@ -10,6 +10,10 @@ import { Link } from "react-router-dom";
 export const CartSidebar = () => {
   const { items, isOpen, setIsOpen, removeItem, updateQuantity, totalPrice, clearCart } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const getItemTypeLabel = (type: string) => {
+    if (type === "booking") return "Listening session submission";
+    return type;
+  };
 
   const handleCheckout = async () => {
     try {
@@ -53,7 +57,7 @@ export const CartSidebar = () => {
                   />
                   <div className="flex-1 min-w-0">
                     <span className="text-xs font-body uppercase tracking-wider text-dem">
-                      {item.type}
+                      {getItemTypeLabel(item.type)}
                     </span>
                     <h4 className="font-display text-sm text-white truncate">
                       {item.name}

@@ -199,7 +199,7 @@ export const OutletEditDialog = ({
                 <SelectContent className="bg-card border-border">
                   <SelectItem value="blog">Blog</SelectItem>
                   <SelectItem value="news">News</SelectItem>
-                  <SelectItem value="playlist">Playlist</SelectItem>
+                  <SelectItem value="playlist">Listening Session</SelectItem>
                   <SelectItem value="community">Community</SelectItem>
                   <SelectItem value="social">Social</SelectItem>
                 </SelectContent>

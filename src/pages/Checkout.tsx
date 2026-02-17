@@ -45,6 +45,10 @@ const Checkout = () => {
   }, [session?.user?.email]);
 
   const contactLabel = contactMethod === "phone" ? "Phone number" : "Email address";
+  const getItemTypeLabel = (type: string) => {
+    if (type === "booking") return "Listening session submission";
+    return type;
+  };
 
   const handleCheckout = async () => {
     if (!shippingAddress.trim()) {
@@ -142,7 +146,7 @@ const Checkout = () => {
                           <h3 className="font-display text-lg uppercase tracking-wide group-hover:text-dem transition-colors">
                             {item.name}
                           </h3>
-                          <p className="text-sm text-muted-foreground font-body">{item.type}</p>
+                          <p className="text-sm text-muted-foreground font-body">{getItemTypeLabel(item.type)}</p>
                         </div>
                         <button 
                           onClick={() => removeItem(item.id)}

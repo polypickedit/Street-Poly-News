@@ -152,3 +152,35 @@ export const createQuickPaymentSession = async (amount: number, description: str
     throw err;
   }
 };
+
+export const createListeningTierCheckoutSession = async (
+  listeningSessionId: string,
+  listeningTierId: string,
+  returnUrl?: string
+) => {
+  try {
+    const session = await requireAuthenticatedSession("You must be signed in to submit to a listening session");
+
+    const { data, error } = await supabase.functions.invoke("create-checkout-session", {
+      body: {
+        type: "listening_tier",
+        listeningSessionId,
+        listeningTierId,
+        userId: session.user.id,
+        userEmail: session.user.email,
+        returnUrl: returnUrl || `${window.location.origin}/booking?session_id={CHECKOUT_SESSION_ID}&slotType=listening_tier&listeningSessionId=${listeningSessionId}&listeningTierId=${listeningTierId}`,
+      }
+    });
+
+    if (error) throw error;
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error("No checkout URL returned from server");
+    }
+  } catch (err) {
+    console.error("Listening tier checkout error:", err);
+    throw err;
+  }
+};

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Chrome, ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { validateUsername } from "@/lib/username";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -16,7 +17,13 @@ const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [profileType, setProfileType] = useState<"artist" | "viewer">("viewer");
+  const [displayName, setDisplayName] = useState("");
+  const [usernameAvailability, setUsernameAvailability] = useState<{
+    status: "idle" | "checking" | "available" | "taken" | "invalid" | "error";
+    message: string | null;
+  }>({ status: "idle", message: null });
   const { session, status: authStatus } = useAuth();
   const [searchParams] = useSearchParams();
   // Default to home screen per user request, unless specific redirect requested
@@ -28,6 +35,75 @@ const Login = () => {
       navigate(redirectTo, { replace: true });
     }
   }, [authStatus, session, navigate, redirectTo]);
+
+  useEffect(() => {
+    if (!isSignUp) {
+      setUsernameAvailability({ status: "idle", message: null });
+      return;
+    }
+
+    const trimmed = username.trim();
+    if (!trimmed) {
+      setUsernameAvailability({ status: "idle", message: null });
+      return;
+    }
+
+    const validation = validateUsername(trimmed);
+    if (!validation.valid) {
+      setUsernameAvailability({
+        status: "invalid",
+        message: validation.message ?? "Invalid username.",
+      });
+      return;
+    }
+
+    let cancelled = false;
+    const timeout = window.setTimeout(async () => {
+      setUsernameAvailability({ status: "checking", message: "Checking username..." });
+
+      const { data, error } = await supabase.rpc("check_username_availability", {
+        p_username: trimmed,
+      });
+
+      if (cancelled) return;
+
+      if (error) {
+        setUsernameAvailability({
+          status: "error",
+          message: "Could not verify username. Please try again.",
+        });
+        return;
+      }
+
+      if (data?.[0]?.available) {
+        setUsernameAvailability({ status: "available", message: "Username available" });
+        return;
+      }
+
+      setUsernameAvailability({
+        status: "taken",
+        message: "Username already taken. Try another.",
+      });
+    }, 350);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [isSignUp, username]);
+
+  const signUpBlocked = useMemo(() => {
+    if (!isSignUp) return false;
+
+    const usernameValidation = validateUsername(username);
+    if (!usernameValidation.valid) return true;
+
+    if (usernameAvailability.status !== "available") return true;
+
+    if (profileType === "artist" && !displayName.trim()) return true;
+
+    return false;
+  }, [displayName, isSignUp, profileType, username, usernameAvailability.status]);
 
 
   const mapAuthError = (error: { message: string }) => {
@@ -61,12 +137,28 @@ const Login = () => {
       setLoading(true);
       
       if (isSignUp) {
+        const usernameValidation = validateUsername(username);
+        if (!usernameValidation.valid) {
+          throw new Error(usernameValidation.message ?? "Invalid username.");
+        }
+
+        if (usernameAvailability.status !== "available") {
+          throw new Error("Username already taken. Try another.");
+        }
+
+        if (profileType === "artist" && !displayName.trim()) {
+          throw new Error("Artist display name is required.");
+        }
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: { 
-              full_name: fullName,
+              username: username.trim(),
+              profile_type: profileType,
+              display_name: displayName.trim() || null,
+              full_name: displayName.trim() || null,
             },
             emailRedirectTo: `${window.location.origin}${redirectTo}`,
           },
@@ -122,8 +214,7 @@ const Login = () => {
         variant: "destructive",
       });
     } finally {
-      // Don't setLoading(false) here because the page will redirect on success.
-      // If it fails, the user is still on the page and can try again.
+      setLoading(false);
     }
   };
   
@@ -233,10 +324,85 @@ const Login = () => {
               />
             </div>
 
+            {isSignUp && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="text-white/60 text-xs font-semibold uppercase tracking-wider">Username</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="your.name"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    className="bg-white/5 border-white/10 text-white h-11 focus:border-dem transition-all"
+                  />
+                  {usernameAvailability.message && (
+                    <p
+                      className={`text-xs ${
+                        usernameAvailability.status === "available"
+                          ? "text-green-400"
+                          : usernameAvailability.status === "checking"
+                            ? "text-white/50"
+                            : "text-red-400"
+                      }`}
+                    >
+                      {usernameAvailability.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-white/60 text-xs font-semibold uppercase tracking-wider">Profile Type</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setProfileType("viewer")}
+                      className={`h-11 rounded-md border text-sm font-semibold transition-colors ${
+                        profileType === "viewer"
+                          ? "border-dem bg-dem/20 text-white"
+                          : "border-white/10 bg-white/5 text-white/70"
+                      }`}
+                    >
+                      Viewer
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProfileType("artist")}
+                      className={`h-11 rounded-md border text-sm font-semibold transition-colors ${
+                        profileType === "artist"
+                          ? "border-dem bg-dem/20 text-white"
+                          : "border-white/10 bg-white/5 text-white/70"
+                      }`}
+                    >
+                      Artist
+                    </button>
+                  </div>
+                </div>
+
+                {profileType === "artist" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="displayName" className="text-white/60 text-xs font-semibold uppercase tracking-wider">
+                      Artist Display Name
+                    </Label>
+                    <Input
+                      id="displayName"
+                      type="text"
+                      placeholder="Your artist name"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      required
+                      className="bg-white/5 border-white/10 text-white h-11 focus:border-dem transition-all"
+                    />
+                  </div>
+                )}
+              </>
+            )}
+
             <Button
               type="submit"
               className="w-full bg-dem hover:bg-dem/90 text-white h-11 font-bold transition-all duration-200 group"
-              disabled={loading}
+              disabled={loading || signUpBlocked}
             >
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

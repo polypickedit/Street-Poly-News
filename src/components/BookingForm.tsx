@@ -563,7 +563,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
           </div>
           <p className="text-xs text-muted-foreground font-medium mb-4">Select outlets to distribute your content or other promotional opportunities. One click, maximum reach.</p>
           <p className="text-[10px] text-muted-foreground italic mb-4 bg-muted/30 p-2 rounded-md border border-border/50">
-            * All bookings are handled on a first-come, first-served basis. Secure your slot early to ensure preferred placement.
+            * All bookings are handled on a first-come, first-served basis. Secure your slot early to maximize editorial consideration.
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

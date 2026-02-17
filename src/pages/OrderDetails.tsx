@@ -18,7 +18,8 @@ import {
   Settings,
   User,
   Globe,
-  Share2
+  Share2,
+  Headphones
 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -223,12 +224,12 @@ export default function OrderDetails() {
                     <CardDescription className="text-muted-foreground font-medium">Where your music is being featured</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Playlists */}
+                    {/* Listening Sessions */}
                     {submission.placements?.map((p) => (
                       <div key={p.id} className="p-4 rounded-xl bg-muted border border-border flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded bg-dem/10 flex items-center justify-center">
-                            <Music className="w-5 h-5 text-dem" />
+                            <Headphones className="w-5 h-5 text-dem" />
                           </div>
                           <div>
                             <p className="font-bold text-foreground">{p.playlists?.name}</p>
@@ -241,8 +242,8 @@ export default function OrderDetails() {
                               href={p.playlists.spotify_playlist_url} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              aria-label={`Open playlist ${p.playlists.name} on Spotify`}
-                              title={`Open playlist ${p.playlists.name} on Spotify`}
+                              aria-label={`Open session ${p.playlists.name} on Spotify`}
+                              title={`Open session ${p.playlists.name} on Spotify`}
                             >
                               <ExternalLink className="w-4 h-4" />
                             </a>

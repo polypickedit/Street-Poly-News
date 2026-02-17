@@ -14,7 +14,8 @@ import {
   ShoppingBag,
   ClipboardList,
   Menu,
-  Home
+  Home,
+  Headphones
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,7 @@ const navItems = [
   { name: "Inventory", path: "/admin/inventory", icon: ClipboardList },
   { name: "Outlets", path: "/admin/outlets", icon: Share2 },
   { name: "Placements", path: "/admin/placements", icon: History },
+  { name: "Sessions", path: "/admin/sessions", icon: Headphones },
   { name: "Settings", path: "/admin/settings", icon: Settings },
 ];
 

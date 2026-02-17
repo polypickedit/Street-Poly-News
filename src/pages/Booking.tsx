@@ -1,8 +1,10 @@
 import { PageLayoutWithAds } from "@/components/PageLayoutWithAds";
 import { PageTransition } from "@/components/PageTransition";
 import { SlotPaywall } from "@/components/slots/SlotPaywall";
-import { Calendar, Music, Mic2, Video, Clock } from "lucide-react";
+import { Calendar, Music, Mic2, Video, Clock, Headphones, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -12,18 +14,26 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { BookingForm } from "@/components/BookingForm";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, type FormEvent } from "react";
 import { QuickPaymentDialog } from "@/components/QuickPaymentDialog";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
 import { PRODUCTS } from "@/config/pricing";
 import { useCart } from "@/hooks/use-cart";
 import { toast } from "sonner";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { safeQuery } from "@/lib/supabase-debug";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import {
+  createListeningSubmission,
+  findPaidPurchaseForTier,
+  listOpenListeningSessions,
+  type ListeningSession,
+  type ListeningSessionTier,
+} from "@/lib/listeningSessions";
+import { createListeningTierCheckoutSession } from "@/lib/stripe";
 
 interface Slot {
   id: string;
@@ -60,10 +70,35 @@ export const Booking = () => {
   const [searchParams] = useSearchParams();
   const { addItem, setIsOpen: setCartOpen } = useCart();
   const { refetch: refetchEntitlements } = useEntitlements();
+  const { user } = useAuth();
+  const { profile } = useProfile();
 
   const [slots, setSlots] = useState<Slot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [listeningSessions, setListeningSessions] = useState<ListeningSession[]>([]);
+  const [listeningLoading, setListeningLoading] = useState(true);
+  const [listeningError, setListeningError] = useState<string | null>(null);
+
+  const [isListeningSubmitDialogOpen, setIsListeningSubmitDialogOpen] = useState(false);
+  const [listeningPurchaseId, setListeningPurchaseId] = useState<string | null>(null);
+  const [listeningTrackTitle, setListeningTrackTitle] = useState("");
+  const [listeningTrackUrl, setListeningTrackUrl] = useState("");
+  const [listeningSubmissionBusy, setListeningSubmissionBusy] = useState(false);
+  const [listeningPurchasePending, setListeningPurchasePending] = useState(false);
+
+  const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
+  const [pendingTierId, setPendingTierId] = useState<string | null>(null);
+
+  const selectedListening = useMemo(() => {
+    if (!pendingSessionId || !pendingTierId) return null;
+    const session = listeningSessions.find((s) => s.id === pendingSessionId);
+    if (!session) return null;
+    const tier = session.tiers.find((t) => t.id === pendingTierId);
+    if (!tier) return null;
+    return { session, tier };
+  }, [listeningSessions, pendingSessionId, pendingTierId]);
 
   const handleSelectSlot = (slot: Slot) => {
     addItem({
@@ -71,7 +106,7 @@ export const Booking = () => {
       name: slot.name,
       type: "slot",
       price: slot.price,
-      image: "/placeholder.svg", // Default image for slots
+      image: "/placeholder.svg",
     });
     setCartOpen(true);
     toast.success(`${slot.name} added to cart!`);
@@ -81,26 +116,24 @@ export const Booking = () => {
     const fetchSlots = async () => {
       setIsLoading(true);
       setError(null);
-      console.log("Booking: Fetching slots...");
-      
+
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
       try {
         const data = await safeQuery(
           supabase
-          .from("slots")
-          .select("*")
-          .eq("is_active", true)
-          .order("created_at", { ascending: true })
-          .abortSignal(controller.signal)
+            .from("slots")
+            .select("*")
+            .eq("is_active", true)
+            .order("created_at", { ascending: true })
+            .abortSignal(controller.signal)
         );
-        
+
         clearTimeout(timeoutId);
 
         if (data) {
-          console.log("Booking: Slots fetched successfully", data.length);
-          const mappedSlots = data.map(s => {
+          const mappedSlots = data.map((s) => {
             const slotData = s as any; // eslint-disable-line @typescript-eslint/no-explicit-any
             return {
               id: s.id,
@@ -108,35 +141,20 @@ export const Booking = () => {
               slug: s.slug,
               price: s.price,
               is_active: s.is_active,
-              type: slotData.type || (s.slug.includes('interview') ? 'interview' : 'music')
+              type: slotData.type || (s.slug.includes("interview") ? "interview" : "music"),
             };
           }) as Slot[];
-          // Only fallback if explicitly empty and we want to show something?
-          // User said "If error, return ErrorBox".
-          // If empty, maybe empty state?
-          // But user also wants "Render a fallback".
-          // I will use fallback if data is empty.
-          if (mappedSlots.length > 0) {
-            setSlots(mappedSlots);
-          } else {
-             // Empty DB => fallback slots? Or empty state?
-             // Given it's a critical feature, fallback seems safer for demo purposes, 
-             // but user wants explicit failure.
-             // If DB is empty, that's not an error.
-             console.warn("Booking: No slots found in DB, using fallback.");
-             setSlots(FALLBACK_SLOTS);
-          }
+
+          setSlots(mappedSlots.length > 0 ? mappedSlots : FALLBACK_SLOTS);
         } else {
-           setSlots(FALLBACK_SLOTS);
+          setSlots(FALLBACK_SLOTS);
         }
       } catch (err) {
         clearTimeout(timeoutId);
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          console.log("Booking: Slots fetch timed out or aborted.");
+        if (err instanceof Error && (err.name === "AbortError" || err.message?.includes("abort"))) {
           setError("Connection timed out. Using offline data.");
-          setSlots(FALLBACK_SLOTS); // Fallback on timeout
+          setSlots(FALLBACK_SLOTS);
         } else {
-          console.error("Booking: Unexpected error fetching slots:", err);
           setError(err instanceof Error ? err.message : "Failed to load slots");
           setSlots(FALLBACK_SLOTS);
         }
@@ -148,8 +166,34 @@ export const Booking = () => {
     fetchSlots();
   }, []);
 
-  const musicSlots = useMemo(() => slots.filter(s => s.type === 'music' || s.slug === 'new-music-monday'), [slots]);
-  const interviewSlots = useMemo(() => slots.filter(s => s.type === 'interview' || s.slug === 'featured-interview'), [slots]);
+  useEffect(() => {
+    let active = true;
+
+    const fetchListeningSessions = async () => {
+      setListeningLoading(true);
+      setListeningError(null);
+
+      try {
+        const sessions = await listOpenListeningSessions();
+        if (!active) return;
+        setListeningSessions(sessions);
+      } catch (err) {
+        if (!active) return;
+        setListeningError(err instanceof Error ? err.message : "Failed to load listening sessions");
+      } finally {
+        if (active) setListeningLoading(false);
+      }
+    };
+
+    fetchListeningSessions();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const musicSlots = useMemo(() => slots.filter((s) => s.type === "music" || s.slug === "new-music-monday"), [slots]);
+  const interviewSlots = useMemo(() => slots.filter((s) => s.type === "interview" || s.slug === "featured-interview"), [slots]);
 
   useEffect(() => {
     const sessionId = searchParams.get("session_id");
@@ -158,10 +202,8 @@ export const Booking = () => {
     const action = searchParams.get("action");
 
     if (sessionId && slotType) {
-      // Force capability refresh on checkout return
-      console.log("Checkout return detected, refetching entitlements...");
       refetchEntitlements();
-      
+
       if (slotType.includes("music")) {
         setIsMusicModalOpen(true);
       } else if (slotType.includes("interview")) {
@@ -177,6 +219,106 @@ export const Booking = () => {
       setIsQuickPaymentOpen(true);
     }
   }, [searchParams, refetchEntitlements]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const hydrateListeningPurchaseFromReturn = async () => {
+      const sessionId = searchParams.get("session_id");
+      const slotType = searchParams.get("slotType");
+      const listeningSessionId = searchParams.get("listeningSessionId");
+      const listeningTierId = searchParams.get("listeningTierId");
+
+      if (!sessionId || slotType !== "listening_tier" || !listeningSessionId || !listeningTierId) return;
+
+      setPendingSessionId(listeningSessionId);
+      setPendingTierId(listeningTierId);
+      setListeningPurchasePending(true);
+
+      const attempts = 10;
+      for (let i = 0; i < attempts; i += 1) {
+        if (cancelled) return;
+        try {
+          const purchase = await findPaidPurchaseForTier(listeningSessionId, listeningTierId, sessionId);
+          if (purchase?.id) {
+            setListeningPurchaseId(purchase.id);
+            setIsListeningSubmitDialogOpen(true);
+            toast.success("Payment confirmed. Submit your track now.");
+            setListeningPurchasePending(false);
+            return;
+          }
+        } catch (_error) {
+          // Continue retrying while webhook finalizes.
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+
+      if (!cancelled) {
+        setListeningPurchasePending(false);
+        toast.error("Payment is still processing. Refresh in a few moments to submit your track.");
+      }
+    };
+
+    hydrateListeningPurchaseFromReturn();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams]);
+
+  const handleListeningCheckout = async (sessionId: string, tier: ListeningSessionTier) => {
+    if (!user) {
+      toast.error("Please sign in to book a listening tier");
+      return;
+    }
+
+    if (!profile?.username || !profile?.display_name) {
+      toast.error("Complete username and display name before submitting");
+      window.location.href = "/settings/profile";
+      return;
+    }
+
+    if (tier.sold_out) {
+      toast.error("This tier is sold out");
+      return;
+    }
+
+    try {
+      await createListeningTierCheckoutSession(sessionId, tier.id);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Unable to start checkout");
+    }
+  };
+
+  const handleListeningSubmission = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!listeningPurchaseId) {
+      toast.error("No paid purchase found for this submission");
+      return;
+    }
+
+    if (!listeningTrackTitle.trim() || !listeningTrackUrl.trim()) {
+      toast.error("Track title and URL are required");
+      return;
+    }
+
+    setListeningSubmissionBusy(true);
+    try {
+      await createListeningSubmission(listeningPurchaseId, listeningTrackTitle.trim(), listeningTrackUrl.trim());
+      setListeningTrackTitle("");
+      setListeningTrackUrl("");
+      setIsListeningSubmitDialogOpen(false);
+      toast.success("Listening submission received");
+
+      const sessions = await listOpenListeningSessions();
+      setListeningSessions(sessions);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to submit track");
+    } finally {
+      setListeningSubmissionBusy(false);
+    }
+  };
 
   return (
     <PageLayoutWithAds>
@@ -211,11 +353,10 @@ export const Booking = () => {
               </div>
             ) : (
               <>
-                {/* New Music Mondays Slot */}
                 {musicSlots[0] && (
                   <div className="bg-card border border-border rounded-2xl overflow-hidden flex flex-col text-center">
                     <div className="p-8 flex flex-col items-center flex-1">
-                      <div 
+                      <div
                         className="w-12 h-12 bg-dem/10 rounded-xl flex items-center justify-center mb-6 cursor-pointer hover:bg-dem/20 transition-all"
                         onClick={() => handleSelectSlot(musicSlots[0])}
                       >
@@ -226,7 +367,7 @@ export const Booking = () => {
                       <p className="font-body text-sm text-muted-foreground mb-6">
                         Get your track featured and reviewed live. Limited slots available every week.
                       </p>
-                      
+
                       <div className="space-y-3 mb-8 w-full flex flex-col items-center">
                         <div className="flex items-center justify-center gap-3 text-xs text-foreground/80">
                           <Calendar className="w-4 h-4 text-dem" />
@@ -239,7 +380,7 @@ export const Booking = () => {
                       </div>
 
                       <div className="w-full mt-auto">
-                        <SlotPaywall 
+                        <SlotPaywall
                           slotSlug={musicSlots[0].slug}
                           preview={
                             <div className="p-4 bg-muted/20 rounded-lg border border-dashed border-border text-center">
@@ -250,9 +391,7 @@ export const Booking = () => {
                           <div className="bg-dem/5 border border-dem/20 rounded-xl p-6 text-center">
                             <Dialog open={isMusicModalOpen} onOpenChange={setIsMusicModalOpen}>
                               <DialogTrigger asChild>
-                                <Button className="w-full bg-dem hover:bg-dem/90 text-white rounded-full text-xs">
-                                  Submit Track
-                                </Button>
+                                <Button className="w-full bg-dem hover:bg-dem/90 text-white rounded-full text-xs">Submit Track</Button>
                               </DialogTrigger>
                               <DialogContent className="sm:max-w-[600px] w-[95vw] max-h-[92vh] overflow-y-auto p-0 top-[50%] translate-y-[-50%] sm:rounded-2xl">
                                 <div className="p-4 sm:p-8 pb-12">
@@ -273,11 +412,10 @@ export const Booking = () => {
                   </div>
                 )}
 
-                {/* Featured Interview Slot */}
                 {interviewSlots[0] && (
                   <div className="bg-card border border-border rounded-2xl overflow-hidden flex flex-col text-center">
                     <div className="p-8 flex flex-col items-center flex-1">
-                      <div 
+                      <div
                         className="w-12 h-12 bg-rep/10 rounded-xl flex items-center justify-center mb-6 cursor-pointer hover:bg-rep/20 transition-all"
                         onClick={() => handleSelectSlot(interviewSlots[0])}
                       >
@@ -301,7 +439,7 @@ export const Booking = () => {
                       </div>
 
                       <div className="w-full mt-auto">
-                        <SlotPaywall 
+                        <SlotPaywall
                           slotSlug={interviewSlots[0].slug}
                           preview={
                             <div className="p-4 bg-muted/20 rounded-lg border border-dashed border-border text-center">
@@ -312,9 +450,7 @@ export const Booking = () => {
                           <div className="bg-rep/5 border border-rep/20 rounded-xl p-6 text-center">
                             <Dialog open={isInterviewModalOpen} onOpenChange={setIsInterviewModalOpen}>
                               <DialogTrigger asChild>
-                                <Button className="w-full bg-rep hover:bg-rep/90 text-white rounded-full text-xs">
-                                  Schedule Time
-                                </Button>
+                                <Button className="w-full bg-rep hover:bg-rep/90 text-white rounded-full text-xs">Schedule Time</Button>
                               </DialogTrigger>
                               <DialogContent className="sm:max-w-[600px] w-[95vw] max-h-[92vh] overflow-y-auto p-0 top-[50%] translate-y-[-50%] sm:rounded-2xl">
                                 <div className="p-4 sm:p-8 pb-12">
@@ -338,6 +474,89 @@ export const Booking = () => {
             )}
           </div>
 
+          <div className="mt-16 w-full max-w-6xl mx-auto">
+            <div className="mb-6 flex items-center gap-3">
+              <Headphones className="w-5 h-5 text-dem" />
+              <h2 className="font-display text-2xl md:text-3xl text-foreground">Listening Sessions</h2>
+            </div>
+
+            {listeningError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Unable to load listening sessions</AlertTitle>
+                <AlertDescription>{listeningError}</AlertDescription>
+              </Alert>
+            )}
+
+            {listeningPurchasePending && (
+              <Alert className="mb-4 border-dem/30 bg-dem/5">
+                <Loader2 className="h-4 w-4 animate-spin text-dem" />
+                <AlertTitle>Finalizing your purchase</AlertTitle>
+                <AlertDescription>Waiting for payment confirmation so your submission form can unlock.</AlertDescription>
+              </Alert>
+            )}
+
+            {listeningLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-dem" />
+              </div>
+            ) : listeningSessions.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">
+                No open listening sessions right now.
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {listeningSessions.map((session) => (
+                  <div key={session.id} className="rounded-2xl border border-border bg-card p-6 md:p-8">
+                    <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
+                      <div>
+                        <h3 className="text-xl font-display text-foreground">{session.title}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">{session.description || "Structured editorial review session."}</p>
+                      </div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-widest">
+                        {new Date(session.scheduled_at).toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {session.tiers.map((tier) => {
+                        const remaining = Math.max(0, tier.remaining_slots);
+                        const soldOut = tier.sold_out;
+
+                        return (
+                          <div key={tier.id} className="rounded-xl border border-border bg-muted/20 p-4 flex flex-col">
+                            <div className="flex items-start justify-between gap-2">
+                              <h4 className="font-bold text-foreground">{tier.tier_name}</h4>
+                              {soldOut ? (
+                                <span className="text-[10px] px-2 py-1 rounded-full bg-rep/15 text-rep font-black uppercase tracking-wider">SOLD OUT</span>
+                              ) : (
+                                <span className="text-[10px] px-2 py-1 rounded-full bg-dem/15 text-dem font-black uppercase tracking-wider">
+                                  {remaining} of {tier.slot_limit} remaining
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="text-2xl font-black text-dem mt-2">${(tier.price_cents / 100).toFixed(2)}</p>
+                            <p className="text-xs text-muted-foreground mt-2 flex-1">{tier.description || "Guaranteed review and consideration."}</p>
+
+                            <Button
+                              className="mt-4 w-full"
+                              onClick={() => handleListeningCheckout(session.id, tier)}
+                              disabled={soldOut}
+                              variant={soldOut ? "outline" : "default"}
+                            >
+                              {soldOut ? "Sold Out" : "Pay and Submit"}
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="mt-16 bg-muted/30 border border-border rounded-3xl p-8 md:p-12 text-center w-full flex flex-col items-center">
             <h2 className="font-display text-3xl md:text-4xl text-foreground mb-4">Custom Advertising</h2>
             <p className="font-body text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-8">
@@ -347,7 +566,7 @@ export const Booking = () => {
               <Button asChild variant="outline" className="rounded-full px-8">
                 <a href="/contact">Contact Sales Team</a>
               </Button>
-              <QuickPaymentDialog 
+              <QuickPaymentDialog
                 open={isQuickPaymentOpen}
                 onOpenChange={setIsQuickPaymentOpen}
                 trigger={
@@ -359,6 +578,49 @@ export const Booking = () => {
             </div>
           </div>
         </div>
+
+        <Dialog open={isListeningSubmitDialogOpen} onOpenChange={setIsListeningSubmitDialogOpen}>
+          <DialogContent className="sm:max-w-[520px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-dem" />
+                Submit Your Listening Track
+              </DialogTitle>
+              <DialogDescription>
+                {selectedListening
+                  ? `${selectedListening.session.title} · ${selectedListening.tier.tier_name}`
+                  : "Your payment is confirmed. Add your track details to complete submission."}
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleListeningSubmission} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="listening-track-title">Track Title</Label>
+                <Input
+                  id="listening-track-title"
+                  value={listeningTrackTitle}
+                  onChange={(e) => setListeningTrackTitle(e.target.value)}
+                  placeholder="Your Song Title"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="listening-track-url">Track URL</Label>
+                <Input
+                  id="listening-track-url"
+                  value={listeningTrackUrl}
+                  onChange={(e) => setListeningTrackUrl(e.target.value)}
+                  placeholder="https://open.spotify.com/track/..."
+                />
+              </div>
+
+              <Button type="submit" className="w-full" disabled={listeningSubmissionBusy || !listeningPurchaseId}>
+                {listeningSubmissionBusy ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Submit Track
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </PageTransition>
     </PageLayoutWithAds>
   );

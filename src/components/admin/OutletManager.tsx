@@ -129,6 +129,7 @@ export const OutletManager = () => {
           <p className="text-xs text-muted-foreground/80 mt-1">Manage distribution targets and outlet requirements.</p>
         </div>
         <button 
+          type="button"
           onClick={() => setIsCreateOpen(true)}
           data-conduction-toggle
           className="inline-flex items-center justify-center rounded-md bg-dem hover:bg-dem/90 text-white px-4 py-2 gap-2 font-black uppercase transition-colors"
@@ -169,7 +170,7 @@ export const OutletManager = () => {
               <CardTitle className="mt-4 text-lg font-black text-dem uppercase">{outlet.name}</CardTitle>
               <div className="flex flex-wrap gap-2 mt-2">
                 <Badge variant="outline" className="text-xs bg-dem/10 border-dem/30 text-dem uppercase tracking-tight">
-                  {outlet.outlet_type}
+                  {outlet.outlet_type === 'playlist' ? 'Listening Session' : outlet.outlet_type}
                 </Badge>
                 {outlet.requires_review ? (
                   <Badge variant="outline" className="text-xs bg-muted border-border text-muted-foreground uppercase tracking-tight gap-1">
