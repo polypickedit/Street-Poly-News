@@ -7,7 +7,7 @@ export const DevAuthOverlay = () => {
   const { status, loading, user, traceId, isAdmin, isEditor, rolesLoaded, error } = useAuth();
   const overlayRef = useRef<HTMLDivElement>(null);
   
-  const [position, setPosition] = useState(() => {
+  const [position, setPosition] = useState<{ x: number; y: number }>(() => {
     const saved = localStorage.getItem('dev-auth-overlay-pos');
     return saved ? JSON.parse(saved) : { x: window.innerWidth - 250, y: window.innerHeight - 200 };
   });
@@ -56,23 +56,35 @@ export const DevAuthOverlay = () => {
   }, []);
 
   useEffect(() => {
+    if (overlayRef.current) {
+      overlayRef.current.style.left = `${position.x}px`;
+      overlayRef.current.style.top = `${position.y}px`;
+    }
+  }, [position]);
+
+  useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
+      if (isDragging && overlayRef.current) {
         const newX = e.clientX - dragStart.current.x;
         const newY = e.clientY - dragStart.current.y;
         
-        const width = overlayRef.current?.offsetWidth || 230;
-        const height = overlayRef.current?.offsetHeight || 40;
+        const width = overlayRef.current.offsetWidth || 230;
+        const height = overlayRef.current.offsetHeight || 40;
 
-        setPosition({
-          x: Math.max(0, Math.min(newX, window.innerWidth - width)),
-          y: Math.max(0, Math.min(newY, window.innerHeight - height))
-        });
+        const x = Math.max(0, Math.min(newX, window.innerWidth - width));
+        const y = Math.max(0, Math.min(newY, window.innerHeight - height));
+        
+        overlayRef.current.style.left = `${x}px`;
+        overlayRef.current.style.top = `${y}px`;
       }
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
+      if (overlayRef.current) {
+        const rect = overlayRef.current.getBoundingClientRect();
+        setPosition({ x: rect.left, y: rect.top });
+      }
     };
 
     if (isDragging) {
@@ -105,10 +117,6 @@ export const DevAuthOverlay = () => {
         "fixed z-[9999] w-[230px] rounded-2xl border border-white/30 bg-black/70 p-3 text-[11px] font-mono text-white backdrop-blur-xl shadow-2xl transition-all duration-200 hover:shadow-white/10",
         isDragging ? "cursor-grabbing" : "cursor-default"
       )}
-      style={{ 
-        left: position.x, 
-        top: position.y,
-      }}
     >
       <div 
         className={cn(
@@ -122,6 +130,7 @@ export const DevAuthOverlay = () => {
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/80 select-none">Auth Debug</p>
         </div>
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             setIsMinimized(!isMinimized);

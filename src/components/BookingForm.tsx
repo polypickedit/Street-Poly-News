@@ -38,9 +38,13 @@ import { getProductBySlotSlug, PRODUCTS } from "@/config/pricing";
 import { submissionService, SubmissionPayload } from "@/lib/submissionService";
 import { useCart } from "@/hooks/use-cart";
 
+import { Slot, Outlet } from "@/types/booking";
+
 interface BookingFormProps {
   type: "music" | "interview";
   onSuccess?: () => void;
+  slots: Slot[];
+  outlets: Outlet[];
 }
 
 interface BookingFormData {
@@ -53,22 +57,6 @@ interface BookingFormData {
   links: string;
   selectedOutlets: string[];
   submissionType: "music" | "story" | "announcement";
-}
-
-interface Outlet {
-  id: string;
-  name: string;
-  price_cents: number;
-  outlet_type: string;
-  accepted_content_types?: string[];
-}
-
-interface Slot {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  type: "music" | "interview";
 }
 
 const FALLBACK_SLOTS: Record<"music" | "interview", Slot[]> = {
@@ -94,13 +82,10 @@ const FALLBACK_SLOTS: Record<"music" | "interview", Slot[]> = {
 
 import { safeQuery } from "@/lib/supabase-debug";
 
-export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
+export const BookingForm = ({ type, onSuccess, slots, outlets }: BookingFormProps) => {
   const [searchParams] = useSearchParams();
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'confirming' | 'paid' | 'failed'>('idle');
   
-  const [slots, setSlots] = useState<Slot[]>([]);
-  const [isLoadingSlots, setIsLoadingSlots] = useState(true);
-  const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const { user, isAdmin, isEditor } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'capability'>('stripe');
@@ -112,7 +97,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
     name: "",
     email: "",
     artistName: "",
-    slotType: "", // Will be set dynamically by fetchSlots
+    slotType: "", // Will be set dynamically
     preferredDate: "",
     description: "",
     links: "",
@@ -162,89 +147,22 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
   }, [searchParams, verifyPayment]);
 
   useEffect(() => {
-    const controller = new AbortController();
-
-    const fetchSlots = async () => {
-      setIsLoadingSlots(true);
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
-
-      try {
-        const data = await safeQuery(
-          supabase
-          .from("slots")
-          .select("id, name, slug, price, type")
-          .eq("is_active", true)
-          .eq("type", type)
-          .abortSignal(controller.signal)
-        );
-        
-        clearTimeout(timeoutId);
-
-        const fetchedSlots = (data || []).map(s => ({
-          id: s.id,
-          name: s.name,
-          slug: s.slug,
-          price: Number(s.price),
-          type: s.type as "music" | "interview"
-        })) as Slot[];
-
-        const slotCandidates = fetchedSlots.length > 0 ? fetchedSlots : FALLBACK_SLOTS[type];
-        setSlots(slotCandidates);
-
-        if (slotCandidates.length > 0) {
-          const slotFromUrl = searchParams.get('slot');
-          const defaultSlot = slotFromUrl 
-            ? (slotCandidates.find(s => s.slug === slotFromUrl) || slotCandidates[0])
-            : slotCandidates[0];
-          
-          form.setValue("slotType", defaultSlot.slug);
-          setSelectedSlot(defaultSlot);
-        }
-      } catch (err) {
-        clearTimeout(timeoutId);
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          console.log("BookingForm: Slots fetch timed out or aborted, using fallback");
-        } else {
-          console.error("Error fetching slots:", err);
-          toast.error("Failed to load available service options.");
-        }
-        const fallbackSlots = FALLBACK_SLOTS[type];
-        setSlots(fallbackSlots);
-        if (fallbackSlots.length > 0) {
-          const slotFromUrl = searchParams.get('slot');
-          const defaultSlot = slotFromUrl 
-            ? (fallbackSlots.find(s => s.slug === slotFromUrl) || fallbackSlots[0])
-            : fallbackSlots[0];
-          
-          form.setValue("slotType", defaultSlot.slug);
-          setSelectedSlot(defaultSlot);
-        }
-      } finally {
-        setIsLoadingSlots(false);
-      }
-    };
-
-    const fetchOutlets = async () => {
-      try {
-        const data = await safeQuery(
-          supabase
-          .from("media_outlets")
-          .select("id, name, price_cents, outlet_type, accepted_content_types")
-          .eq("active", true)
-          .abortSignal(controller.signal)
-        );
+    if (slots.length > 0) {
+      const slotFromUrl = searchParams.get('slot');
+      const defaultSlot = slotFromUrl 
+        ? (slots.find(s => s.slug === slotFromUrl) || slots[0])
+        : slots[0];
       
-        if (data) setOutlets(data as Outlet[]);
-      } catch (err) {
-         console.error("BookingForm: Error fetching outlets:", err);
+      // Only set if not already set or if explicitly requested via URL (which might mean a direct link)
+      // But we don't want to overwrite user selection if they changed it?
+      // The original code ran once after fetch.
+      // Here we can check if slotType is empty.
+      if (!form.getValues("slotType")) {
+        form.setValue("slotType", defaultSlot.slug);
+        setSelectedSlot(defaultSlot);
       }
-    };
-
-    fetchSlots();
-    fetchOutlets();
-
-    return () => controller.abort();
-  }, [type, form, searchParams]);
+    }
+  }, [slots, searchParams, form]);
 
   const watchSlotType = form.watch("slotType");
   const watchSubmissionType = form.watch("submissionType");
@@ -326,7 +244,7 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
     }
 
     if (isSubmitting) return; // Prevent double-click
-    if (isLoadingSlots) {
+    if (slots.length === 0) {
       toast.error("Please wait for service options to load.");
       return;
     }
@@ -766,10 +684,10 @@ export const BookingForm = ({ type, onSuccess }: BookingFormProps) => {
 
         <Button
           type="submit"
-          disabled={isSubmitting || isLoadingSlots}
-          className={`w-full rounded-full h-12 text-white font-medium transition ${type === "music" ? "bg-dem hover:bg-dem/90" : "bg-rep hover:bg-rep/90"} ${isSubmitting || isLoadingSlots ? "opacity-80 cursor-wait" : ""}`}
+          disabled={isSubmitting || slots.length === 0}
+          className={`w-full rounded-full h-12 text-white font-medium transition ${type === "music" ? "bg-dem hover:bg-dem/90" : "bg-rep hover:bg-rep/90"} ${isSubmitting || slots.length === 0 ? "opacity-80 cursor-wait" : ""}`}
         >
-          {isSubmitting ? "Submitting..." : isLoadingSlots ? "Loading options..." : "Submit Booking Request"}
+          {isSubmitting ? "Submitting..." : slots.length === 0 ? "Loading options..." : "Submit Booking Request"}
         </Button>
       </form>
     </Form>

@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-interface Playlist {
+interface ListeningSession {
   id: string;
   name: string;
 }
@@ -58,14 +58,14 @@ export const PlacementEditDialog = ({
   placement,
   onSuccess,
 }: PlacementEditDialogProps) => {
-  const [playlistId, setPlaylistId] = useState<string>("");
+  const [sessionId, setSessionId] = useState<string>("");
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const { data: playlists, isLoading: loadingPlaylists } = useQuery({
-    queryKey: ["admin-playlists-select"],
+  const { data: sessions, isLoading: loadingSessions } = useQuery({
+    queryKey: ["admin-sessions-select"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("playlists")
@@ -73,21 +73,21 @@ export const PlacementEditDialog = ({
         .eq("active", true);
       
       if (error) throw error;
-      return data as Playlist[];
+      return data as ListeningSession[];
     },
     enabled: isOpen,
   });
 
   useEffect(() => {
     if (placement) {
-      setPlaylistId(placement.playlist_id);
+      setSessionId(placement.playlist_id);
       setStartDate(parseISO(placement.start_date));
       setEndDate(parseISO(placement.end_date));
     }
   }, [placement]);
 
   const handleSave = async () => {
-    if (!placement || !playlistId || !startDate || !endDate) {
+    if (!placement || !sessionId || !startDate || !endDate) {
       toast({
         title: "Missing Information",
         description: "Please fill in all fields before saving.",
@@ -101,7 +101,7 @@ export const PlacementEditDialog = ({
       const { error } = await supabase
         .from("placements")
         .update({
-          playlist_id: playlistId,
+          playlist_id: sessionId,
           start_date: format(startDate, "yyyy-MM-dd"),
           end_date: format(endDate, "yyyy-MM-dd"),
         })
@@ -150,19 +150,19 @@ export const PlacementEditDialog = ({
             <Label className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest">
               Channel / Partner (Session)
             </Label>
-            <Select value={playlistId} onValueChange={setPlaylistId}>
+            <Select value={sessionId} onValueChange={setSessionId}>
               <SelectTrigger className="bg-muted border-border text-foreground focus:ring-dem">
                 <SelectValue placeholder="Select a session" />
               </SelectTrigger>
               <SelectContent className="bg-card border-border">
-                {loadingPlaylists ? (
+                {loadingSessions ? (
                   <div className="flex items-center justify-center p-4">
                     <Loader2 className="w-4 h-4 animate-spin text-dem" />
                   </div>
                 ) : (
-                  playlists?.map((playlist) => (
-                    <SelectItem key={playlist.id} value={playlist.id} className="text-foreground focus:bg-dem/10 focus:text-dem">
-                      {playlist.name}
+                  sessions?.map((session) => (
+                    <SelectItem key={session.id} value={session.id} className="text-foreground focus:bg-dem/10 focus:text-dem">
+                      {session.name}
                     </SelectItem>
                   ))
                 )}

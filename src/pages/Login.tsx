@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,8 +26,12 @@ const Login = () => {
   }>({ status: "idle", message: null });
   const { session, status: authStatus } = useAuth();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  
   // Default to home screen per user request, unless specific redirect requested
-  const redirectTo = searchParams.get("redirectTo") || "/";
+  // Prioritize query param (explicit redirect), then history state (protected route redirect), then home
+  const fromState = (location.state as { from?: { pathname: string } })?.from?.pathname;
+  const redirectTo = searchParams.get("redirectTo") || fromState || "/";
 
   useEffect(() => {
     if (authStatus === "authenticated" && session) {

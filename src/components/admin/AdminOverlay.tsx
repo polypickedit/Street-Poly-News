@@ -22,7 +22,6 @@ export function AdminOverlay() {
     activeAdmins,
     hasDismissedWalkthrough
   } = useAdmin();
-  const [hoveredSlot, setHoveredSlot] = useState<string | null>(null);
   const clickTimeout = useRef<number | null>(null);
   const pendingSlot = useRef<{ key: string; accepts: ContentType[] } | null>(null);
 
@@ -39,6 +38,20 @@ export function AdminOverlay() {
     accepts: ContentType[];
   } | null>(null);
   
+  useEffect(() => {
+    if (elementRef.current) {
+      if (position) {
+        elementRef.current.style.left = `${position.x}px`;
+        elementRef.current.style.top = `${position.y}px`;
+        elementRef.current.style.right = 'auto';
+      } else {
+        elementRef.current.style.left = 'auto';
+        elementRef.current.style.top = '1rem';
+        elementRef.current.style.right = '1rem';
+      }
+    }
+  }, [position, isAdminMode]);
+
   // Drag Logic
   const handleMouseDown = (e: React.MouseEvent) => {
     // Prevent drag if clicking buttons
@@ -58,17 +71,24 @@ export function AdminOverlay() {
     const offsetY = e.clientY - currentY;
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging.current) return;
-      setPosition({
-        x: e.clientX - offsetX,
-        y: e.clientY - offsetY
-      });
+      if (!isDragging.current || !elementRef.current) return;
+      const x = e.clientX - offsetX;
+      const y = e.clientY - offsetY;
+      
+      elementRef.current.style.left = `${x}px`;
+      elementRef.current.style.top = `${y}px`;
+      elementRef.current.style.right = 'auto';
     };
 
     const handleMouseUp = () => {
       isDragging.current = false;
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      
+      if (elementRef.current) {
+        const rect = elementRef.current.getBoundingClientRect();
+        setPosition({ x: rect.left, y: rect.top });
+      }
     };
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -114,16 +134,6 @@ export function AdminOverlay() {
   useEffect(() => {
     if (!isAdminMode) return;
 
-    const handleMouseOver = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const slotElement = target.closest("[data-slot]");
-      if (slotElement) {
-        setHoveredSlot(slotElement.getAttribute("data-slot"));
-      } else {
-        setHoveredSlot(null);
-      }
-    };
-
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       
@@ -166,11 +176,9 @@ export function AdminOverlay() {
       }
     };
 
-    window.addEventListener("mouseover", handleMouseOver);
     window.addEventListener("click", handleClick, true); // Use capture phase to intercept
 
     return () => {
-      window.removeEventListener("mouseover", handleMouseOver);
       window.removeEventListener("click", handleClick, true);
     };
   }, [isAdminMode]);
@@ -184,15 +192,8 @@ export function AdminOverlay() {
         ref={elementRef}
         data-conduction-toggle
         onMouseDown={handleMouseDown}
-        style={{
-          position: 'fixed',
-          left: position?.x ?? undefined,
-          top: position?.y ?? '1rem',
-          right: position ? undefined : '1rem',
-          zIndex: 10001
-        }}
         className={cn(
-          "flex items-center gap-3 bg-dem/95 text-white shadow-2xl backdrop-blur-md border border-white/20 cursor-grab active:cursor-grabbing transition-all duration-200 ease-out",
+          "fixed z-[10001] flex items-center gap-3 bg-dem/95 text-white shadow-2xl backdrop-blur-md border border-white/20 cursor-grab active:cursor-grabbing transition-all duration-200 ease-out",
           isMinimized ? "p-3 rounded-full" : "px-4 py-2 rounded-full",
           !position && "animate-in fade-in slide-in-from-top-4"
         )}
@@ -239,6 +240,7 @@ export function AdminOverlay() {
             
             <div className="flex items-center gap-2">
               <button 
+                type="button"
                 onClick={() => setIsWalkthroughActive(true)}
                 className="flex items-center gap-1.5 text-white hover:text-white/70 transition-colors px-2 py-1 rounded-full hover:bg-white/10"
                 aria-label="Help and Walkthrough"
@@ -254,6 +256,7 @@ export function AdminOverlay() {
         {/* Controls (Minimize/Close) */}
         <div className={cn("flex items-center gap-1", !isMinimized && "border-l border-white/20 pl-2 ml-1")}>
             <button 
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsMinimized(!isMinimized);
@@ -267,6 +270,7 @@ export function AdminOverlay() {
             
             {!isMinimized && (
               <button 
+                type="button"
                 onClick={(e) => {
                     e.stopPropagation();
                     toggleAdminMode();

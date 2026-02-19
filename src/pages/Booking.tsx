@@ -26,6 +26,7 @@ import { safeQuery } from "@/lib/supabase-debug";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { Slot, Outlet } from "@/types/booking";
 import {
   createListeningSubmission,
   findPaidPurchaseForTier,
@@ -34,15 +35,6 @@ import {
   type ListeningSessionTier,
 } from "@/lib/listeningSessions";
 import { createListeningTierCheckoutSession } from "@/lib/stripe";
-
-interface Slot {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  type: "music" | "interview";
-  is_active: boolean;
-}
 
 const FALLBACK_SLOTS: Slot[] = [
   {
@@ -74,6 +66,7 @@ export const Booking = () => {
   const { profile } = useProfile();
 
   const [slots, setSlots] = useState<Slot[]>([]);
+  const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -113,7 +106,7 @@ export const Booking = () => {
   };
 
   useEffect(() => {
-    const fetchSlots = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       setError(null);
 
@@ -121,19 +114,28 @@ export const Booking = () => {
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
       try {
-        const data = await safeQuery(
-          supabase
-            .from("slots")
-            .select("*")
-            .eq("is_active", true)
-            .order("created_at", { ascending: true })
-            .abortSignal(controller.signal)
-        );
+        const [slotsData, outletsData] = await Promise.all([
+          safeQuery(
+            supabase
+              .from("slots")
+              .select("*")
+              .eq("is_active", true)
+              .order("created_at", { ascending: true })
+              .abortSignal(controller.signal)
+          ),
+          safeQuery(
+            supabase
+              .from("media_outlets")
+              .select("id, name, price_cents, outlet_type, accepted_content_types, active")
+              .eq("active", true)
+              .abortSignal(controller.signal)
+          )
+        ]);
 
         clearTimeout(timeoutId);
 
-        if (data) {
-          const mappedSlots = data.map((s) => {
+        if (slotsData) {
+          const mappedSlots = slotsData.map((s) => {
             const slotData = s as any; // eslint-disable-line @typescript-eslint/no-explicit-any
             return {
               id: s.id,
@@ -149,13 +151,17 @@ export const Booking = () => {
         } else {
           setSlots(FALLBACK_SLOTS);
         }
+
+        if (outletsData) {
+          setOutlets(outletsData as Outlet[]);
+        }
       } catch (err) {
         clearTimeout(timeoutId);
         if (err instanceof Error && (err.name === "AbortError" || err.message?.includes("abort"))) {
           setError("Connection timed out. Using offline data.");
           setSlots(FALLBACK_SLOTS);
         } else {
-          setError(err instanceof Error ? err.message : "Failed to load slots");
+          setError(err instanceof Error ? err.message : "Failed to load data");
           setSlots(FALLBACK_SLOTS);
         }
       } finally {
@@ -163,7 +169,7 @@ export const Booking = () => {
       }
     };
 
-    fetchSlots();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -401,7 +407,12 @@ export const Booking = () => {
                                       Fill out the form below to submit your track for live review and feature.
                                     </DialogDescription>
                                   </DialogHeader>
-                                  <BookingForm type="music" onSuccess={() => setIsMusicModalOpen(false)} />
+                                  <BookingForm 
+                                    type="music" 
+                                    slots={musicSlots}
+                                    outlets={outlets}
+                                    onSuccess={() => setIsMusicModalOpen(false)} 
+                                  />
                                 </div>
                               </DialogContent>
                             </Dialog>
@@ -460,7 +471,12 @@ export const Booking = () => {
                                       Provide your details below to schedule your featured interview.
                                     </DialogDescription>
                                   </DialogHeader>
-                                  <BookingForm type="interview" onSuccess={() => setIsInterviewModalOpen(false)} />
+                                  <BookingForm 
+                                    type="interview" 
+                                    slots={interviewSlots}
+                                    outlets={outlets}
+                                    onSuccess={() => setIsInterviewModalOpen(false)} 
+                                  />
                                 </div>
                               </DialogContent>
                             </Dialog>
