@@ -1,6 +1,8 @@
 -- Migration: Add get_user_roles RPC
 -- Description: Returns the roles for the current authenticated user.
 
+DROP FUNCTION IF EXISTS public.get_user_roles();
+
 CREATE OR REPLACE FUNCTION public.get_user_roles()
 RETURNS text[]
 LANGUAGE plpgsql

@@ -1,34 +1,83 @@
--- Create products table
-create table if not exists public.products (
-  id uuid default gen_random_uuid() primary key,
-  source text not null check (source in ('stripe', 'ecwid', 'internal')),
-  category text not null check (category in ('join', 'book', 'learn', 'shop')),
-  entitlement_key text not null,
-  price integer not null check (price >= 0),
-  status text not null default 'draft' check (status in ('active', 'archived', 'draft')),
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+-- Create products table with canonical category order and robust constraints
+
+-- 1. Create Enum for Category Order (Enforces Join -> Book -> Learn -> Shop sequence)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'product_category') THEN
+        CREATE TYPE public.product_category AS ENUM ('join', 'book', 'learn', 'shop');
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'product_source') THEN
+        CREATE TYPE public.product_source AS ENUM ('stripe', 'ecwid', 'internal');
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'product_status') THEN
+        CREATE TYPE public.product_status AS ENUM ('active', 'archived', 'draft');
+    END IF;
+END $$;
+
+-- 2. Create Table
+CREATE TABLE IF NOT EXISTS public.products (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  source public.product_source NOT NULL,
+  category public.product_category NOT NULL,
+  entitlement_key TEXT NOT NULL, -- References slots.slug or internal keys
+  price INTEGER NOT NULL CHECK (price >= 0),
+  status public.product_status NOT NULL DEFAULT 'draft',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Enable RLS
-alter table public.products enable row level security;
+-- 3. Enable RLS
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 
--- Policies
-create policy "Public products are viewable by everyone"
-  on public.products for select
-  using (status = 'active');
+-- 4. Create Policies (Idempotent)
+DO $$
+BEGIN
+    -- Public View Policy
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'products' AND policyname = 'Public products are viewable by everyone'
+    ) THEN
+        CREATE POLICY "Public products are viewable by everyone"
+        ON public.products FOR SELECT
+        USING (status = 'active');
+    END IF;
 
-create policy "Admins can manage products"
-  on public.products for all
-  using (
-    exists (
-      select 1 from public.user_roles
-      where user_id = auth.uid()
-      and role in ('admin', 'editor')
-    )
-  );
+    -- Admin Manage Policy
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'products' AND policyname = 'Admins can manage products'
+    ) THEN
+        CREATE POLICY "Admins can manage products"
+        ON public.products FOR ALL
+        USING (
+            EXISTS (
+                SELECT 1 FROM public.user_roles ur
+                JOIN public.roles r ON ur.role_id = r.id
+                WHERE ur.user_id = auth.uid()
+                AND r.name IN ('admin', 'editor')
+            )
+        );
+    END IF;
+END $$;
 
--- Indexes
-create index if not exists idx_products_category on public.products(category);
-create index if not exists idx_products_entitlement_key on public.products(entitlement_key);
-create index if not exists idx_products_status on public.products(status);
+-- 5. Create Indexes (Idempotent)
+CREATE INDEX IF NOT EXISTS idx_products_category ON public.products(category);
+CREATE INDEX IF NOT EXISTS idx_products_entitlement_key ON public.products(entitlement_key);
+CREATE INDEX IF NOT EXISTS idx_products_status ON public.products(status);
+
+-- 6. Trigger for updated_at
+CREATE OR REPLACE FUNCTION public.handle_products_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS set_products_updated_at ON public.products;
+CREATE TRIGGER set_products_updated_at
+    BEFORE UPDATE ON public.products
+    FOR EACH ROW
+    EXECUTE PROCEDURE public.handle_products_updated_at();

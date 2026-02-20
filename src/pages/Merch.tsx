@@ -2,54 +2,93 @@ import { PageLayoutWithAds } from "@/components/PageLayoutWithAds";
 import { PageTransition } from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, ExternalLink } from "lucide-react";
-import { MerchCard } from "@/components/MerchCard";
+import { ProductCard, Product } from "@/components/store/ProductCard";
+import { useCart } from "@/hooks/use-cart";
+import { toast } from "sonner";
 
-const mockMerch = [
+const mockMerch: Product[] = [
   {
-    id: 1,
-    name: "Streetpoly Logo Tee",
-    type: "T-Shirt",
-    price: 29.99,
-    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop",
+    id: "1",
+    title: "Streetpoly Logo Tee",
+    category: "shop",
+    source: "internal",
+    entitlement_key: "merch_tee_logo",
+    status: "active",
+    price: 2999,
+    image_url: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop",
+    description: "Classic logo tee."
   },
   {
-    id: 2,
-    name: "Urban Voices Hoodie",
-    type: "Hoodie",
-    price: 59.99,
-    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=400&fit=crop",
+    id: "2",
+    title: "Urban Voices Hoodie",
+    category: "shop",
+    source: "internal",
+    entitlement_key: "merch_hoodie_urban",
+    status: "active",
+    price: 5999,
+    image_url: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=400&fit=crop",
+    description: "Premium heavyweight hoodie."
   },
   {
-    id: 3,
-    name: "Movement Graphic Tee",
-    type: "T-Shirt",
-    price: 34.99,
-    image: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400&h=400&fit=crop",
+    id: "3",
+    title: "Movement Graphic Tee",
+    category: "shop",
+    source: "internal",
+    entitlement_key: "merch_tee_movement",
+    status: "active",
+    price: 3499,
+    image_url: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400&h=400&fit=crop",
+    description: "Graphic tee with movement design."
   },
   {
-    id: 4,
-    name: "Street Culture Hoodie",
-    type: "Hoodie",
-    price: 64.99,
-    image: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=400&h=400&fit=crop",
+    id: "4",
+    title: "Street Culture Hoodie",
+    category: "shop",
+    source: "internal",
+    entitlement_key: "merch_hoodie_culture",
+    status: "active",
+    price: 6499,
+    image_url: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=400&h=400&fit=crop",
+    description: "Street culture inspired hoodie."
   },
   {
-    id: 5,
-    name: "Resist Classic Tee",
-    type: "T-Shirt",
-    price: 27.99,
-    image: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400&h=400&fit=crop",
+    id: "5",
+    title: "Resist Classic Tee",
+    category: "shop",
+    source: "internal",
+    entitlement_key: "merch_tee_resist",
+    status: "active",
+    price: 2799,
+    image_url: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400&h=400&fit=crop",
+    description: "Classic resist tee."
   },
   {
-    id: 6,
-    name: "Block Party Zip Hoodie",
-    type: "Hoodie",
-    price: 69.99,
-    image: "https://images.unsplash.com/photo-1578768079052-aa76e52ff62e?w=400&h=400&fit=crop",
+    id: "6",
+    title: "Block Party Zip Hoodie",
+    category: "shop",
+    source: "internal",
+    entitlement_key: "merch_hoodie_block",
+    status: "active",
+    price: 6999,
+    image_url: "https://images.unsplash.com/photo-1578768079052-aa76e52ff62e?w=400&h=400&fit=crop",
+    description: "Zip hoodie for block parties."
   },
 ];
 
 const Merch = () => {
+  const { addItem } = useCart();
+
+  const handlePurchase = async (product: Product) => {
+    addItem({
+      id: product.id,
+      name: product.title,
+      type: "merch",
+      price: product.price / 100,
+      image: product.image_url || "",
+    });
+    toast.success(`${product.title} added to cart`);
+  };
+
   return (
     <PageLayoutWithAds mainClassName="max-w-7xl mx-auto">
       <PageTransition>
@@ -70,8 +109,12 @@ const Merch = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {mockMerch.map((item) => (
-              <MerchCard key={item.id} item={item} />
+            {mockMerch.map((product) => (
+              <ProductCard 
+                key={product.id} 
+                product={product} 
+                onPurchase={handlePurchase}
+              />
             ))}
           </div>
 

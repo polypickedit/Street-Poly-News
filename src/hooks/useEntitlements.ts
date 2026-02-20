@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Entitlement } from "@/types/slots";
-import { safeQuery } from "@/lib/supabase-debug";
+import { safeFetch } from "@/lib/safeFetch";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useMemo, useRef } from "react";
 
@@ -25,8 +25,8 @@ export function useEntitlements() {
       if (!userId) return [];
       console.log("%cENTITLEMENTS TRANSITION", "color: #22d3ee; font-weight: bold;", "fetch.start", { userId });
 
-      // safeQuery handles AbortError internally now
-      const data = await safeQuery(
+      // safeFetch handles AbortError internally
+      const data = await safeFetch(
         supabase
         .from("slot_entitlements")
         .select("*")

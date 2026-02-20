@@ -9,9 +9,9 @@ interface StoreLayoutProps {
 }
 
 const CATEGORIES = [
-  { name: "Join", path: "/join", description: "Membership & Community" },
+  { name: "Join", path: "/community", description: "Membership & Community" },
   { name: "Book", path: "/booking", description: "Studio & Events" },
-  { name: "Learn", path: "/learn", description: "Education & Resources" },
+  { name: "Learn", path: "/about", description: "Education & Resources" },
   { name: "Shop", path: "/merch", description: "Apparel & Goods" },
 ] as const;
 

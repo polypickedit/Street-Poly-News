@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Slot, SlotAccess, Entitlement } from '@/types/slots';
-import { safeQuery } from '@/lib/supabase-debug';
+import { safeFetch } from '@/lib/safeFetch';
 
 export const useSlotAccess = (slotSlug: string) => {
   const { session, isAdmin, appReady } = useAuth();
@@ -45,7 +45,7 @@ export const useSlotAccess = (slotSlug: string) => {
 
       try {
         // 1. Get the slot
-        const slot = await safeQuery(
+        const slot = await safeFetch(
           supabase
           .from('slots')
           .select('*')
@@ -87,7 +87,7 @@ export const useSlotAccess = (slotSlug: string) => {
         }
 
         // 5. Check entitlements for paid slots
-        const entitlement = await safeQuery(
+        const entitlement = await safeFetch(
           supabase
           .from('slot_entitlements')
           .select('*')

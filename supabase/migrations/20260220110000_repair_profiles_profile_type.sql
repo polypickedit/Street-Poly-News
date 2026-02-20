@@ -14,7 +14,7 @@ BEGIN
 
   UPDATE public.profiles
   SET profile_type = 'viewer'
-  WHERE profile_type IS NULL;
+  WHERE profile_type IS NULL OR profile_type NOT IN ('artist', 'viewer');
 
   IF NOT EXISTS (
     SELECT 1
@@ -27,8 +27,12 @@ BEGIN
       CHECK (profile_type IN ('artist', 'viewer'));
   END IF;
 
-  ALTER TABLE public.profiles
-    ALTER COLUMN profile_type SET NOT NULL;
+  -- Ensure no nulls exist before setting NOT NULL
+  IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE profile_type IS NULL) THEN
+    ALTER TABLE public.profiles
+      ALTER COLUMN profile_type SET DEFAULT 'viewer',
+      ALTER COLUMN profile_type SET NOT NULL;
+  END IF;
 END $$;
 
 NOTIFY pgrst, 'reload schema';

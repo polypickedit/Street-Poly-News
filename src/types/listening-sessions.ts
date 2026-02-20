@@ -76,8 +76,8 @@ export interface ListeningPurchase {
   stripe_session_id?: string | null;
 }
 
-export type ExtendedDatabase = {
-  public: {
+export type ExtendedDatabase = Database & {
+  public: Database["public"] & {
     Tables: Database["public"]["Tables"] & {
       listening_sessions: {
         Row: ListeningSession;
@@ -108,8 +108,5 @@ export type ExtendedDatabase = {
         Returns: string;
       };
     };
-    Views: Database["public"]["Views"];
-    Enums: Database["public"]["Enums"];
-    CompositeTypes: Database["public"]["CompositeTypes"];
   };
 };

@@ -391,7 +391,32 @@ serve(async (req: Request) => {
       }
     }
 
-    // 4. Create Stripe Checkout Session
+    // 4. Log Commerce Event (Ledger) - PRE-CREATION
+    // We create a record of intent before calling Stripe to ensure we have a trace even if Stripe fails
+    let commerceEventId: string | null = null;
+    try {
+      const { data: eventData, error: eventError } = await supabaseClient.from("commerce_events").insert({
+        user_id: verifiedUserId || null,
+        stripe_session_id: null, // Will be updated after creation
+        type: "checkout_intent",
+        status: "initializing",
+        amount_total: lineItems.reduce((sum, item) => sum + (item.price_data?.unit_amount || 0) * (item.quantity || 1), 0),
+        currency: lineItems[0]?.price_data?.currency || 'usd',
+        metadata: metadata,
+        raw_payload: { line_items: lineItems, mode },
+      }).select('id').single();
+
+      if (eventError) {
+        console.error("Failed to log commerce event intent:", eventError);
+      } else {
+        commerceEventId = eventData.id;
+        console.log("Logged commerce event intent:", commerceEventId);
+      }
+    } catch (logError) {
+      console.error("Failed to log commerce event intent (exception):", logError);
+    }
+
+    // 5. Create Stripe Checkout Session
     console.log("Creating Stripe session with lineItems:", JSON.stringify(lineItems));
     console.log("Metadata:", JSON.stringify(metadata));
 
@@ -414,15 +439,57 @@ serve(async (req: Request) => {
         payment_intent_data: mode === "payment" ? {
           metadata: metadata,
         } : undefined,
-        metadata: metadata,
+        metadata: {
+          ...metadata,
+          commerceEventId: commerceEventId || "", // Link back to our ledger
+        },
       });
     } catch (stripeError) {
       const err = stripeError as Error & { message?: string };
       console.error("Stripe Session Creation Error:", err);
+      
+      // Update ledger to failed
+      if (commerceEventId) {
+        await supabaseClient.from("commerce_events").update({
+          status: 'failed',
+          metadata: { ...metadata, error: err.message }
+        }).eq('id', commerceEventId);
+      }
+
       throw new Error(`Stripe error: ${err.message || "Unknown Stripe error"}`);
     }
 
     console.log("Stripe session created successfully:", session.id);
+
+    // 6. Update Ledger with Session ID
+    if (commerceEventId) {
+      try {
+        await supabaseClient.from("commerce_events").update({
+          stripe_session_id: session.id,
+          status: 'pending', // Now waiting for webhook
+          type: 'checkout_created', // Upgrade type
+          raw_payload: session
+        }).eq('id', commerceEventId);
+      } catch (updateError) {
+        console.error("Failed to update commerce event with session ID:", updateError);
+      }
+    } else {
+      // Fallback: If intent creation failed, try to insert now (legacy behavior)
+      try {
+        await supabaseClient.from("commerce_events").insert({
+          user_id: verifiedUserId || null,
+          stripe_session_id: session.id,
+          type: "checkout_created",
+          status: "pending",
+          amount_total: session.amount_total,
+          currency: session.currency,
+          metadata: metadata,
+          raw_payload: session,
+        });
+      } catch (logError) {
+        console.error("Failed to log commerce event (fallback):", logError);
+      }
+    }
 
     if (merchOrderId) {
       try {
@@ -433,23 +500,6 @@ serve(async (req: Request) => {
       } catch (orderUpdateError) {
         console.error('Failed to update merch order session ID:', orderUpdateError);
       }
-    }
-
-    // 5. Log Commerce Event (Ledger)
-    try {
-      await supabaseClient.from("commerce_events").insert({
-        user_id: verifiedUserId || null,
-        stripe_session_id: session.id,
-        type: "checkout_created",
-        status: "pending",
-        amount_total: session.amount_total,
-        currency: session.currency,
-        metadata: metadata,
-        raw_payload: session,
-      });
-    } catch (logError) {
-      console.error("Failed to log commerce event:", logError);
-      // Don't fail the checkout if logging fails, but it's captured in logs
     }
 
     return new Response(JSON.stringify({ url: session.url }), {

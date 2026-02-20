@@ -6,6 +6,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Minus, Plus } from 'lucide-react';
+import { Database } from '@/integrations/supabase/types';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { safeFetch } from '@/lib/safeFetch';
+
+// Extend Database type to include get_user_roles RPC if missing
+interface DebugDatabase extends Database {
+  public: Database['public'] & {
+    Functions: Database['public']['Functions'] & {
+      get_user_roles: {
+        Args: Record<string, never>;
+        Returns: { role: string }[];
+      };
+    };
+  };
+}
+
+const db = supabase as unknown as SupabaseClient<DebugDatabase>;
 
 type AppSnapshot = {
   path: string;
@@ -98,20 +115,21 @@ export function DebugAuth() {
 
       // 2. Check Roles
       console.log('2. Fetching roles RPC...');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: rolesData, error: rolesError } = await (supabase as any).rpc('get_user_roles');
-      console.log('Roles RPC Result:', { rolesData, rolesError });
-      setRolesCheck({ data: rolesData, error: rolesError });
+      const rolesData = await safeFetch(db.rpc('get_user_roles'));
+      console.log('Roles RPC Result:', { rolesData });
+      setRolesCheck({ data: rolesData, error: null }); // safeFetch swallows/logs error, or we catch below
 
       // 3. Check Profile
       console.log('3. Fetching profile...');
-      const { data: profileData, error: profileError } = await supabase
+      const profileData = await safeFetch(
+        db
         .from('profiles')
         .select('*')
         .eq('id', sessionData.session?.user?.id)
-        .maybeSingle();
-      console.log('Profile Result:', { profileData, profileError });
-      setProfileCheck({ data: profileData, error: profileError });
+        .maybeSingle()
+      );
+      console.log('Profile Result:', { profileData });
+      setProfileCheck({ data: profileData, error: null });
 
       console.log('--- END DIAGNOSTICS ---');
     } catch (err) {

@@ -37,9 +37,13 @@ If they return `true` for your admin user, the guard used by `AdminRoute`/`AuthP
 
 1. **Apply the schema** (order matters because some scripts drop/recreate policies):
    ```sh
-   supabase db push --project-ref <your-project> --schema public
+   npm run db:push:safe
    ```
-   This executes everything under `supabase/migrations` and ensures the `MASTER_FIX` scripts re-create the safe policy functions last.
+   This loads `.env.local`, runs a local migration verification (`supabase db reset --local --yes`), then pushes via direct `--db-url` to avoid login-role 403 issues.
+   If Docker/local DB is unavailable, use:
+   ```sh
+   npm run db:push:safe:skip-local
+   ```
 
 2. **Check required roles**:
    ```sql

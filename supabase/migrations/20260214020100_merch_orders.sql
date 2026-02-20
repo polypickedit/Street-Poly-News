@@ -49,20 +49,25 @@ ALTER TABLE public.merch_orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.merch_order_items ENABLE ROW LEVEL SECURITY;
 
 -- 4. Policies
+DROP POLICY IF EXISTS "Merch inventory admin only" ON public.merch_inventory;
 CREATE POLICY "Merch inventory admin only" ON public.merch_inventory
     FOR ALL
     USING (public.is_owner_admin())
     WITH CHECK (public.is_owner_admin());
 
+DROP POLICY IF EXISTS "Merch orders: owner can select" ON public.merch_orders;
 CREATE POLICY "Merch orders: owner can select" ON public.merch_orders
     FOR SELECT USING (auth.uid() = user_id OR public.is_owner_admin());
 
+DROP POLICY IF EXISTS "Merch orders: users can insert own" ON public.merch_orders;
 CREATE POLICY "Merch orders: users can insert own" ON public.merch_orders
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Merch orders: admins can update" ON public.merch_orders;
 CREATE POLICY "Merch orders: admins can update" ON public.merch_orders
     FOR ALL USING (public.is_owner_admin()) WITH CHECK (public.is_owner_admin());
 
+DROP POLICY IF EXISTS "Merch order items: owner view" ON public.merch_order_items;
 CREATE POLICY "Merch order items: owner view" ON public.merch_order_items
     FOR SELECT USING (EXISTS (
         SELECT 1 FROM public.merch_orders o
@@ -70,6 +75,7 @@ CREATE POLICY "Merch order items: owner view" ON public.merch_order_items
           AND (auth.uid() = o.user_id OR public.is_owner_admin())
     ));
 
+DROP POLICY IF EXISTS "Merch order items: admins can manage" ON public.merch_order_items;
 CREATE POLICY "Merch order items: admins can manage" ON public.merch_order_items
     FOR ALL USING (public.is_owner_admin()) WITH CHECK (public.is_owner_admin());
 
@@ -86,10 +92,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS merch_inventory_updated ON public.merch_inventory;
 CREATE TRIGGER merch_inventory_updated
     BEFORE UPDATE ON public.merch_inventory
     FOR EACH ROW EXECUTE FUNCTION public.update_timestamp();
 
+DROP TRIGGER IF EXISTS merch_orders_updated ON public.merch_orders;
 CREATE TRIGGER merch_orders_updated
     BEFORE UPDATE ON public.merch_orders
     FOR EACH ROW EXECUTE FUNCTION public.update_timestamp();

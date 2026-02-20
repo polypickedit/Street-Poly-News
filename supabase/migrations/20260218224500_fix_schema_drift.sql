@@ -4,24 +4,25 @@
 DO $$
 BEGIN
     -- 0. Add profile_type if missing (required by frontend profile query)
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='profile_type') THEN
-        ALTER TABLE public.profiles ADD COLUMN profile_type TEXT;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='profiles' AND column_name='profile_type') THEN
+        ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS profile_type TEXT;
     END IF;
 
     -- 1. Add username_normalized if missing
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='username_normalized') THEN
-        ALTER TABLE public.profiles ADD COLUMN username_normalized TEXT;
-        CREATE INDEX idx_profiles_username_normalized ON public.profiles(username_normalized);
+    /*
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='profiles' AND column_name='username_normalized') THEN
+        ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS username_normalized TEXT;
+        CREATE INDEX IF NOT EXISTS idx_profiles_username_normalized ON public.profiles(username_normalized);
     END IF;
 
     -- 2. Add username_last_changed_at if missing
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='username_last_changed_at') THEN
-        ALTER TABLE public.profiles ADD COLUMN username_last_changed_at TIMESTAMPTZ DEFAULT now();
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='profiles' AND column_name='username_last_changed_at') THEN
+        ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS username_last_changed_at TIMESTAMPTZ DEFAULT now();
     END IF;
 
     -- 3. Add username_change_count if missing
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='username_change_count') THEN
-        ALTER TABLE public.profiles ADD COLUMN username_change_count INTEGER DEFAULT 0;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='profiles' AND column_name='username_change_count') THEN
+        ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS username_change_count INTEGER DEFAULT 0;
     END IF;
 
     -- 4. Backfill username_normalized
@@ -32,7 +33,7 @@ BEGIN
     -- 5. Backfill and constrain profile_type
     UPDATE public.profiles
     SET profile_type = 'viewer'
-    WHERE profile_type IS NULL;
+    WHERE profile_type IS NULL OR profile_type NOT IN ('artist', 'viewer');
 
     IF NOT EXISTS (
       SELECT 1
@@ -46,8 +47,13 @@ BEGIN
     END IF;
 
     -- Make profile_type required now that nulls are backfilled.
-    ALTER TABLE public.profiles
-      ALTER COLUMN profile_type SET NOT NULL;
+    -- Ensure no nulls exist before setting NOT NULL
+    IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE profile_type IS NULL) THEN
+        ALTER TABLE public.profiles
+          ALTER COLUMN profile_type SET DEFAULT 'viewer',
+          ALTER COLUMN profile_type SET NOT NULL;
+    END IF;
+    */
 
 END $$;
 

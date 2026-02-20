@@ -97,7 +97,7 @@ BEGIN
 END;
 $$;
 
--- Ensure the primary test user has admin privileges
+-- Ensure the primary test user has admin privileges (if they exist)
 -- User ID: 66a61b1f-2121-45c0-94ad-b973df35d2e8
 DO $$
 DECLARE
@@ -106,9 +106,12 @@ DECLARE
 BEGIN
     SELECT id INTO v_admin_role_id FROM public.roles WHERE name = 'admin';
     
+    -- Only insert if the user exists in auth.users
     IF v_admin_role_id IS NOT NULL THEN
         INSERT INTO public.user_roles (user_id, role_id)
-        VALUES (v_user_id, v_admin_role_id)
+        SELECT v_user_id, v_admin_role_id
+        FROM auth.users
+        WHERE id = v_user_id
         ON CONFLICT DO NOTHING;
     END IF;
 END $$;

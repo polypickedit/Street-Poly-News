@@ -1,111 +1,89 @@
-# Authentication Setup Guide
+# Authentication Setup & Configuration Guide
 
-This document outlines the necessary steps to configure authentication for the Street Politics Feed application using Supabase.
+## Overview
+This document outlines the authentication configuration for Street Politics Feed, using Supabase Auth.
 
 ## 1. Supabase Project Configuration
+Ensure your Supabase project is configured correctly in the dashboard:
 
-### General Settings
+### Email Auth
+- [ ] **Enable Email Provider**: Go to Authentication -> Providers -> Email
+- [ ] **Confirm Email**: Disable "Confirm email" for development if desired, or ensure SMTP is set up.
+- [ ] **Secure Password**: Ensure "Secure password" policy is enabled.
 
-- Ensure your Supabase project is created and active.
-- Note your `Project URL` and `Anon Key`. These will be used in your `.env` file.
+### External Providers (Google)
+- [ ] **Enable Google Provider**: Go to Authentication -> Providers -> Google
+- [ ] **Client ID**: Add your Google Client ID
+- [ ] **Client Secret**: Add your Google Client Secret
+- [ ] **Callback URL**: Add `https://<project-ref>.supabase.co/auth/v1/callback` to your Google Cloud Console "Authorized redirect URIs".
 
-### Authentication Providers
+### URL Configuration
+Go to Authentication -> URL Configuration:
+- [ ] **Site URL**: Set to your production URL (e.g., `https://streetpolitics.com`)
+- [ ] **Redirect URLs**: Add all valid redirect URLs:
+  - `http://localhost:8080` (Local Dev)
+  - `http://localhost:8080/admin`
+  - `http://localhost:8080/auth/callback`
+  - `https://<project-ref>.supabase.co`
+  - Production URLs
 
-#### Email / Password
-
-- Enable "Email" provider in `Authentication > Providers`.
-- Configure "Confirm email" settings based on your preference (recommended: enabled for production).
-
-#### Google (Optional)
-
-- Enable "Google" provider.
-- Obtain `Client ID` and `Client Secret` from Google Cloud Console.
-- Add the Supabase callback URL to your Google Cloud Console "Authorized redirect URIs":
-  `https://<your-project-ref>.supabase.co/auth/v1/callback`
-
-## 2. Environment Variables
-
-Create or update your `.env` file with the following keys:
+## 2. Environment Variables (.env.local)
+Your local environment must match the remote project configuration.
 
 ```bash
-VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
-VITE_SUPABASE_ANON_KEY=<your-anon-key>
+VITE_SUPABASE_URL="https://cjodbnsjggslngnzwxsv.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY="<your-anon-key>"
+SUPABASE_SERVICE_ROLE_KEY="<your-service-role-key>" # Required for admin scripts/tests
 ```
 
-## 3. Redirect URLs
+**Important**:
+- Do not commit `.env.local` to git.
+- `SUPABASE_SERVICE_ROLE_KEY` is for backend/scripts only. Never expose it in client-side code (Vite).
 
-Configure the allowed redirect URLs in `Authentication > URL Configuration`.
+## 3. CLI & Local Development
+To run migrations and sync schema:
 
-- **Site URL**: `http://localhost:8080` (for local development)
-- **Additional Redirect URLs**:
-  - `https://<your-production-domain>.com`
-  - `http://localhost:8080/auth/callback` (if using a dedicated callback route)
-  - `http://localhost:8080/reset-password` (for password reset flows)
+1.  **Login to CLI**:
+    ```bash
+    supabase login
+    ```
+2.  **Link Project**:
+    ```bash
+    supabase link --project-ref cjodbnsjggslngnzwxsv
+    ```
+    (You will need your Database Password. If lost, reset it in Supabase Dashboard -> Settings -> Database).
 
-## 4. Database Schema & RLS Policies
+3.  **Push Migrations**:
+    ```bash
+    supabase db push
+    ```
 
-Ensure the following tables exist and have Row Level Security (RLS) enabled.
+## 4. Auth Context & Hooks
+We use a strict `appReady` state to prevent race conditions.
 
-### `profiles` Table
+- **useAuth()**: Returns `{ session, user, appReady, ... }`
+  - `appReady` is true only when:
+    - Auth is initialized
+    - If logged in, User Roles are loaded
+    - If not logged in, Guest state is settled
 
-- **Columns**: `id` (uuid, references auth.users), `username`, `full_name`, `avatar_url`, `updated_at`.
-- **RLS Policies**:
-  - `Public profiles are viewable by everyone`: `SELECT` for `anon` and `authenticated`.
-  - `Users can insert their own profile`: `INSERT` for `authenticated` where `auth.uid() = id`.
-  - `Users can update own profile`: `UPDATE` for `authenticated` where `auth.uid() = id`.
+- **useProfile()**, **useEntitlements()**, **useSlotAccess()**:
+  - All gated by `appReady`.
+  - Use `safeFetch` to handle request cancellations (AbortError).
 
-### `slot_entitlements` Table
+## 5. Troubleshooting
+- **"Unsupported provider"**: Check Supabase Dashboard -> Providers.
+- **"Auth session missing"**: Check `VITE_SUPABASE_URL` matches the project you are logging into.
+- **Infinite Loading**: Check `appReady` state in `DebugAuth` component.
+- **400/404 Errors**: Likely Schema Drift. Run `supabase db push`.
 
-- **Columns**: `id`, `user_id`, `slot_id`, `is_active`, `expires_at`.
-- **RLS Policies**:
-  - `Users can view own entitlements`: `SELECT` for `authenticated` where `auth.uid() = user_id`.
-  - `Service role only can insert/update`: No public write access.
+## 6. Role Management
+Roles are managed via `user_roles` table and `get_user_roles` RPC.
+- **Admin**: Full access.
+- **Editor**: Content management.
+- **Viewer**: Standard user.
 
-## 5. Client-Side Integration
-
-The application uses a custom `AuthProvider` in `src/hooks/useAuth.tsx`.
-
-### Key Features
-
-- **Session Persistence**: Automatically restores session from local storage.
-- **State Management**: Exposes `session`, `user`, `status`, and `appReady`.
-- **Debug Mode**: Logs authentication state transitions for troubleshooting.
-
-### Usage
-
-Wrap your application with `AuthProvider` in `src/App.tsx`:
-
-```tsx
-import { AuthProvider } from "@/hooks/useAuth";
-
-function App() {
-  return (
-    <AuthProvider>
-      <Router>
-        <Routes />
-      </Router>
-    </AuthProvider>
-  );
-}
+To assign a role (Admin only):
+```sql
+insert into public.user_roles (user_id, role) values ('<user-uuid>', 'admin');
 ```
-
-Access auth state in components:
-
-```tsx
-import { useAuth } from "@/hooks/useAuth";
-
-function MyComponent() {
-  const { user, status, appReady } = useAuth();
-  
-  if (!appReady) return <Loading />;
-  if (status === "unauthenticated") return <LoginButton />;
-  
-  return <div>Welcome, {user.email}</div>;
-}
-```
-
-## 6. Troubleshooting
-
-- **"Unsupported provider" Error**: Ensure the provider is enabled in Supabase dashboard.
-- **Session not persisting**: Check browser cookies and local storage settings.
-- **Infinite Loading**: Verify `appReady` state is being used to gate data fetching queries.

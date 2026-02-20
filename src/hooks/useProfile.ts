@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { safeQuery } from "@/lib/supabase-debug";
+import { safeFetch } from "@/lib/safeFetch";
 
 export interface UserProfile {
   id: string;
@@ -28,8 +28,8 @@ export function useProfile() {
     queryFn: async ({ signal }) => {
       if (!userId) return null;
 
-      // safeQuery handles AbortError internally now
-      const data = await safeQuery(
+      // safeFetch handles AbortError internally
+      const data = await safeFetch(
         supabase
           .from("profiles")
           .select(
