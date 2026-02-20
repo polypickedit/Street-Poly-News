@@ -122,7 +122,7 @@ export function ProductCard({ product, onPurchase, className }: ProductCardProps
               ) : (
                 <ShoppingCart className="mr-2 h-4 w-4" />
               )}
-              {isStripe ? "Buy Now" : isEcwid ? "Add to Cart" : "Select"}
+              {isStripe ? "Buy Now" : isEcwid ? "Add to Cart" : "Buy Now"}
             </>
           )}
         </Button>

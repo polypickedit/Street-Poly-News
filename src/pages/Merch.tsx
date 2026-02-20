@@ -5,6 +5,8 @@ import { ShoppingBag, ExternalLink } from "lucide-react";
 import { ProductCard, Product } from "@/components/store/ProductCard";
 import { useCart } from "@/hooks/use-cart";
 import { toast } from "sonner";
+import { useState } from "react";
+import { PayPalStabilizerModal } from "@/components/PayPalStabilizerModal";
 
 const mockMerch: Product[] = [
   {
@@ -77,8 +79,22 @@ const mockMerch: Product[] = [
 
 const Merch = () => {
   const { addItem } = useCart();
+  
+  // PayPal Stabilizer State
+  const [isPayPalModalOpen, setIsPayPalModalOpen] = useState(false);
+  const [payPalInitialData, setPayPalInitialData] = useState<{ slot_type?: string; notes?: string }>({});
+  const ENABLE_PAYPAL_STABILIZER = true;
 
   const handlePurchase = async (product: Product) => {
+    if (ENABLE_PAYPAL_STABILIZER) {
+      setPayPalInitialData({ 
+        slot_type: "merch",
+        notes: `Product: ${product.title} (${product.id})`
+      });
+      setIsPayPalModalOpen(true);
+      return;
+    }
+
     addItem({
       id: product.id,
       name: product.title,
@@ -137,6 +153,12 @@ const Merch = () => {
             </Button>
           </div>
         </div>
+
+        <PayPalStabilizerModal
+          isOpen={isPayPalModalOpen}
+          onClose={() => setIsPayPalModalOpen(false)}
+          initialData={payPalInitialData}
+        />
       </PageTransition>
     </PageLayoutWithAds>
   );

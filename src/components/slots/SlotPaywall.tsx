@@ -12,11 +12,16 @@ interface SlotPaywallProps {
   slotSlug: string;
   children: React.ReactNode;
   preview?: React.ReactNode;
+  bypass?: boolean;
 }
 
-export const SlotPaywall: React.FC<SlotPaywallProps> = ({ slotSlug, children, preview }) => {
+export const SlotPaywall: React.FC<SlotPaywallProps> = ({ slotSlug, children, preview, bypass }) => {
   const { hasAccess, reason, slot, loading } = useSlotAccess(slotSlug);
   const [isRedirecting, setIsRedirecting] = useState(false);
+
+  if (bypass) {
+    return <>{children}</>;
+  }
 
   const handleUnlock = async () => {
     if (!slot) return;

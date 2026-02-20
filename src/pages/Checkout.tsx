@@ -2,6 +2,7 @@ import { PageLayoutWithAds } from "@/components/PageLayoutWithAds";
 import { PageTransition } from "@/components/PageTransition";
 import { useCart } from "@/hooks/use-cart";
 import { Button } from "@/components/ui/button";
+import { PayPalStabilizerModal } from "@/components/PayPalStabilizerModal";
 import {
   Minus,
   Plus,
@@ -37,6 +38,11 @@ const Checkout = () => {
   const [shippingAddress, setShippingAddress] = useState("");
   const [contactMethod, setContactMethod] = useState<"email" | "phone">("email");
   const [contactValue, setContactValue] = useState("");
+  
+  // PayPal Stabilizer State
+  const [isPayPalModalOpen, setIsPayPalModalOpen] = useState(false);
+  const [payPalInitialData, setPayPalInitialData] = useState<{ slot_type?: string; notes?: string }>({});
+  const ENABLE_PAYPAL_STABILIZER = true;
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -84,6 +90,18 @@ const Checkout = () => {
     } finally {
       setIsCheckingOut(false);
     }
+  };
+
+  const handlePayPalCheckout = () => {
+    // Summarize cart for notes
+    const itemSummary = items.map(item => `${item.quantity}x ${item.name}`).join(', ');
+    const totalAmount = totalPrice.toFixed(2);
+    
+    setPayPalInitialData({ 
+      slot_type: "cart_checkout",
+      notes: `Cart Total: $${totalAmount}. Items: ${itemSummary}`
+    });
+    setIsPayPalModalOpen(true);
   };
 
   if (items.length === 0) {
@@ -261,23 +279,34 @@ const Checkout = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <Button 
-                    className="w-full bg-dem hover:bg-dem/90 text-white font-display text-lg py-6 rounded-xl uppercase tracking-widest shadow-lg shadow-dem/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                    onClick={handleCheckout}
-                    disabled={isCheckingOut}
-                  >
-                    {isCheckingOut ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="mr-2 h-5 w-5" />
-                        Pay with Stripe
-                      </>
-                    )}
-                  </Button>
+                  {ENABLE_PAYPAL_STABILIZER && (
+                    <Button 
+                      className="w-full bg-[#003087] hover:bg-[#003087]/90 text-white font-display text-lg py-6 rounded-xl uppercase tracking-widest shadow-lg shadow-[#003087]/20 transition-all hover:scale-[1.02] active:scale-[0.98] mb-4"
+                      onClick={handlePayPalCheckout}
+                    >
+                      Pay with PayPal
+                    </Button>
+                  )}
+
+                  {!ENABLE_PAYPAL_STABILIZER && (
+                    <Button 
+                      className="w-full bg-dem hover:bg-dem/90 text-white font-display text-lg py-6 rounded-xl uppercase tracking-widest shadow-lg shadow-dem/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      onClick={handleCheckout}
+                      disabled={isCheckingOut}
+                    >
+                      {isCheckingOut ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="mr-2 h-5 w-5" />
+                          Pay with Stripe
+                        </>
+                      )}
+                    </Button>
+                  )}
                   
                   <p className="text-[10px] text-center text-muted-foreground font-body uppercase tracking-tighter opacity-50">
                     Secure checkout powered by Stripe. Your data is protected by industry-standard encryption.
@@ -294,6 +323,14 @@ const Checkout = () => {
           </div>
         </div>
       </PageTransition>
+      
+      {ENABLE_PAYPAL_STABILIZER && (
+        <PayPalStabilizerModal
+          isOpen={isPayPalModalOpen}
+          onClose={() => setIsPayPalModalOpen(false)}
+          initialData={payPalInitialData}
+        />
+      )}
     </PageLayoutWithAds>
   );
 };

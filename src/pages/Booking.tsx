@@ -36,6 +36,8 @@ import {
 } from "@/lib/listeningSessions";
 import { createListeningTierCheckoutSession } from "@/lib/stripe";
 
+import { PayPalStabilizerModal } from "@/components/PayPalStabilizerModal";
+
 const FALLBACK_SLOTS: Slot[] = [
   {
     id: "00000000-0000-0000-0000-000000000001",
@@ -59,6 +61,12 @@ export const Booking = () => {
   const [isMusicModalOpen, setIsMusicModalOpen] = useState(false);
   const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
   const [isQuickPaymentOpen, setIsQuickPaymentOpen] = useState(false);
+  
+  // PayPal Stabilizer State
+  const [isPayPalModalOpen, setIsPayPalModalOpen] = useState(false);
+  const [payPalInitialData, setPayPalInitialData] = useState<{ slot_type?: string }>({});
+  const ENABLE_PAYPAL_STABILIZER = true;
+
   const [searchParams] = useSearchParams();
   const { addItem, setIsOpen: setCartOpen } = useCart();
   const { refetch: refetchEntitlements } = useEntitlements();
@@ -94,6 +102,12 @@ export const Booking = () => {
   }, [listeningSessions, pendingSessionId, pendingTierId]);
 
   const handleSelectSlot = (slot: Slot) => {
+    if (ENABLE_PAYPAL_STABILIZER) {
+      setPayPalInitialData({ slot_type: slot.slug || slot.name });
+      setIsPayPalModalOpen(true);
+      return;
+    }
+
     addItem({
       id: slot.id,
       name: slot.name,
@@ -388,6 +402,7 @@ export const Booking = () => {
                       <div className="w-full mt-auto">
                         <SlotPaywall
                           slotSlug={musicSlots[0].slug}
+                          bypass={ENABLE_PAYPAL_STABILIZER}
                           preview={
                             <div className="p-4 bg-muted/20 rounded-lg border border-dashed border-border text-center">
                               <p className="text-xs text-muted-foreground">Live stream preview</p>
@@ -452,6 +467,7 @@ export const Booking = () => {
                       <div className="w-full mt-auto">
                         <SlotPaywall
                           slotSlug={interviewSlots[0].slug}
+                          bypass={ENABLE_PAYPAL_STABILIZER}
                           preview={
                             <div className="p-4 bg-muted/20 rounded-lg border border-dashed border-border text-center">
                               <p className="text-xs text-muted-foreground">Interview details</p>
@@ -637,6 +653,12 @@ export const Booking = () => {
             </form>
           </DialogContent>
         </Dialog>
+
+        <PayPalStabilizerModal
+          isOpen={isPayPalModalOpen}
+          onClose={() => setIsPayPalModalOpen(false)}
+          initialData={payPalInitialData}
+        />
       </PageTransition>
     </PageLayoutWithAds>
   );

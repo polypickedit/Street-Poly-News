@@ -31,6 +31,8 @@ import { OutletManager } from "@/components/admin/OutletManager";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { UnifiedQueue } from "@/components/admin/UnifiedQueue";
 import MerchOrdersPage from "./pages/admin/MerchOrdersPage";
+import PayPalOrdersPage from "./pages/admin/PayPalOrdersPage";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import InventoryPage from "./pages/admin/InventoryPage";
 import { AdminOverlay } from "@/components/admin/AdminOverlay";
 import { AdminRoute } from "@/components/AdminRoute";
@@ -79,6 +81,7 @@ const AnimatedRoutes = () => {
         <Route path="/community" element={<Community />} />
         <Route path="/booking" element={<Booking />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/payment/success" element={<PaymentSuccessPage />} />
         <Route
           path="/dashboard"
           element={
@@ -150,6 +153,16 @@ const AnimatedRoutes = () => {
             <AdminRoute>
               <AdminLayout>
                 <MerchOrdersPage />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/paypal-orders"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <PayPalOrdersPage />
               </AdminLayout>
             </AdminRoute>
           }
