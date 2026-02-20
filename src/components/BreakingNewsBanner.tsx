@@ -4,48 +4,46 @@ import { Link } from "react-router-dom";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { useSlotContents } from "@/hooks/usePlacements";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { safeQuery } from "@/lib/supabase-debug";
+import { useAuth } from "@/hooks/useAuth";
+import { Post } from "@/hooks/usePosts";
 
 export function BreakingNewsBanner() {
   const { data: placements, isLoading: loadingPlacements } = useSlotContents("home.breaking");
+  const { appReady } = useAuth();
 
   const { data: breakingPosts, isLoading: loadingPosts } = useQuery({
     queryKey: ["breaking-posts", placements?.map(p => p.content_id)],
     queryFn: async ({ signal }) => {
-      try {
-        // If we have specific placements, fetch them
-        if (placements && placements.length > 0) {
-          const ids = placements.map(p => parseInt(p.content_id!)).filter(id => !isNaN(id));
-          if (ids.length > 0) {
-            const { data, error } = await (supabase as SupabaseClient)
-               .from("posts")
-               .select("*")
-               .in("id", ids)
-               .abortSignal(signal);
-
-             if (error) throw error;
-             return data || [];
-           }
-         }
- 
-         // Fallback: Latest breaking posts
-         const { data, error } = await (supabase as SupabaseClient)
-           .from("posts")
-           .select("*")
-           .eq("is_breaking", true)
-           .order("created_at", { ascending: false })
-           .abortSignal(signal)
-           .limit(10);
- 
-         if (error) throw error;
-         return data || [];
-      } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return [];
+      // If we have specific placements, fetch them
+      if (placements && placements.length > 0) {
+        const ids = placements.map(p => parseInt(p.content_id!)).filter(id => !isNaN(id));
+        if (ids.length > 0) {
+          const data = await safeQuery(
+            (supabase as SupabaseClient)
+              .from("posts")
+              .select("*")
+              .in("id", ids)
+              .abortSignal(signal)
+          ) as Post[] | null;
+          return data || [];
         }
-        throw err;
       }
+
+      // Fallback: Latest breaking posts
+      const data = await safeQuery(
+        (supabase as SupabaseClient)
+          .from("posts")
+          .select("*")
+          .eq("is_breaking", true)
+          .order("created_at", { ascending: false })
+          .abortSignal(signal)
+          .limit(10)
+      ) as Post[] | null;
+      
+      return data || [];
     },
-    enabled: !loadingPlacements,
+    enabled: appReady && !loadingPlacements,
   });
 
   const hasPosts = breakingPosts && breakingPosts.length > 0;

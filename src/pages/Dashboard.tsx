@@ -63,9 +63,9 @@ import { PageTransition } from "@/components/PageTransition";
 export default function Dashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isAdmin, status: authStatus } = useAuth();
+  const { user, isAdmin, status: authStatus, appReady } = useAuth();
   const userId = user?.id ?? null;
-  const authLoading = authStatus === "initializing";
+  const authLoading = authStatus === "initializing" || (authStatus === "authenticated" && !appReady);
   
   // Decouple these from the first paint
   const accountQuery = useAccount();
@@ -132,7 +132,7 @@ export default function Dashboard() {
         return [];
       }
     },
-    enabled: !!userId,
+    enabled: appReady && !!userId,
     staleTime: 30000, // Submissions can change more frequently
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -199,7 +199,7 @@ export default function Dashboard() {
         return [];
       }
     },
-    enabled: !!userId,
+    enabled: appReady && !!userId,
     staleTime: 60 * 1000,
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -226,7 +226,7 @@ export default function Dashboard() {
         return [];
       }
     },
-    enabled: !!userId,
+    enabled: appReady && !!userId,
     staleTime: 60 * 1000,
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,

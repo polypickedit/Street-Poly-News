@@ -1,60 +1,111 @@
 # Authentication Setup Guide
 
-## 1. Google OAuth Configuration
+This document outlines the necessary steps to configure authentication for the Street Politics Feed application using Supabase.
 
-To enable "Continue with Google" functionality, you must configure the Google provider in your Supabase project.
+## 1. Supabase Project Configuration
 
-### Step 1: Enable Google Provider in Supabase
-1. Go to your [Supabase Dashboard](https://supabase.com/dashboard).
-2. Navigate to **Authentication** -> **Providers**.
-3. Find **Google** in the list.
-4. Toggle the switch to **Enabled**.
+### General Settings
 
-### Step 2: Configure Client ID and Secret
-You need to obtain these credentials from the Google Cloud Console.
+- Ensure your Supabase project is created and active.
+- Note your `Project URL` and `Anon Key`. These will be used in your `.env` file.
 
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
-2. Select (or create) your project.
-3. Navigate to **APIs & Services** -> **Credentials**.
-4. Click **Create Credentials** -> **OAuth client ID**.
-5. Select **Web application**.
-6. Set the **Authorized redirect URIs** to:
-   - `https://<your-project-ref>.supabase.co/auth/v1/callback`
-   
-   *(You can find your project URL in Supabase under Settings -> API -> URL)*
+### Authentication Providers
 
-7. Copy the **Client ID** and **Client Secret**.
-8. Paste them into the Supabase Google Provider settings.
-9. Click **Save**.
+#### Email / Password
 
-### Step 3: Allow Redirects
-Ensure your application's URL is allowed in Supabase.
+- Enable "Email" provider in `Authentication > Providers`.
+- Configure "Confirm email" settings based on your preference (recommended: enabled for production).
 
-1. In Supabase, go to **Authentication** -> **URL Configuration**.
-2. Add your local development URL to **Redirect URLs**:
-   - `http://localhost:5173` (or your specific local port)
-   - `http://localhost:3000` (if applicable)
-3. Add your production URL (e.g., `https://your-app.com`).
+#### Google (Optional)
+
+- Enable "Google" provider.
+- Obtain `Client ID` and `Client Secret` from Google Cloud Console.
+- Add the Supabase callback URL to your Google Cloud Console "Authorized redirect URIs":
+  `https://<your-project-ref>.supabase.co/auth/v1/callback`
 
 ## 2. Environment Variables
 
-Ensure your local `.env` file contains the correct Supabase credentials:
+Create or update your `.env` file with the following keys:
 
 ```bash
 VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=<your-anon-key>
+VITE_SUPABASE_ANON_KEY=<your-anon-key>
 ```
 
-## 3. Troubleshooting
+## 3. Redirect URLs
 
-### Error: "Unsupported provider: provider is not enabled"
-- **Cause:** The Google provider toggle is OFF in Supabase.
-- **Fix:** Follow Step 1 above to enable it.
+Configure the allowed redirect URLs in `Authentication > URL Configuration`.
 
-### Error: "redirect_uri_mismatch"
-- **Cause:** The redirect URI in Google Cloud Console does not match the Supabase callback URL.
-- **Fix:** Verify the `https://.../auth/v1/callback` URL in Google Cloud Console matches your Supabase project exactly.
+- **Site URL**: `http://localhost:8080` (for local development)
+- **Additional Redirect URLs**:
+  - `https://<your-production-domain>.com`
+  - `http://localhost:8080/auth/callback` (if using a dedicated callback route)
+  - `http://localhost:8080/reset-password` (for password reset flows)
 
-### Sign-in hangs or returns to login page without error
-- **Cause:** The `redirectTo` URL (e.g., localhost) is not whitelisted in Supabase.
-- **Fix:** Add `http://localhost:5173` to the Redirect URLs in Supabase (Step 3).
+## 4. Database Schema & RLS Policies
+
+Ensure the following tables exist and have Row Level Security (RLS) enabled.
+
+### `profiles` Table
+
+- **Columns**: `id` (uuid, references auth.users), `username`, `full_name`, `avatar_url`, `updated_at`.
+- **RLS Policies**:
+  - `Public profiles are viewable by everyone`: `SELECT` for `anon` and `authenticated`.
+  - `Users can insert their own profile`: `INSERT` for `authenticated` where `auth.uid() = id`.
+  - `Users can update own profile`: `UPDATE` for `authenticated` where `auth.uid() = id`.
+
+### `slot_entitlements` Table
+
+- **Columns**: `id`, `user_id`, `slot_id`, `is_active`, `expires_at`.
+- **RLS Policies**:
+  - `Users can view own entitlements`: `SELECT` for `authenticated` where `auth.uid() = user_id`.
+  - `Service role only can insert/update`: No public write access.
+
+## 5. Client-Side Integration
+
+The application uses a custom `AuthProvider` in `src/hooks/useAuth.tsx`.
+
+### Key Features
+
+- **Session Persistence**: Automatically restores session from local storage.
+- **State Management**: Exposes `session`, `user`, `status`, and `appReady`.
+- **Debug Mode**: Logs authentication state transitions for troubleshooting.
+
+### Usage
+
+Wrap your application with `AuthProvider` in `src/App.tsx`:
+
+```tsx
+import { AuthProvider } from "@/hooks/useAuth";
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes />
+      </Router>
+    </AuthProvider>
+  );
+}
+```
+
+Access auth state in components:
+
+```tsx
+import { useAuth } from "@/hooks/useAuth";
+
+function MyComponent() {
+  const { user, status, appReady } = useAuth();
+  
+  if (!appReady) return <Loading />;
+  if (status === "unauthenticated") return <LoginButton />;
+  
+  return <div>Welcome, {user.email}</div>;
+}
+```
+
+## 6. Troubleshooting
+
+- **"Unsupported provider" Error**: Ensure the provider is enabled in Supabase dashboard.
+- **Session not persisting**: Check browser cookies and local storage settings.
+- **Infinite Loading**: Verify `appReady` state is being used to gate data fetching queries.

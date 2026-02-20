@@ -41,9 +41,11 @@ import Person from "./pages/Person";
 import NotFound from "./pages/NotFound";
 import Community from "./pages/Community";
 import { DevAuthOverlay } from "@/components/DevAuthOverlay";
+import { DebugAuth } from "@/components/DebugAuth";
 import CompleteProfile from "./pages/CompleteProfile";
 import ProfileSettings from "./pages/ProfileSettings";
 import { ArtistProfileGate } from "@/components/ArtistProfileGate";
+import { AppDiagnosticsProbe } from "@/components/AppDiagnosticsProbe";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -224,12 +226,14 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <DevAuthOverlay />
+      <DebugAuth />
       <AdminProvider>
         <CartProvider>
           <TooltipProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <AppDiagnosticsProbe />
               <div className="min-h-screen bg-white text-foreground font-sans selection:bg-dem/30">
                 <AdminOverlay />
                 <ArtistProfileGate>

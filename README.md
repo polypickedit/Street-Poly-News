@@ -63,6 +63,10 @@ The application requires the following environment variables in `.env.local`:
 
 If these are missing, the application will display a "Fatal Configuration Error" screen on startup.
 
+## Authentication Setup
+
+See `AUTH_SETUP.md` for OAuth provider enablement, callback URL requirements, signup-policy behavior, and post-login verification steps.
+
 ## 🚢 Deployment
 
 Simply open [Lovable](https://lovable.dev/projects) and click on **Share -> Publish**. Lovable automatically handles the Vercel/Vite build process. For the backend, ensure your environment variables are set in the Lovable/Vercel settings.
@@ -72,4 +76,6 @@ Simply open [Lovable](https://lovable.dev/projects) and click on **Share -> Publ
 - [Production Checklist](TODO.md)
 - [Testing Guide](TESTING.md)
 - [Environment Setup](ENVIRONMENT.md)
+- [Authentication Setup](AUTH_SETUP.md)
+- [Supabase Backend Setup](SUPABASE-SETUP.md)
 - [Diagnostics](DIAGNOSTICS.md)

@@ -7,81 +7,79 @@ import { Post } from "@/hooks/usePosts";
 import { PostCard } from "./PostCard";
 import { getYouTubeId } from "@/lib/utils";
 import { Slot } from "./Slot";
+import { safeQuery } from "@/lib/supabase-debug";
+import { useAuth } from "@/hooks/useAuth";
 
 export function FeaturedSection() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const currentCategory = searchParams.get("category");
+  const { appReady } = useAuth();
 
   const { data: featuredPosts, isLoading } = useQuery({
     queryKey: ["featured-posts", currentCategory],
     queryFn: async ({ signal }) => {
-      try {
-        const client = supabase as SupabaseClient;
-        
-        const baseQuery = currentCategory 
-          ? client
-            .from("posts")
-            .select(`
-              *,
-              post_categories!inner (
-                category_id,
-                categories (
-                  slug
-                )
+      const client = supabase as SupabaseClient;
+      
+      const baseQuery = currentCategory 
+        ? client
+          .from("posts")
+          .select(`
+            *,
+            post_categories!inner (
+              category_id,
+              categories (
+                slug
               )
-            `)
-            .eq("post_categories.categories.slug", currentCategory)
-          : client
-            .from("posts")
-            .select("*");
+            )
+          `)
+          .eq("post_categories.categories.slug", currentCategory)
+        : client
+          .from("posts")
+          .select("*");
 
-        // First try to get featured posts
-        const { data: featuredData, error: featuredError } = await baseQuery
+      // First try to get featured posts
+      const featuredData = await safeQuery(
+        baseQuery
           .eq("is_featured", true)
           .order("created_at", { ascending: false })
           .abortSignal(signal)
-          .limit(7);
+          .limit(7)
+      ) as Post[] | null;
 
-        if (featuredError) throw featuredError;
+      // If we found featured posts, return them
+      if (featuredData && featuredData.length > 0) {
+        return featuredData;
+      }
 
-        // If we found featured posts, return them
-        if (featuredData && featuredData.length > 0) {
-          return featuredData as Post[];
-        }
-
-        // Fallback: If no featured posts, just get the latest posts
-        const fallbackQuery = currentCategory 
-          ? client
-            .from("posts")
-            .select(`
-              *,
-              post_categories!inner (
-                category_id,
-                categories (
-                  slug
-                )
+      // Fallback: If no featured posts, just get the latest posts
+      const fallbackQuery = currentCategory 
+        ? client
+          .from("posts")
+          .select(`
+            *,
+            post_categories!inner (
+              category_id,
+              categories (
+                slug
               )
-            `)
-            .eq("post_categories.categories.slug", currentCategory)
-          : client
-            .from("posts")
-            .select("*");
+            )
+          `)
+          .eq("post_categories.categories.slug", currentCategory)
+        : client
+          .from("posts")
+          .select("*");
 
-        const { data: fallbackData, error: fallbackError } = await fallbackQuery
+      const fallbackData = await safeQuery(
+        fallbackQuery
           .order("created_at", { ascending: false })
           .abortSignal(signal)
-          .limit(7);
+          .limit(7)
+      ) as Post[] | null;
 
-        if (fallbackError) throw fallbackError;
-        return fallbackData as Post[];
-      } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return [];
-        }
-        throw err;
-      }
+      return fallbackData || [];
     },
+    enabled: appReady,
   });
 
   if (isLoading) return (
@@ -150,28 +148,23 @@ export function FeaturedSection() {
 }
 
 function ResolvedHero({ id, getThumbnail, fallback }: { id: string | null | undefined; getThumbnail: (post: Post) => string; fallback: React.ReactNode }) {
+  const { appReady } = useAuth();
   const { data: post, isLoading } = useQuery({
     queryKey: ["post", id],
     queryFn: async ({ signal }) => {
       if (!id) return null;
-      try {
-        const query = supabase
+      const data = await safeQuery(
+        supabase
           .from("posts")
           .select("*")
           .eq("id", parseInt(id))
-          .single() as unknown as { abortSignal: (s: AbortSignal) => Promise<{ data: Post | null; error: { message: string; code: string } | null }> };
-        
-        const { data, error } = await query.abortSignal(signal);
-        if (error) throw error;
-        return data;
-      } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return null;
-        }
-        throw err;
-      }
+          .abortSignal(signal)
+          .single()
+      ) as Post | null;
+      
+      return data;
     },
-    enabled: !!id,
+    enabled: appReady && !!id,
   });
 
   if (isLoading) return <div className="aspect-video w-full animate-pulse bg-white/5 rounded-2xl lg:aspect-[21/9] flex items-center justify-center"><Loader2 className="animate-spin text-dem" /></div>;

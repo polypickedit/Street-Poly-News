@@ -1,5 +1,9 @@
 # Supabase backend readiness for admin workflows
 
+Related docs:
+- `AUTH_SETUP.md` (OAuth providers, callback URLs, signup policy behavior)
+- `ENVIRONMENT.md` (env vars/secrets for local and deployment)
+
 This repo ships a full Supabase schema (see `supabase/migrations/*.sql`). The admin UI, monetization flows, and `AdminRoute` guard rely on those tables/policies, so the goal is to ensure the migrations are applied in order and that at least one `admin` user exists before spinning up the admin portal.
 
 ## 1. Key tables & policies that must exist
@@ -82,3 +86,4 @@ If they return `true` for your admin user, the guard used by `AdminRoute`/`AuthP
 - **`user_roles` lacks admin row**: insert via SQL as shown above or create a simple SQL script that accepts an email.  
 - **Accounts/credits misbehaving**: run the accounts migration manually to ensure `public.accounts`, `public.account_members`, and `public.account_ledger` exist before `submissions` claims them.
 - **`profiles.admin_walkthrough_completed_at` missing**: reapply `20260203000003_admin_onboarding.sql` so the admin provider can track walkthrough completion and the SQL render doesn’t fail when reading that column.
+- **OAuth returns `Unsupported provider`**: follow `AUTH_SETUP.md` and enable the provider in Supabase Auth -> Providers, then re-test callback/session creation.

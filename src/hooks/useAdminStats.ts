@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { PostgrestError } from "@supabase/supabase-js";
-import { safeQuery, safeCountQuery } from "@/lib/supabase-debug";
+import { isAbortError, safeQuery, safeCountQuery } from "@/lib/supabase-debug";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CountResponse {
   data: null;
@@ -22,6 +23,7 @@ export interface AdminStats {
 }
 
 export function useAdminStats(enabled: boolean) {
+  const { appReady } = useAuth();
   return useQuery({
     queryKey: ["admin-dashboard-stats"],
     queryFn: async ({ signal }): Promise<AdminStats> => {
@@ -50,14 +52,14 @@ export function useAdminStats(enabled: boolean) {
           failedPayments: failedPaymentsCount || 0
         };
       } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+        if (isAbortError(err)) {
           throw err;
         }
         console.error("Error fetching dashboard stats:", err);
         throw err;
       }
     },
-    enabled,
+    enabled: appReady && enabled,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 1,
@@ -80,6 +82,7 @@ interface StatusHistory {
 }
 
 export function useVisibilityMetrics(enabled: boolean) {
+  const { appReady } = useAuth();
   return useQuery({
     queryKey: ["admin-visibility-metrics"],
     queryFn: async ({ signal: _signal }): Promise<VisibilityMetrics> => {
@@ -158,14 +161,14 @@ export function useVisibilityMetrics(enabled: boolean) {
           revenueBySlot
         };
       } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+        if (isAbortError(err)) {
           throw err;
         }
         console.error("Error fetching visibility metrics:", err);
         throw err;
       }
     },
-    enabled,
+    enabled: appReady && enabled,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -179,6 +182,7 @@ export interface ActivityLog {
 }
 
 export function useAdminActivities(enabled: boolean) {
+  const { appReady } = useAuth();
   return useQuery({
     queryKey: ["admin-dashboard-activities"],
     queryFn: async ({ signal }): Promise<ActivityLog[]> => {
@@ -200,14 +204,14 @@ export function useAdminActivities(enabled: boolean) {
 
         return (data || []) as unknown as ActivityLog[];
       } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+        if (isAbortError(err)) {
           throw err;
         }
         console.error("Error fetching admin activities:", err);
         throw err;
       }
     },
-    enabled,
+    enabled: appReady && enabled,
     staleTime: 5 * 60 * 1000,
   });
 }

@@ -2,11 +2,12 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { safeQuery } from "@/lib/supabase-debug";
 
 export interface UserProfile {
   id: string;
   username: string | null;
-  username_normalized: string | null;
+  username_normalized?: string | null;
   display_name: string | null;
   profile_type: "artist" | "viewer" | null;
   username_last_changed_at: string | null;
@@ -18,28 +19,31 @@ export interface UserProfile {
 }
 
 export function useProfile() {
-  const { status, user } = useAuth();
+  const { status, user, appReady } = useAuth();
   const userId = user?.id ?? null;
 
   const query = useQuery({
     queryKey: ["profile", userId],
-    enabled: status === "authenticated" && !!userId,
+    enabled: appReady && status === "authenticated" && !!userId,
     queryFn: async ({ signal }) => {
       if (!userId) return null;
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(
-          "id, username, username_normalized, display_name, profile_type, username_last_changed_at, username_change_count, full_name, avatar_url, created_at, updated_at"
-        )
-        .eq("id", userId)
-        .abortSignal(signal)
-        .maybeSingle();
+      // safeQuery handles AbortError internally now
+      const data = await safeQuery(
+        supabase
+          .from("profiles")
+          .select(
+            "id, username, display_name, profile_type, username_last_changed_at, username_change_count, full_name, avatar_url, created_at, updated_at"
+          )
+          .eq("id", userId)
+          .abortSignal(signal)
+          .maybeSingle()
+      );
 
-      if (error) throw error;
       return (data as UserProfile | null) ?? null;
     },
     staleTime: 30_000,
+    retry: false,
     refetchOnWindowFocus: false,
   });
 
@@ -51,6 +55,7 @@ export function useProfile() {
 
   return {
     ...query,
+    isLoading: query.isLoading || (status === "authenticated" && !appReady),
     profile: query.data ?? null,
     requiresArtistCompletion,
   };

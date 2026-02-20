@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { safeQuery } from '@/lib/supabase-debug';
+import { isAbortError, safeQuery } from '@/lib/supabase-debug';
 import { generateTraceId } from '@/utils/trace';
 
 type RoleCheckResult = boolean | null;
@@ -84,7 +84,7 @@ export async function hydrateRoles(userId: string, { timeoutMs = 10000, retries 
       const reason = error;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const errAny = reason as any;
-      const isNetworkError = errAny?.name === 'AbortError' || errAny?.message?.includes('abort') || errAny?.message?.includes('Failed to fetch');
+      const isNetworkError = isAbortError(errAny) || errAny?.message?.includes('Failed to fetch');
 
       // If we have retries left and it's a network error (or we want to retry everything?), wait and continue
       // The user wants robustness. Retrying generic errors might be okay if transient.

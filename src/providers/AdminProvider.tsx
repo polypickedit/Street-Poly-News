@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ActiveAdmin } from "@/types/admin";
 import { AdminContext } from "@/contexts/AdminContext";
 import { useAuth } from "@/hooks/useAuth";
+import { isAbortError } from "@/lib/supabase-debug";
 
 type SupabaseTableOverride = {
   from: (table: string) => {
@@ -43,7 +44,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           .abortSignal(signal);
         return data as { admin_walkthrough_completed_at: string | null } | null;
       } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
+        if (isAbortError(err)) {
           return null;
         }
         throw err;

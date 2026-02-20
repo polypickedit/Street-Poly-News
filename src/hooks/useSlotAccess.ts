@@ -2,17 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Slot, SlotAccess, Entitlement } from '@/types/slots';
+import { safeQuery } from '@/lib/supabase-debug';
 
 export const useSlotAccess = (slotSlug: string) => {
-  const { session, isAdmin, rolesLoaded, status } = useAuth();
-
-  // Deterministic readiness check:
-  // 1. If unauthenticated, we are ready (user is guest)
-  // 2. If authenticated, we must wait for roles to load
-  const isAuthReady = status === 'unauthenticated' || (status === 'authenticated' && rolesLoaded);
+  const { session, isAdmin, appReady } = useAuth();
+  const userId = session?.user?.id;
 
   const { data: access, isLoading: queryLoading } = useQuery({
-    queryKey: ['slot-access', slotSlug, session?.user?.id, isAdmin],
+    queryKey: ['slot-access', slotSlug, userId, isAdmin],
     queryFn: async ({ signal }) => {
       // Mock data for development when database records are missing
       const MOCK_SLOTS: Record<string, Slot> = {
@@ -48,14 +45,16 @@ export const useSlotAccess = (slotSlug: string) => {
 
       try {
         // 1. Get the slot
-        const { data: slot, error: slotError } = await (supabase
+        const slot = await safeQuery(
+          supabase
           .from('slots')
           .select('*')
           .eq('slug', slotSlug)
-          .single() as any) // eslint-disable-line @typescript-eslint/no-explicit-any
-          .abortSignal(signal);
+          .abortSignal(signal)
+          .single()
+        ) as Slot | null;
 
-        if (slotError || !slot) {
+        if (!slot) {
           // Check if we have a mock fallback for this slug
           if (import.meta.env.DEV && MOCK_SLOTS[slotSlug]) {
             return { hasAccess: true, slot: MOCK_SLOTS[slotSlug] };
@@ -64,75 +63,72 @@ export const useSlotAccess = (slotSlug: string) => {
           return { hasAccess: false, reason: 'slot_unavailable' };
         }
 
-        const typedSlot = slot as unknown as Slot;
-
-        if (!typedSlot.is_active) {
-          return { hasAccess: false, reason: 'inactive_slot', slot: typedSlot };
+        if (!slot.is_active) {
+          return { hasAccess: false, reason: 'inactive_slot', slot };
         }
 
         // 2. Check if free
-        if (typedSlot.monetization_model === 'free') {
-          return { hasAccess: true, slot: typedSlot };
+        if (slot.monetization_model === 'free') {
+          return { hasAccess: true, slot };
         }
 
         // 3. Check session for paid/restricted content
-        if (!session) {
+        if (!userId) {
           return { 
             hasAccess: false, 
             reason: 'unauthenticated', 
-            slot: typedSlot 
+            slot 
           };
         }
 
         // 4. Check if admin - Admins bypass paywalls
         if (isAdmin) {
-          return { hasAccess: true, slot: typedSlot };
+          return { hasAccess: true, slot };
         }
 
         // 5. Check entitlements for paid slots
-        const { data: entitlement, error: entError } = await (supabase
+        const entitlement = await safeQuery(
+          supabase
           .from('slot_entitlements')
           .select('*')
-          .eq('user_id', session.user.id)
-          .eq('slot_id', typedSlot.id)
+          .eq('user_id', userId)
+          .eq('slot_id', slot.id)
           .eq('is_active', true)
-          .maybeSingle() as any) // eslint-disable-line @typescript-eslint/no-explicit-any
-          .abortSignal(signal);
+          .abortSignal(signal)
+          .maybeSingle()
+        ) as Entitlement | null;
 
-        if (entError || !entitlement) {
+        if (!entitlement) {
           return { 
             hasAccess: false, 
             reason: 'payment_required', 
-            slot: typedSlot 
+            slot 
           };
         }
-
-        const typedEntitlement = entitlement as unknown as Entitlement;
 
         // Check expiration
-        if (typedEntitlement.expires_at && new Date(typedEntitlement.expires_at) < new Date()) {
+        if (entitlement.expires_at && new Date(entitlement.expires_at) < new Date()) {
           return { 
             hasAccess: false, 
             reason: 'payment_required', 
-            slot: typedSlot 
+            slot 
           };
         }
 
-        return { hasAccess: true, slot: typedSlot };
+        return { hasAccess: true, slot };
       } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          throw err; // Let React Query handle it
-        }
         console.error('Error checking slot access:', err);
         return { hasAccess: false, reason: 'access_check_failed' };
       }
     },
-    enabled: isAuthReady,
+    // Strict readiness contract:
+    // App boot -> auth settles -> (if authenticated) roles hydrate -> query executes
+    enabled: appReady && !!slotSlug,
     staleTime: 60000, // 1 minute cache
     retry: false,
   });
 
-  const loading = !isAuthReady || queryLoading;
+  const loading = !appReady || queryLoading;
 
   return { 
     hasAccess: access?.hasAccess ?? false, 

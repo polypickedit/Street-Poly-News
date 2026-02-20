@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { safeQuery } from "@/lib/supabase-debug";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   Table, 
   TableBody, 
@@ -31,9 +33,18 @@ interface Submission {
   status: string;
   payment_status: string;
   created_at: string;
+  artists?: {
+    name: string | null;
+    email?: string | null;
+  } | {
+    name: string | null;
+    email?: string | null;
+  }[] | null;
   slots?: {
-    name: string;
-  };
+    name: string | null;
+  } | {
+    name: string | null;
+  }[] | null;
   placements?: {
     id: string;
   }[];
@@ -44,36 +55,49 @@ interface Placement {
   start_date: string;
   end_date: string;
   playlists?: {
-    name: string;
-    spotify_playlist_url: string;
-  };
+    name: string | null;
+    spotify_playlist_url?: string | null;
+  } | {
+    name: string | null;
+    spotify_playlist_url?: string | null;
+  }[] | null;
   submissions?: {
-    track_title: string;
-    artist_name: string;
-  };
+    track_title: string | null;
+    artist_name: string | null;
+  } | {
+    track_title: string | null;
+    artist_name: string | null;
+  }[] | null;
 }
+
+const getSingle = <T,>(item: T | T[] | null | undefined): T | null => {
+  if (!item) return null;
+  if (Array.isArray(item)) return item[0] || null;
+  return item;
+};
 
 export const UnifiedQueue = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("awaiting_approval");
+  const { appReady } = useAuth();
 
   // Query for "Paid and awaiting approval"
   const { data: awaitingApproval, isLoading: loadingApproval, error: errorApproval, refetch: refetchApproval } = useQuery({
     queryKey: ["admin-awaiting-approval"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("submissions")
-        .select("*, artists ( name, email ), slots ( name )")
-        .eq("status", "pending_review")
-        .eq("payment_status", "paid")
-        .order("created_at", { ascending: true });
+    queryFn: async ({ signal }) => {
+      const data = await safeQuery(
+        supabase
+          .from("submissions")
+          .select("*, artists ( name, email ), slots ( name )")
+          .eq("status", "pending_review")
+          .eq("payment_status", "paid")
+          .order("created_at", { ascending: true })
+          .abortSignal(signal)
+      ) as unknown as Submission[] | null;
       
-      if (error) {
-        console.error("UnifiedQueue: Error fetching awaiting approval:", error);
-        throw error;
-      }
-      return data as unknown as Submission[];
-    }
+      return data || [];
+    },
+    enabled: appReady,
   });
 
   // Real-time subscription for admin queue
@@ -102,100 +126,93 @@ export const UnifiedQueue = () => {
   // Query for "Approved but not scheduled (Paid but not scheduled)"
   const { data: awaitingSchedule, isLoading: loadingSchedule, error: errorSchedule } = useQuery({
     queryKey: ["admin-awaiting-schedule"],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       // Find approved submissions that don't have a placement yet
-      const { data, error } = await supabase
-        .from("submissions")
-        .select(`
-          *,
-          artists ( name ),
-          slots ( name ),
-          placements ( id )
-        `)
-        .eq("status", "approved")
-        .eq("payment_status", "paid");
+      const data = await safeQuery(
+        supabase
+          .from("submissions")
+          .select(`
+            *,
+            artists ( name ),
+            slots ( name ),
+            placements ( id )
+          `)
+          .eq("status", "approved")
+          .eq("payment_status", "paid")
+          .abortSignal(signal)
+      ) as Submission[] | null;
       
-      if (error) {
-        console.error("UnifiedQueue: Error fetching awaiting schedule:", error);
-        throw error;
-      }
       // Filter out those with placements manually if join isn't perfect
-      return (data as unknown as Submission[]).filter((s) => !s.placements || s.placements.length === 0);
-    }
+      return (data || []).filter((s) => !s.placements || s.placements.length === 0);
+    },
+    enabled: appReady,
   });
 
   // Query for "Active Placements"
   const { data: activePlacements, isLoading: loadingActive, error: errorActive } = useQuery({
     queryKey: ["admin-active-placements"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("placements")
-        .select(`
-          *,
-          playlists ( name, spotify_playlist_url ),
-          submissions ( track_title, artist_name )
-        `)
-        .gt("end_date", new Date().toISOString())
-        .order("end_date", { ascending: true });
+    queryFn: async ({ signal }) => {
+      const data = await safeQuery(
+        supabase
+          .from("placements")
+          .select(`
+            *,
+            playlists ( name, spotify_playlist_url ),
+            submissions ( track_title, artist_name )
+          `)
+          .gt("end_date", new Date().toISOString())
+          .order("end_date", { ascending: true })
+          .abortSignal(signal)
+      ) as Placement[] | null;
       
-      if (error) {
-        console.error("UnifiedQueue: Error fetching active placements:", error);
-        throw error;
-      }
-      return data as unknown as Placement[];
-    }
+      return data || [];
+    },
+    enabled: appReady,
   });
 
   // Query for "Completed Placements"
   const { data: completedPlacements, isLoading: loadingCompleted, error: errorCompleted } = useQuery({
     queryKey: ["admin-completed-placements"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("placements")
-        .select(`
-          *,
-          playlists ( name ),
-          submissions ( track_title, artist_name )
-        `)
-        .lt("end_date", new Date().toISOString())
-        .order("end_date", { ascending: false })
-        .limit(20);
+    queryFn: async ({ signal }) => {
+      const data = await safeQuery(
+        supabase
+          .from("placements")
+          .select(`
+            *,
+            playlists ( name ),
+            submissions ( track_title, artist_name )
+          `)
+          .lt("end_date", new Date().toISOString())
+          .order("end_date", { ascending: false })
+          .limit(20)
+          .abortSignal(signal)
+      ) as Placement[] | null;
       
-      if (error) {
-        console.error("UnifiedQueue: Error fetching completed placements:", error);
-        throw error;
-      }
-      return data as unknown as Placement[];
-    }
+      return data || [];
+    },
+    enabled: appReady,
   });
 
   // Query for "Expiring Soon" (Placements ending in next 7 days)
   const { data: expiringSoon, isLoading: loadingExpiring, error: errorExpiring } = useQuery({
     queryKey: ["admin-expiring-soon"],
     queryFn: async ({ signal }) => {
-      try {
-        const sevenDaysFromNow = new Date();
-        sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-        
-        const { data, error } = await supabase
+      const sevenDaysFromNow = new Date();
+      sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+      
+      const data = await safeQuery(
+        supabase
           .from("placements")
           .select("*, playlists ( name ), submissions ( track_title, artist_name )")
           .gte("end_date", new Date().toISOString())
           .lte("end_date", sevenDaysFromNow.toISOString())
           .order("end_date", { ascending: true })
-          .abortSignal(signal);
-        if (error) {
-          console.error("UnifiedQueue: Error fetching expiring soon:", error);
-          throw error;
-        }
-        return data as unknown as Placement[];
-      } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return [];
-        }
-        throw err;
-      }
-    }
+          .abortSignal(signal)
+      ) as Placement[] | null;
+      
+      return data || [];
+    },
+    enabled: appReady,
   });
 
   const renderError = (error: Error) => (
@@ -273,7 +290,7 @@ export const UnifiedQueue = () => {
                     <TableCell className="text-foreground font-medium">{s.artist_name}</TableCell>
                     <TableCell>
                       <Badge variant="secondary" className="bg-dem/10 text-dem border-none font-bold">
-                        {s.slots?.name}
+                        {getSingle(s.slots)?.name}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -333,14 +350,14 @@ export const UnifiedQueue = () => {
               <TableBody>
                 {activePlacements.map((p) => (
                   <TableRow key={p.id} className="border-border hover:bg-muted">
-                    <TableCell className="font-black text-dem uppercase">{p.submissions?.track_title}</TableCell>
-                    <TableCell className="text-foreground font-medium">{p.playlists?.name}</TableCell>
+                    <TableCell className="font-black text-dem uppercase">{getSingle(p.submissions)?.track_title}</TableCell>
+                    <TableCell className="text-foreground font-medium">{getSingle(p.playlists)?.name}</TableCell>
                     <TableCell className="text-foreground font-bold">
                       {format(new Date(p.end_date), "MMM d")}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button type="button" variant="ghost" size="sm" asChild className="text-dem hover:text-dem/80">
-                        <a href={p.playlists?.spotify_playlist_url} target="_blank" rel="noopener noreferrer" title="View on Spotify">
+                        <a href={getSingle(p.playlists)?.spotify_playlist_url || "#"} target="_blank" rel="noopener noreferrer" title="View on Spotify">
                           <ExternalLink className="w-4 h-4" />
                         </a>
                       </Button>
@@ -366,8 +383,8 @@ export const UnifiedQueue = () => {
               <TableBody>
                 {expiringSoon.map((p) => (
                   <TableRow key={p.id} className="border-border hover:bg-muted">
-                    <TableCell className="font-black text-dem uppercase">{p.submissions?.track_title}</TableCell>
-                    <TableCell className="text-foreground font-medium">{p.playlists?.name}</TableCell>
+                    <TableCell className="font-black text-dem uppercase">{getSingle(p.submissions)?.track_title}</TableCell>
+                    <TableCell className="text-foreground font-medium">{getSingle(p.playlists)?.name}</TableCell>
                     <TableCell className="text-rep font-bold">
                       {format(new Date(p.end_date), "MMM d, yyyy")}
                     </TableCell>

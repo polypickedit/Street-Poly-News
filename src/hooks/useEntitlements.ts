@@ -13,51 +13,45 @@ type EntitlementsFetchState =
   | "error";
 
 export function useEntitlements() {
-  const { status: authStatus, user } = useAuth();
+  const { status: authStatus, user, appReady } = useAuth();
   const userId = user?.id ?? null;
-  const enabled = authStatus === "authenticated" && !!userId;
+  const enabled = appReady && authStatus === "authenticated" && !!userId;
   const previousStateRef = useRef<EntitlementsFetchState | null>(null);
 
   const { data: entitlements = [], isLoading, refetch, error } = useQuery({
     queryKey: ["user-entitlements", userId],
     enabled,
     queryFn: async ({ signal }) => {
-      try {
-        if (!userId) return [];
-        console.log("%cENTITLEMENTS TRANSITION", "color: #22d3ee; font-weight: bold;", "fetch.start", { userId });
+      if (!userId) return [];
+      console.log("%cENTITLEMENTS TRANSITION", "color: #22d3ee; font-weight: bold;", "fetch.start", { userId });
 
-        const data = await safeQuery(
-          supabase
-          .from("slot_entitlements")
-          .select("*")
-          .eq("user_id", userId)
-          .eq("is_active", true)
-          .abortSignal(signal)
-        );
+      // safeQuery handles AbortError internally now
+      const data = await safeQuery(
+        supabase
+        .from("slot_entitlements")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("is_active", true)
+        .abortSignal(signal)
+      );
 
-        const rows = (data || []) as Entitlement[];
-        console.log("%cENTITLEMENTS TRANSITION", "color: #22d3ee; font-weight: bold;", "fetch.loaded", {
-          userId,
-          count: rows.length,
-        });
-        return rows;
-      } catch (err) {
-        if (err instanceof Error && (err.name === "AbortError" || err.message?.includes("abort"))) {
-          return [];
-        }
-        throw err;
-      }
+      const rows = (data || []) as Entitlement[];
+      console.log("%cENTITLEMENTS TRANSITION", "color: #22d3ee; font-weight: bold;", "fetch.loaded", {
+        userId,
+        count: rows.length,
+      });
+      return rows;
     },
     refetchOnWindowFocus: false,
   });
 
   const state: EntitlementsFetchState = useMemo(() => {
-    if (authStatus === "initializing") return "initializing";
+    if (authStatus === "initializing" || (authStatus === "authenticated" && !appReady)) return "initializing";
     if (authStatus !== "authenticated" || !userId) return "unauthenticated";
     if (isLoading) return "loading";
     if (error) return "error";
     return "ready";
-  }, [authStatus, error, isLoading, userId]);
+  }, [appReady, authStatus, error, isLoading, userId]);
 
   useEffect(() => {
     if (previousStateRef.current === state) return;

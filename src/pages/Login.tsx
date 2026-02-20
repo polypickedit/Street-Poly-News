@@ -111,6 +111,7 @@ const Login = () => {
 
 
   const mapAuthError = (error: { message: string }) => {
+    console.error("Auth Error Detail:", error);
     const message = error.message.toLowerCase();
     if (message.includes("invalid login credentials")) {
       return "Email or password didn't match. Please try again.";
@@ -125,7 +126,7 @@ const Login = () => {
       return "Password must be at least 6 characters long.";
     }
     if (message.includes("unsupported provider")) {
-      return "This login method is currently disabled. Please contact support if you believe this is an error.";
+      return `This login method is currently disabled on project ${import.meta.env.VITE_SUPABASE_URL?.split('.')[0]?.split('//')[1] || 'unknown'}. Please enable it in the Supabase Dashboard.`;
     }
     if (message.includes("service unavailable") || message.includes("fetch failed")) {
       return "Unable to connect to the server. Please check your internet connection and try again.";

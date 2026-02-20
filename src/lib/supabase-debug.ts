@@ -1,6 +1,21 @@
 
 import { PostgrestError } from '@supabase/supabase-js';
 
+export function isAbortError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  // Handle DOMException: AbortError
+  if (error instanceof Error && (error.name === 'AbortError' || error.message?.includes('abort'))) {
+    return true;
+  }
+  // Handle potential non-Error objects that look like aborts
+  const err = error as { name?: string; message?: string; code?: string };
+  return (
+    err.name === 'AbortError' || 
+    err.message?.toLowerCase().includes('abort') === true ||
+    err.code === '20' // DOMException code
+  );
+}
+
 /**
  * Wraps a Supabase query to ensure errors are thrown and logged.
  * 
@@ -15,12 +30,23 @@ export async function safeQuery<T>(
     const { data, error } = await queryPromise;
 
     if (error) {
+      // AbortError is a lifecycle event, not a failure.
+      // Do not log as Supabase error and do not throw.
+      if (isAbortError(error)) {
+        return null;
+      }
       logSupabaseError(error);
       throw error;
     }
 
     return data;
   } catch (err) {
+    if (isAbortError(err)) {
+      // AbortError is a lifecycle event, not a failure.
+      // We return null so the calling code can exit gracefully.
+      return null;
+    }
+
     if (isPostgrestError(err)) {
       logSupabaseError(err);
     } else {
@@ -70,12 +96,20 @@ export async function safeCountQuery(
     const { count, error } = await queryPromise;
 
     if (error) {
+      // AbortError is expected under query cancellation.
+      if (isAbortError(error)) {
+        return 0;
+      }
       logSupabaseError(error);
       throw error;
     }
 
     return count ?? 0;
   } catch (err) {
+    if (isAbortError(err)) {
+      return 0; // Return 0 on abort for count queries
+    }
+    
     if (isPostgrestError(err)) {
       logSupabaseError(err);
     } else {

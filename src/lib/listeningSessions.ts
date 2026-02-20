@@ -1,89 +1,53 @@
 import { supabase } from "@/integrations/supabase/client";
+import { safeQuery } from "@/lib/supabase-debug";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { 
+  ListeningSessionStatus, 
+  ListeningSession, 
+  ListeningSessionTier, 
+  ListeningPurchase, 
+  AdminListeningSessionRow, 
+  AdminListeningSessionInput, 
+  AdminListeningTierInput,
+  ExtendedDatabase
+} from "@/types/listening-sessions";
 
-export type ListeningSessionStatus = "draft" | "open" | "closed" | "completed";
+// Helper to get around missing types for listening sessions tables
+const db = supabase as unknown as SupabaseClient<ExtendedDatabase>;
 
-export interface ListeningSessionTier {
-  id: string;
-  session_id: string;
-  tier_name: string;
-  price_cents: number;
-  slot_limit: number;
-  slots_filled: number;
-  description: string | null;
-  manually_closed: boolean;
-  remaining_slots: number;
-  sold_out: boolean;
-}
+export type { ListeningSessionStatus, ListeningSessionTier, ListeningSession, ListeningPurchase, AdminListeningSessionInput, AdminListeningTierInput, AdminListeningSessionRow };
 
-export interface ListeningSession {
-  id: string;
-  title: string;
-  description: string | null;
-  scheduled_at: string;
-  status: ListeningSessionStatus;
-  tiers: ListeningSessionTier[];
-}
-
-export interface ListeningPurchase {
-  id: string;
-  session_id: string;
-  tier_id: string;
-  status: "pending" | "paid" | "refunded" | "failed";
-  payment_id: string | null;
-  created_at: string;
-  paid_at: string | null;
-  stripe_session_id?: string | null;
-}
-
-export interface AdminListeningSessionInput {
-  id?: string;
-  title: string;
-  description?: string | null;
-  scheduled_at: string;
-  status: ListeningSessionStatus;
-}
-
-export interface AdminListeningTierInput {
-  id?: string;
-  tier_name: string;
-  price_cents: number;
-  slot_limit: number;
-  description?: string | null;
-  manually_closed?: boolean;
-}
-
-export interface AdminListeningSessionRow extends AdminListeningSessionInput {
-  id: string;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-  tiers: ListeningSessionTier[];
-}
-
-export async function listOpenListeningSessions(): Promise<ListeningSession[]> {
-  const sessionsQuery = (supabase as any)
+export async function listOpenListeningSessions(signal?: AbortSignal): Promise<ListeningSession[]> {
+  let sessionsQuery = db
     .from("listening_sessions")
     .select("id, title, description, scheduled_at, status")
     .eq("status", "open")
     .order("scheduled_at", { ascending: true });
 
-  const tiersQuery = (supabase as any)
+  if (signal) {
+    sessionsQuery = sessionsQuery.abortSignal(signal);
+  }
+
+  let tiersQuery = db
     .from("listening_session_tiers")
     .select("id, session_id, tier_name, price_cents, slot_limit, slots_filled, description, manually_closed")
     .order("price_cents", { ascending: true });
 
-  const [{ data: sessions, error: sessionsError }, { data: tiers, error: tiersError }] = await Promise.all([
-    sessionsQuery,
-    tiersQuery,
+  if (signal) {
+    tiersQuery = tiersQuery.abortSignal(signal);
+  }
+
+  const [sessionsData, tiersData] = await Promise.all([
+    safeQuery(sessionsQuery),
+    safeQuery(tiersQuery),
   ]);
 
-  if (sessionsError) throw sessionsError;
-  if (tiersError) throw tiersError;
+  const sessions = (sessionsData || []) as Omit<ListeningSession, "tiers">[];
+  const tiers = (tiersData || []) as ListeningSessionTier[];
 
   const tierBySession = new Map<string, ListeningSessionTier[]>();
 
-  for (const rawTier of (tiers || [])) {
-    const tier = rawTier as ListeningSessionTier;
+  for (const tier of tiers) {
     const remaining = Math.max(0, Number(tier.slot_limit) - Number(tier.slots_filled));
     const computedTier: ListeningSessionTier = {
       ...tier,
@@ -96,29 +60,34 @@ export async function listOpenListeningSessions(): Promise<ListeningSession[]> {
     tierBySession.set(tier.session_id, existing);
   }
 
-  return ((sessions || []) as Omit<ListeningSession, "tiers">[]).map((session) => ({
+  return sessions.map((session) => ({
     ...session,
     tiers: tierBySession.get(session.id) || [],
   }));
 }
 
-export async function listMyListeningPurchases(): Promise<ListeningPurchase[]> {
-  const { data, error } = await (supabase as any)
+export async function listMyListeningPurchases(signal?: AbortSignal): Promise<ListeningPurchase[]> {
+  let query = db
     .from("listening_session_purchases")
     .select("id, session_id, tier_id, status, payment_id, created_at, paid_at, stripe_session_id")
     .eq("status", "paid")
     .order("created_at", { ascending: false });
 
-  if (error) throw error;
+  if (signal) {
+    query = query.abortSignal(signal);
+  }
+
+  const data = await safeQuery(query);
   return (data || []) as ListeningPurchase[];
 }
 
 export async function findPaidPurchaseForTier(
   sessionId: string,
   tierId: string,
-  stripeSessionId?: string | null
+  stripeSessionId?: string | null,
+  signal?: AbortSignal
 ): Promise<ListeningPurchase | null> {
-  const baseQuery = (supabase as any)
+  let query = db
     .from("listening_session_purchases")
     .select("id, session_id, tier_id, status, payment_id, created_at, paid_at, stripe_session_id")
     .eq("session_id", sessionId)
@@ -127,11 +96,15 @@ export async function findPaidPurchaseForTier(
     .order("paid_at", { ascending: false })
     .limit(1);
 
-  const { data, error } = stripeSessionId
-    ? await baseQuery.eq("stripe_session_id", stripeSessionId)
-    : await baseQuery;
+  if (stripeSessionId) {
+    query = query.eq("stripe_session_id", stripeSessionId);
+  }
 
-  if (error) throw error;
+  if (signal) {
+    query = query.abortSignal(signal);
+  }
+
+  const data = await safeQuery(query);
   return ((data || [])[0] as ListeningPurchase | undefined) || null;
 }
 
@@ -140,7 +113,7 @@ export async function createListeningSubmission(
   trackTitle: string,
   trackUrl: string
 ): Promise<string> {
-  const { data, error } = await supabase.rpc("create_listening_submission", {
+  const { data, error } = await db.rpc("create_listening_submission", {
     p_purchase_id: purchaseId,
     p_track_title: trackTitle,
     p_track_url: trackUrl,
@@ -150,28 +123,37 @@ export async function createListeningSubmission(
   return data as string;
 }
 
-export async function listAdminListeningSessions(): Promise<AdminListeningSessionRow[]> {
-  const sessionsQuery = (supabase as any)
+export async function listAdminListeningSessions(signal?: AbortSignal): Promise<AdminListeningSessionRow[]> {
+  let sessionsQuery = db
     .from("listening_sessions")
     .select("id, title, description, scheduled_at, status, created_by, created_at, updated_at")
     .order("scheduled_at", { ascending: true });
 
-  const tiersQuery = (supabase as any)
+  if (signal) {
+    sessionsQuery = sessionsQuery.abortSignal(signal);
+  }
+
+  let tiersQuery = db
     .from("listening_session_tiers")
     .select("id, session_id, tier_name, price_cents, slot_limit, slots_filled, description, manually_closed")
     .order("price_cents", { ascending: true });
 
-  const [{ data: sessions, error: sessionsError }, { data: tiers, error: tiersError }] = await Promise.all([
-    sessionsQuery,
-    tiersQuery,
+  if (signal) {
+    tiersQuery = tiersQuery.abortSignal(signal);
+  }
+
+  const [sessionsData, tiersData] = await Promise.all([
+    safeQuery(sessionsQuery),
+    safeQuery(tiersQuery),
   ]);
 
-  if (sessionsError) throw sessionsError;
-  if (tiersError) throw tiersError;
+  const sessions = (sessionsData || []) as unknown as Omit<AdminListeningSessionRow, "tiers">[];
+  const tiers = (tiersData || []) as unknown as ListeningSessionTier[];
 
   const tierBySession = new Map<string, ListeningSessionTier[]>();
-  for (const rawTier of (tiers || [])) {
-    const tier = rawTier as ListeningSessionTier;
+  // Use unknown cast first to avoid type mismatch
+  for (const rawTier of tiers) {
+    const tier = rawTier;
     const remaining = Math.max(0, Number(tier.slot_limit) - Number(tier.slots_filled));
     const computedTier: ListeningSessionTier = {
       ...tier,
@@ -183,7 +165,7 @@ export async function listAdminListeningSessions(): Promise<AdminListeningSessio
     tierBySession.set(tier.session_id, existing);
   }
 
-  return ((sessions || []) as Omit<AdminListeningSessionRow, "tiers">[]).map((session) => ({
+  return sessions.map((session) => ({
     ...session,
     tiers: tierBySession.get(session.id) || [],
   }));
@@ -205,13 +187,13 @@ export async function upsertListeningSessionWithTiers(
   let sessionId = payload.id;
 
   if (sessionId) {
-    const { error } = await (supabase as any)
+    const { error } = await db
       .from("listening_sessions")
       .update(sessionPayload)
       .eq("id", sessionId);
     if (error) throw error;
   } else {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await db
       .from("listening_sessions")
       .insert(sessionPayload)
       .select("id")
@@ -222,7 +204,7 @@ export async function upsertListeningSessionWithTiers(
 
   if (!sessionId) throw new Error("Unable to resolve session id");
 
-  const { data: existingTiers, error: existingError } = await (supabase as any)
+  const { data: existingTiers, error: existingError } = await db
     .from("listening_session_tiers")
     .select("id, slots_filled")
     .eq("session_id", sessionId);
@@ -250,7 +232,7 @@ export async function upsertListeningSessionWithTiers(
   }));
 
   if (toUpsert.length > 0) {
-    const { error } = await (supabase as any)
+    const { error } = await db
       .from("listening_session_tiers")
       .upsert(toUpsert);
     if (error) throw error;
@@ -262,7 +244,7 @@ export async function upsertListeningSessionWithTiers(
     .filter((id: string) => !incomingIds.has(id));
 
   if (removableIds.length > 0) {
-    const { data: usedTiers, error: usedError } = await (supabase as any)
+    const { data: usedTiers, error: usedError } = await db
       .from("listening_session_purchases")
       .select("tier_id")
       .in("tier_id", removableIds)
@@ -273,7 +255,7 @@ export async function upsertListeningSessionWithTiers(
       throw new Error("Cannot remove tiers that already have purchases");
     }
 
-    const { error: deleteError } = await (supabase as any)
+    const { error: deleteError } = await db
       .from("listening_session_tiers")
       .delete()
       .in("id", removableIds);

@@ -33,8 +33,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const hydrationRunIdRef = useRef(0);
   const bootstrappedRef = useRef(false);
 
-  const transition = useCallback((event: AuthStatusEvent, partial: Partial<AuthState>) => {
+  const transition = useCallback((event: AuthStatusEvent, update: Partial<AuthState> | ((prev: AuthState) => Partial<AuthState>)) => {
     setState((prev) => {
+      const partial = typeof update === 'function' ? update(prev) : update;
       const next: AuthState = {
         ...prev,
         ...partial,
@@ -53,12 +54,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const runId = ++hydrationRunIdRef.current;
       const trace = traceId ?? generateTraceId();
-      transition('roles.hydrating', {
-        rolesLoaded: false,
+      transition('roles.hydrating', (prev) => ({
+        // Only reset rolesLoaded if we are switching users.
+        // If refreshing the same user, keep the previous state to avoid UI jitter.
+        rolesLoaded: prev.user?.id === userId ? prev.rolesLoaded : false,
         // Keep previous role flags during hydration to avoid admin UI flicker.
         error: undefined,
         traceId: trace,
-      });
+      }));
 
       hydrateRoles(userId)
         .then((result) => {
@@ -108,16 +111,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const hydrateForSession = useCallback(
     (session: Session, traceId?: string, event: AuthStatusEvent = 'session.authenticated') => {
       const trace = traceId ?? generateTraceId();
-      transition(event, {
+      transition(event, (prev) => ({
         status: 'authenticated',
         session,
         user: session.user,
-        rolesLoaded: false,
+        // Only reset rolesLoaded if we are switching users.
+        rolesLoaded: prev.user?.id === session.user.id ? prev.rolesLoaded : false,
         isAdmin: false,
         isEditor: false,
         error: undefined,
         traceId: trace,
-      });
+      }));
       if (session.user?.id) {
         hydrateRolesInBackground(session.user.id, trace);
       }
@@ -235,6 +239,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("AUTH EVENT:", event, session);
       console.log('%cAUTH TRANSITION', 'color: violet; font-weight: bold;', event, {
         hasSession: !!session,
         userId: session?.user?.id ?? null,
@@ -265,19 +270,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [hydrateForSession, markUnauthenticated, transition]);
 
   const contextValue = useMemo(
-    () => ({
-      status: state.status,
-      session: state.session,
-      user: state.user,
-      rolesLoaded: state.rolesLoaded,
-      isAdmin: state.isAdmin,
-      isEditor: state.isEditor,
-      error: state.error,
-      traceId: state.traceId ?? null,
-      loading: state.status === 'initializing',
-      authReady: state.status !== 'initializing',
-      refreshAuth,
-    }),
+    () => {
+      const authReady = state.status !== 'initializing';
+      // Strict app readiness:
+      // 1. Not initializing
+      // 2. If authenticated, roles MUST be loaded
+      // 3. If unauthenticated or error, we are ready (as guest)
+      const appReady = 
+        authReady && 
+        (state.status !== 'authenticated' || state.rolesLoaded);
+
+      return {
+        status: state.status,
+        session: state.session,
+        user: state.user,
+        rolesLoaded: state.rolesLoaded,
+        isAdmin: state.isAdmin,
+        isEditor: state.isEditor,
+        error: state.error,
+        traceId: state.traceId ?? null,
+        loading: state.status === 'initializing',
+        authReady,
+        appReady,
+        refreshAuth,
+      };
+    },
     [state, refreshAuth]
   );
 

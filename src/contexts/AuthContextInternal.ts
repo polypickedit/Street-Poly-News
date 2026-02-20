@@ -4,6 +4,7 @@ import type { AuthState } from './authTypes';
 export interface AuthContextType extends AuthState {
   loading: boolean;
   authReady: boolean;
+  appReady: boolean;
   refreshAuth: () => Promise<void>;
 }
 
@@ -18,5 +19,6 @@ export const AuthContext = createContext<AuthContextType>({
   traceId: null,
   loading: true,
   authReady: false,
+  appReady: false,
   refreshAuth: async () => {},
 });

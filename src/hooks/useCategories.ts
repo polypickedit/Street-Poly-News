@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { SupabaseClient } from "@supabase/supabase-js";
+import { safeQuery } from "@/lib/supabase-debug";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface Category {
   id: string;
@@ -11,54 +12,45 @@ export interface Category {
 }
 
 export function useCategories() {
+  const { appReady } = useAuth();
   return useQuery({
     queryKey: ["categories"],
     queryFn: async ({ signal }) => {
-      try {
-        const query = (supabase as SupabaseClient)
+      const data = await safeQuery(
+        supabase
           .from("categories")
           .select("*")
-          .order("name") as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: Category[] | null; error: { code: string; message: string } | null }> };
+          .order("name")
+          .abortSignal(signal)
+      ) as Category[] | null;
 
-        const { data, error } = await query.abortSignal(signal);
-
-        if (error) throw error;
-        return data as Category[];
-      } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return [];
-        }
-        throw err;
-      }
+      return data || [];
     },
+    enabled: appReady,
   });
 }
 
 export function usePostCategories(postId: number) {
+  const { appReady } = useAuth();
   return useQuery({
     queryKey: ["post-categories", postId],
     queryFn: async ({ signal }) => {
-      try {
-        const query = (supabase as SupabaseClient)
+      const data = await safeQuery(
+        supabase
           .from("post_categories")
           .select(`
             category_id,
             categories (*)
           `)
-          .eq("post_id", postId) as unknown as { abortSignal: (s?: AbortSignal) => Promise<{ data: { categories: Category }[] | null; error: { code: string; message: string } | null }> };
+          .eq("post_id", postId)
+          .abortSignal(signal)
+      ) as { categories: Category | null }[] | null;
 
-        const { data, error } = await query.abortSignal(signal);
-
-        if (error) throw error;
-        const postCategories = data || [];
-        return postCategories.map((pc) => pc.categories).filter((cat): cat is Category => cat !== null);
-      } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return [];
-        }
-        throw err;
-      }
+      const postCategories = data || [];
+      return postCategories
+        .map((pc) => pc.categories)
+        .filter((cat): cat is Category => cat !== null);
     },
-    enabled: !!postId,
+    enabled: appReady && !!postId,
   });
 }

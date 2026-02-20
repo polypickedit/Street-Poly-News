@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { SupabaseClient } from "@supabase/supabase-js";
+import { safeQuery } from "@/lib/supabase-debug";
+import { useAuth } from "@/hooks/useAuth";
 
 const POSTS_PER_PAGE = 9;
 
@@ -30,75 +31,69 @@ async function fetchPosts({
   const from = pageParam * POSTS_PER_PAGE;
   const to = from + POSTS_PER_PAGE - 1;
 
-  try {
-    const client = supabase as SupabaseClient;
-    const baseQuery = category 
-      ? client
-        .from("posts")
-        .select(`
-          *,
-          post_categories!inner (
-            category_id,
-            categories (
-              slug
-            )
+  const client = supabase;
+  const baseQuery = category 
+    ? client
+      .from("posts")
+      .select(`
+        *,
+        post_categories!inner (
+          category_id,
+          categories (
+            slug
           )
-        `)
-        .eq("post_categories.categories.slug", category)
-      : client
-        .from("posts")
-        .select("*");
+        )
+      `)
+      .eq("post_categories.categories.slug", category)
+    : client
+      .from("posts")
+      .select("*");
 
-    const { data, error } = await baseQuery
+  const posts = await safeQuery(
+    baseQuery
       .order("created_at", { ascending: false })
       .abortSignal(signal)
-      .range(from, to);
-
-    if (error) throw error;
-    
-    return {
-      posts: (data || []) as Post[],
-      nextPage: data && data.length === POSTS_PER_PAGE ? pageParam + 1 : undefined,
-    };
-  } catch (err) {
-    if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-      return { posts: [], nextPage: undefined };
-    }
-    throw err;
-  }
+      .range(from, to)
+  ) as Post[] | null;
+  
+  const data = posts || [];
+  
+  return {
+    posts: data,
+    nextPage: data.length === POSTS_PER_PAGE ? pageParam + 1 : undefined,
+  };
 }
 
 export function usePosts(category?: string | null) {
+  const { appReady } = useAuth();
   return useInfiniteQuery({
-    queryKey: ["posts", category],
+    queryKey: ["posts", category || null],
     queryFn: ({ pageParam, signal }) => fetchPosts({ pageParam, category, signal }),
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 0,
+    enabled: appReady,
   });
 }
 
 export function usePost(id: string) {
+  const { appReady } = useAuth();
   return useInfiniteQuery({
     queryKey: ["post", id],
     queryFn: async ({ signal }) => {
-      try {
-        const { data, error } = await (supabase as SupabaseClient)
+      const post = await safeQuery(
+        supabase
           .from("posts")
           .select("*")
           .eq("id", parseInt(id))
           .abortSignal(signal)
-          .single();
+          .single()
+      ) as Post | null;
 
-        if (error) throw error;
-        return { posts: [data as Post], nextPage: undefined };
-      } catch (err) {
-        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('abort'))) {
-          return { posts: [], nextPage: undefined };
-        }
-        throw err;
-      }
+      if (!post) return { posts: [], nextPage: undefined };
+      return { posts: [post], nextPage: undefined };
     },
     getNextPageParam: () => undefined,
     initialPageParam: 0,
+    enabled: appReady && !!id,
   });
 }
