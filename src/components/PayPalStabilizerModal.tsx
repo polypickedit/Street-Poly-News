@@ -75,10 +75,7 @@ export const PayPalStabilizerModal = ({
     const orderId = crypto.randomUUID();
 
     try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: placement_orders table created manually, types not yet generated
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from("placement_orders").insert({
+      const { error } = await supabase.from("placement_orders").insert({
         order_id: orderId,
         slot_type: values.slot_type,
         outlet_id: values.outlet_id || null,

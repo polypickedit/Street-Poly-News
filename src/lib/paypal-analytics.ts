@@ -1,17 +1,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { PayPalEventType } from "@/types/paypal";
+import { Json } from "@/integrations/supabase/types";
 
 export async function trackPayPalEvent(
   orderId: string,
   eventType: PayPalEventType,
-  metadata: Record<string, unknown> = {}
+  metadata: Json = {}
 ) {
   try {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: placement_order_events table created manually
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('placement_order_events')
       .insert([
         {

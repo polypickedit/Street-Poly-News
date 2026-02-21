@@ -38,20 +38,19 @@ export default function PayPalOrdersPage() {
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query = (supabase as any)
+      let query = supabase
         .from("placement_orders")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (filterStatus !== "all") {
-        query = query.eq("status", filterStatus);
+        query = query.eq("status", filterStatus as "pending_paypal" | "paid" | "cancelled");
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
-      setOrders(data as unknown as PlacementOrder[]);
+      setOrders(data as PlacementOrder[]);
     } catch (error) {
       console.error("Error fetching orders:", error);
       toast.error("Failed to load orders");
@@ -69,8 +68,7 @@ export default function PayPalOrdersPage() {
     setProcessingId(selectedOrder.id);
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("placement_orders")
         .update({
           status: "paid",

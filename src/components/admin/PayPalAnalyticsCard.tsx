@@ -24,8 +24,7 @@ export function PayPalAnalyticsCard() {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data, error } = await (supabase as any)
+        const { data, error } = await supabase
           .from('placement_order_events')
           .select('event_type')
           .gte('created_at', thirtyDaysAgo.toISOString());
