@@ -31,9 +31,10 @@ create policy "Admins can view all placement orders"
   for select
   using (
     exists (
-      select 1 from public.user_roles
-      where user_id = auth.uid()
-      and role = 'admin'
+      select 1 from public.user_roles ur
+      join public.roles r on ur.role_id = r.id
+      where ur.user_id = auth.uid()
+      and r.name = 'admin'
     )
   );
 
@@ -43,8 +44,9 @@ create policy "Admins can update placement orders"
   for update
   using (
     exists (
-      select 1 from public.user_roles
-      where user_id = auth.uid()
-      and role = 'admin'
+      select 1 from public.user_roles ur
+      join public.roles r on ur.role_id = r.id
+      where ur.user_id = auth.uid()
+      and r.name = 'admin'
     )
   );

@@ -1,4 +1,17 @@
 
+## PayPal Stabilizer (Temporary)
+- [x] Create placement_orders table
+- [x] Implement Intake Modal (Booking & Merch)
+- [x] Redirect to PayPal hosted checkout
+- [x] Create Payment Success Page with Order ID recovery
+- [x] Build Admin Reconciliation Dashboard
+- [x] Add lightweight analytics (funnel tracking)
+- [ ] **CRITICAL: 30-Day Review (Due: 2026-03-22)**
+  - Evaluate PayPal usage volume.
+  - Decide: Formalize with Webhooks OR Revert to Stripe.
+  - If keeping: Implement proper webhook handlers for `payment.capture.completed`.
+  - If reverting: Remove `ENABLE_PAYPAL_STABILIZER` flag.
+
 ## RLS Sovereignty Lockdown – Phase Final
 
 ### Pre-Execution Audit

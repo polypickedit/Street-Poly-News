@@ -47,10 +47,9 @@ async function testPayPalFlow() {
 
   console.log(`📝 Inserting test order: ${testOrder.order_id}...`);
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('placement_orders')
-    .insert([testOrder])
-    .select();
+    .insert([testOrder]);
 
   if (error) {
     console.error('❌ Insertion Failed:', error.message);
@@ -58,15 +57,30 @@ async function testPayPalFlow() {
     process.exit(1);
   }
 
-  // Note: Since RLS prevents reading back the inserted row for anon users (only admins can select),
-  // we might not get 'data' back depending on the policy "Anyone can create placement orders".
-  // If the policy is just "true" for insert, it allows insertion.
-  // The 'select()' call attempts to return the inserted row. If RLS blocks select, it might return null data or an error.
+  console.log('✅ Insertion Verified (No data returned due to RLS - expected for public intake).');
+
+  // 3. Test Event Tracking
+  console.log('\n📝 Testing Analytics Event Tracking...');
   
-  if (!data && !error) {
-    console.log('⚠️  Insertion likely succeeded, but RLS prevented reading back the record (expected for anon users).');
+  const testEvent = {
+    order_id: testOrder.order_id,
+    event_type: 'intake_created',
+    metadata: { source: 'test_script' }
+  };
+
+  const { error: eventError } = await supabase
+    .from('placement_order_events')
+    .insert([testEvent]);
+
+  if (eventError) {
+    if (eventError.code === '42P01') { // Table undefined
+       console.error('❌ Analytics Table "placement_order_events" missing.');
+       console.error('Run migration: supabase/migrations/20260220160000_create_placement_order_events.sql');
+    } else {
+       console.error('❌ Event Tracking Failed:', eventError.message);
+    }
   } else {
-    console.log('✅ Insertion Verified. Data returned:', data);
+    console.log('✅ Analytics Event Inserted: intake_created');
   }
 
   console.log('\n--- Verification Steps ---');

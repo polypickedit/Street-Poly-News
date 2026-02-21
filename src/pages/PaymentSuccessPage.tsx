@@ -4,20 +4,25 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { PageLayoutWithAds } from "@/components/PageLayoutWithAds";
+import { trackPayPalEvent } from "@/lib/paypal-analytics";
 
 const PaymentSuccessPage = () => {
   const [searchParams] = useSearchParams();
   const [orderId, setOrderId] = useState<string | null>(null);
 
   useEffect(() => {
-    const urlOrderId = searchParams.get("order_id");
-    if (urlOrderId) {
-      setOrderId(urlOrderId);
-    } else {
-      const storedOrderId = localStorage.getItem("latest_paypal_order_id");
-      if (storedOrderId) {
-        setOrderId(storedOrderId);
-      }
+    let finalOrderId = searchParams.get("order_id");
+    
+    if (!finalOrderId) {
+      finalOrderId = localStorage.getItem("latest_paypal_order_id");
+    }
+
+    if (finalOrderId) {
+      setOrderId(finalOrderId);
+      
+      // Track: returned_from_paypal
+      // We only track this once per page load to avoid spamming
+      trackPayPalEvent(finalOrderId, 'returned_from_paypal', {});
     }
   }, [searchParams]);
 

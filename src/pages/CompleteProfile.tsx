@@ -38,7 +38,7 @@ const CompleteProfile = () => {
     if (profile && (profile.profile_type !== "artist" || !!profile.display_name)) {
       navigate("/", { replace: true });
     }
-  }, [isLoading, navigate, profile?.display_name, profile?.profile_type, status, user]);
+  }, [isLoading, navigate, profile, status, user]);
 
   const canSubmit = useMemo(() => {
     const usernameResult = validateUsername(username);

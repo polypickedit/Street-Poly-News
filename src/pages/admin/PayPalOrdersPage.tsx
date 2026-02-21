@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Table,
@@ -21,8 +21,10 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Loader2, CheckCircle, XCircle, Search } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { PlacementOrder } from "@/types/paypal";
+import { trackPayPalEvent } from "@/lib/paypal-analytics";
+import { PayPalAnalyticsCard } from "@/components/admin/PayPalAnalyticsCard";
 
 export default function PayPalOrdersPage() {
   const [orders, setOrders] = useState<PlacementOrder[]>([]);
@@ -33,7 +35,7 @@ export default function PayPalOrdersPage() {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,11 +58,11 @@ export default function PayPalOrdersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterStatus]);
 
   useEffect(() => {
     fetchOrders();
-  }, [filterStatus]);
+  }, [fetchOrders]);
 
   const handleMarkAsPaid = async () => {
     if (!selectedOrder) return;
@@ -79,6 +81,12 @@ export default function PayPalOrdersPage() {
 
       if (error) throw error;
 
+      // Track: marked_paid
+      await trackPayPalEvent(selectedOrder.order_id, 'marked_paid', {
+        admin_id: (await supabase.auth.getUser()).data.user?.id,
+        paypal_transaction_id: transactionId,
+      });
+
       toast.success("Order marked as paid");
       setIsConfirmDialogOpen(false);
       setTransactionId("");
@@ -93,13 +101,19 @@ export default function PayPalOrdersPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">PayPal Orders</h1>
           <p className="text-muted-foreground">
             Manual reconciliation for PayPal stabilizer flow.
           </p>
         </div>
+        <div className="flex justify-end">
+          <PayPalAnalyticsCard />
+        </div>
+      </div>
+      
+      <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Button
             variant={filterStatus === "pending_paypal" ? "default" : "outline"}

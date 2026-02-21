@@ -11,6 +11,7 @@ export interface ListeningSession {
   created_by: string;
   created_at: string;
   updated_at: string;
+  tiers?: ListeningSessionTier[];
 }
 
 export interface ListeningSessionTier {

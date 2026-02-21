@@ -17,8 +17,8 @@ export function isPostgrestError(error: unknown): error is PostgrestError {
 
 export function logSupabaseError(error: PostgrestError | Error) {
   console.error('Supabase Error:', error.message);
-  if ('details' in error && (error as any).details) console.error('Details:', (error as any).details);
-  if ('hint' in error && (error as any).hint) console.error('Hint:', (error as any).hint);
+  if ('details' in error && error.details) console.error('Details:', error.details);
+  if ('hint' in error && error.hint) console.error('Hint:', error.hint);
 }
 
 /**
