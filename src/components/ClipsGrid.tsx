@@ -16,7 +16,8 @@ interface ClipsGridProps {
 
 export function ClipsGrid({ slotKey, fallback }: ClipsGridProps) {
   const { data: placements, isLoading: loadingPlacements } = useSlotContents(slotKey);
-  const { isAdminMode } = useAdmin();
+  const { isAdminMode, isAdmin: hasAdminAccess } = useAdmin();
+  const canEdit = isAdminMode && hasAdminAccess;
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const queryClient = useQueryClient();
 
@@ -96,14 +97,14 @@ export function ClipsGrid({ slotKey, fallback }: ClipsGridProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => {
-              if (isAdminMode) {
+              if (canEdit) {
                 e.preventDefault();
                 setEditingPost(post);
               }
             }}
             className="group flex flex-col rounded-2xl border border-white/10 bg-white/5 transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg relative"
           >
-            {isAdminMode && (
+            {canEdit && (
               <div className="absolute top-2 right-2 z-10 bg-black/80 text-white px-2 py-1 rounded text-xs font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
                 Edit Video
               </div>
@@ -123,7 +124,7 @@ export function ClipsGrid({ slotKey, fallback }: ClipsGridProps) {
                 {post.subtitle || "Latest clips from the heart of the city."}
               </p>
               <span className="mt-3 text-sm font-black uppercase tracking-widest text-dem">
-                {isAdminMode ? "Edit Video →" : "Watch on YouTube →"}
+                {canEdit ? "Edit Video →" : "Watch on YouTube →"}
               </span>
             </div>
           </a>

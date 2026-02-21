@@ -48,6 +48,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isAdminMode, setIsAdminMode, toggleAdminMode } = useAdmin();
+  const showAuthDebugToggle = import.meta.env.DEV;
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Keep admin stats and activities alive at the layout level to prevent aborts during navigation
@@ -190,6 +191,21 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             <div className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-bold uppercase tracking-wider border border-border">
               Live Environment
             </div>
+            {/* Auth Debugger Toggle */}
+            {showAuthDebugToggle && (
+              <button
+                className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground text-xs font-bold uppercase tracking-wider border border-border transition-colors"
+                title="Toggle Auth Debugger"
+                onClick={() => {
+                  const current = localStorage.getItem('debug-auth-visible') === 'true';
+                  localStorage.setItem('debug-auth-visible', String(!current));
+                  window.dispatchEvent(new Event('storage')); // Force update
+                }}
+              >
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                <span>Auth Debug</span>
+              </button>
+            )}
           </div>
         </header>
 

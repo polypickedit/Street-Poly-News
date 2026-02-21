@@ -74,12 +74,17 @@ function isPostgrestError(error: unknown): error is PostgrestError {
  * Logs a structured Supabase error to the console.
  */
 export function logSupabaseError(error: PostgrestError) {
-  console.error("❌ Supabase Error:", {
-    message: error.message,
-    details: error.details,
-    hint: error.hint,
-    code: error.code,
-  });
+  if (import.meta.env.DEV) {
+    console.error("❌ Supabase Error:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
+  } else {
+    // In production, log a generic message to avoid leaking schema details
+    console.error("Database operation failed. Please try again later.");
+  }
 }
 
 /**

@@ -33,7 +33,9 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   // Only import App if environment is valid
   // This prevents the Supabase client from initializing and throwing
   import('./App').then(({ default: App }) => {
-    console.log('ENV: Configuration valid, starting app...');
+    if (import.meta.env.DEV) {
+      console.log('ENV: Configuration valid, starting app...');
+    }
     
     if (import.meta.env.PROD && typeof window !== 'undefined') {
       const host = window.location.hostname;

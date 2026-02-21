@@ -8,11 +8,13 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
 
   useEffect(() => {
-    console.log("%cROUTE TRANSITION", "color: #a78bfa; font-weight: bold;", "protected.check", {
-      status,
-      authenticated: !!session,
-      path: location.pathname,
-    });
+    if (import.meta.env.DEV) {
+      console.log("%cROUTE TRANSITION", "color: #a78bfa; font-weight: bold;", "protected.check", {
+        status,
+        authenticated: !!session,
+        path: location.pathname,
+      });
+    }
   }, [location.pathname, session, status]);
 
   if (status === "initializing") {

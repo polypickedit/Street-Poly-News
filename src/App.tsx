@@ -42,7 +42,6 @@ import Categories from "./pages/Categories";
 import Person from "./pages/Person";
 import NotFound from "./pages/NotFound";
 import Community from "./pages/Community";
-import { DevAuthOverlay } from "@/components/DevAuthOverlay";
 import { DebugAuth } from "@/components/DebugAuth";
 import CompleteProfile from "./pages/CompleteProfile";
 import ProfileSettings from "./pages/ProfileSettings";
@@ -238,7 +237,6 @@ const AnimatedRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <DevAuthOverlay />
       <DebugAuth />
       <AdminProvider>
         <CartProvider>

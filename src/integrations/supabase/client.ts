@@ -6,11 +6,13 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 // Debug environment variables (safe log)
-console.log('Supabase Config:', {
-  url: SUPABASE_URL,
-  keyLength: SUPABASE_PUBLISHABLE_KEY?.length || 0,
-  hasKey: !!SUPABASE_PUBLISHABLE_KEY
-});
+if (import.meta.env.DEV) {
+  console.log('Supabase Config:', {
+    url: SUPABASE_URL,
+    keyLength: SUPABASE_PUBLISHABLE_KEY?.length || 0,
+    hasKey: !!SUPABASE_PUBLISHABLE_KEY
+  });
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

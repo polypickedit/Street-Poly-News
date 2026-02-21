@@ -40,6 +40,11 @@ type AppSnapshot = {
 
 export function DebugAuth() {
   const auth = useAuth();
+  const canViewDebugger =
+    auth.status === 'authenticated' &&
+    !!auth.user &&
+    auth.rolesLoaded &&
+    auth.isAdmin;
   const [sessionCheck, setSessionCheck] = useState<{ hasSession: boolean; user?: string; error: unknown } | null>(null);
   const [rolesCheck, setRolesCheck] = useState<{ data: unknown; error: unknown } | null>(null);
   const [profileCheck, setProfileCheck] = useState<{ data: unknown; error: unknown } | null>(null);
@@ -150,6 +155,20 @@ export function DebugAuth() {
       setTimeout(() => setCopyStatus(null), 2000);
     }
   }, []);
+
+  const [isVisible, setIsVisible] = useState(() => {
+    return localStorage.getItem('debug-auth-visible') === 'true';
+  });
+
+  useEffect(() => {
+    const handleStorage = () => {
+      setIsVisible(localStorage.getItem('debug-auth-visible') === 'true');
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  if (!canViewDebugger || !isVisible) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-[9999] max-w-sm w-full opacity-90 hover:opacity-100 transition-opacity">

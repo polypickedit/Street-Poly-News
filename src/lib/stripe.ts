@@ -92,7 +92,7 @@ export const createMerchCheckoutSession = async (items: any[], options?: MerchCh
 
     // Determine return URL - if it's a single booking, go back to booking page for confirmation
     const bookingItem = items.find(i => typeof i.id === 'string' && i.id.startsWith('booking-'));
-    let returnUrl = window.location.origin + '/merch?session_id={CHECKOUT_SESSION_ID}';
+    let returnUrl = window.location.origin + '/payment/success?session_id={CHECKOUT_SESSION_ID}';
     
     if (items.length === 1 && bookingItem) {
       const submissionId = bookingItem.id.replace('booking-', '');

@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
  */
 export function AdminOverlay() {
   const { 
+    isAdmin: hasAdminAccess,
     isAdminMode, 
     toggleAdminMode, 
     hasCompletedWalkthrough, 
@@ -132,7 +133,7 @@ export function AdminOverlay() {
   }, [isWalkthroughActive, walkthroughStep]);
 
   useEffect(() => {
-    if (!isAdminMode) return;
+    if (!isAdminMode || !hasAdminAccess) return;
 
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -181,9 +182,9 @@ export function AdminOverlay() {
     return () => {
       window.removeEventListener("click", handleClick, true);
     };
-  }, [isAdminMode]);
+  }, [hasAdminAccess, isAdminMode]);
 
-  if (!isAdminMode) return null;
+  if (!isAdminMode || !hasAdminAccess) return null;
 
   return (
     <>

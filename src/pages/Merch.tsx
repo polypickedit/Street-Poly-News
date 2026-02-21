@@ -5,85 +5,48 @@ import { ShoppingBag, ExternalLink } from "lucide-react";
 import { ProductCard, Product } from "@/components/store/ProductCard";
 import { useCart } from "@/hooks/use-cart";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PayPalStabilizerModal } from "@/components/PayPalStabilizerModal";
-
-const mockMerch: Product[] = [
-  {
-    id: "1",
-    title: "Streetpoly Logo Tee",
-    category: "shop",
-    source: "internal",
-    entitlement_key: "merch_tee_logo",
-    status: "active",
-    price: 2999,
-    image_url: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop",
-    description: "Classic logo tee."
-  },
-  {
-    id: "2",
-    title: "Urban Voices Hoodie",
-    category: "shop",
-    source: "internal",
-    entitlement_key: "merch_hoodie_urban",
-    status: "active",
-    price: 5999,
-    image_url: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=400&fit=crop",
-    description: "Premium heavyweight hoodie."
-  },
-  {
-    id: "3",
-    title: "Movement Graphic Tee",
-    category: "shop",
-    source: "internal",
-    entitlement_key: "merch_tee_movement",
-    status: "active",
-    price: 3499,
-    image_url: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400&h=400&fit=crop",
-    description: "Graphic tee with movement design."
-  },
-  {
-    id: "4",
-    title: "Street Culture Hoodie",
-    category: "shop",
-    source: "internal",
-    entitlement_key: "merch_hoodie_culture",
-    status: "active",
-    price: 6499,
-    image_url: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=400&h=400&fit=crop",
-    description: "Street culture inspired hoodie."
-  },
-  {
-    id: "5",
-    title: "Resist Classic Tee",
-    category: "shop",
-    source: "internal",
-    entitlement_key: "merch_tee_resist",
-    status: "active",
-    price: 2799,
-    image_url: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400&h=400&fit=crop",
-    description: "Classic resist tee."
-  },
-  {
-    id: "6",
-    title: "Block Party Zip Hoodie",
-    category: "shop",
-    source: "internal",
-    entitlement_key: "merch_hoodie_block",
-    status: "active",
-    price: 6999,
-    image_url: "https://images.unsplash.com/photo-1578768079052-aa76e52ff62e?w=400&h=400&fit=crop",
-    description: "Zip hoodie for block parties."
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
 
 const Merch = () => {
-  const { addItem } = useCart();
+  const { addItem, setIsOpen: setCartOpen } = useCart();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   
   // PayPal Stabilizer State
   const [isPayPalModalOpen, setIsPayPalModalOpen] = useState(false);
   const [payPalInitialData, setPayPalInitialData] = useState<{ slot_type?: string; notes?: string }>({});
   const ENABLE_PAYPAL_STABILIZER = true;
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        // @ts-expect-error: products table not in types yet
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('category', 'shop')
+          .eq('status', 'active');
+
+        if (error) {
+          console.error('Error fetching products:', error);
+          toast.error("Failed to load products");
+          return;
+        }
+
+        if (data) {
+          setProducts(data as unknown as Product[]);
+        }
+      } catch (err) {
+        console.error('Unexpected error:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProducts();
+  }, []);
 
   const handlePurchase = async (product: Product) => {
     if (ENABLE_PAYPAL_STABILIZER) {
@@ -100,66 +63,73 @@ const Merch = () => {
       name: product.title,
       type: "merch",
       price: product.price / 100,
-      image: product.image_url || "",
+      image: product.image_url || "/placeholder.svg",
     });
-    toast.success(`${product.title} added to cart`);
+    setCartOpen(true);
+    toast.success(`${product.title} added to cart!`);
   };
 
   return (
-    <PageLayoutWithAds mainClassName="max-w-7xl mx-auto">
+    <PageLayoutWithAds>
       <PageTransition>
-        <div className="px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-          <div className="text-center mb-12">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-dem/10 flex items-center justify-center mx-auto mb-6 md:mb-8">
-              <ShoppingBag className="w-8 h-8 md:w-10 md:h-10 text-dem" />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <div>
+              <h1 className="text-4xl font-bold font-display uppercase tracking-wider mb-2">
+                Street Merch
+              </h1>
+              <p className="text-muted-foreground">
+                Support the movement. Wear the culture.
+              </p>
             </div>
             
-            <h1 className="font-display text-4xl md:text-6xl text-dem mb-4">
-              STREETPOLY <span className="text-rep">MERCH</span>
-            </h1>
-            
-            <p className="text-white/40 font-body max-w-xl mx-auto px-4">
-              Support independent journalism and wear the message. High-quality apparel 
-              for the voices of the street.
+            <div className="flex gap-4">
+              <Button variant="outline" className="gap-2">
+                <ExternalLink className="w-4 h-4" />
+                Partner Store
+              </Button>
+            </div>
+          </div>
+
+          {loading ? (
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+               {[1, 2, 3].map((i) => (
+                 <div key={i} className="h-[400px] bg-muted/20 animate-pulse rounded-lg" />
+               ))}
+             </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              {products.map((product) => (
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  onPurchase={handlePurchase}
+                />
+              ))}
+              {products.length === 0 && (
+                <div className="col-span-full text-center py-12 text-muted-foreground">
+                  No products available at the moment.
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="bg-muted/30 rounded-lg p-8 text-center max-w-2xl mx-auto">
+            <ShoppingBag className="w-12 h-12 mx-auto mb-4 text-primary" />
+            <h2 className="text-2xl font-bold mb-2">More Coming Soon</h2>
+            <p className="text-muted-foreground">
+              We're constantly collaborating with local artists to bring you fresh designs.
+              Check back often for limited edition drops.
             </p>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {mockMerch.map((product) => (
-              <ProductCard 
-                key={product.id} 
-                product={product} 
-                onPurchase={handlePurchase}
-              />
-            ))}
-          </div>
-
-          <div className="text-center">
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="border-white/10 text-white hover:bg-white/5 font-body uppercase tracking-wider"
-            >
-              <a
-                href="https://yourstore.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2"
-              >
-                Visit Full Store
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            </Button>
-          </div>
         </div>
-
-        <PayPalStabilizerModal
-          isOpen={isPayPalModalOpen}
-          onClose={() => setIsPayPalModalOpen(false)}
-          initialData={payPalInitialData}
-        />
       </PageTransition>
+
+      <PayPalStabilizerModal
+        isOpen={isPayPalModalOpen}
+        onClose={() => setIsPayPalModalOpen(false)}
+        initialData={payPalInitialData}
+      />
     </PageLayoutWithAds>
   );
 };

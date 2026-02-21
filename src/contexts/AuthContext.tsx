@@ -19,12 +19,14 @@ export type AuthStatusEvent =
   | 'roles.failed';
 
 const logTransition = (event: AuthStatusEvent, next: AuthState) => {
-  console.log('%cAUTH TRANSITION', 'color: violet; font-weight: bold;', event, {
-    status: next.status,
-    userId: next.user?.id ?? null,
-    traceId: next.traceId,
-  });
-  console.log('AUTH STATE →', next);
+  if (import.meta.env.DEV) {
+    console.log('%cAUTH TRANSITION', 'color: violet; font-weight: bold;', event, {
+      status: next.status,
+      userId: next.user?.id ?? null,
+      traceId: next.traceId,
+    });
+    console.log('AUTH STATE →', next);
+  }
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -239,11 +241,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("AUTH EVENT:", event, session);
-      console.log('%cAUTH TRANSITION', 'color: violet; font-weight: bold;', event, {
-        hasSession: !!session,
-        userId: session?.user?.id ?? null,
-      });
+      if (import.meta.env.DEV) {
+        console.log("AUTH EVENT:", event, session);
+        console.log('%cAUTH TRANSITION', 'color: violet; font-weight: bold;', event, {
+          hasSession: !!session,
+          userId: session?.user?.id ?? null,
+        });
+      }
       if (!session?.user) {
         markUnauthenticated(generateTraceId(), 'listener.unauthenticated');
         return;

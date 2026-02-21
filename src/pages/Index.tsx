@@ -162,7 +162,8 @@ interface VideoLink {
 }
 
 const FallbackClips = ({ videoLinks }: { videoLinks: VideoLink[] }) => {
-  const { isAdminMode } = useAdmin();
+  const { isAdminMode, isAdmin: hasAdminAccess } = useAdmin();
+  const canEdit = isAdminMode && hasAdminAccess;
   const [editingVideo, setEditingVideo] = useState<VideoLink | null>(null);
   const queryClient = useQueryClient();
 
@@ -228,14 +229,14 @@ const FallbackClips = ({ videoLinks }: { videoLinks: VideoLink[] }) => {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => {
-              if (isAdminMode) {
+              if (canEdit) {
                 e.preventDefault();
                 setEditingVideo(video);
               }
             }}
             className="group flex flex-col rounded-2xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-dem hover:shadow-lg relative"
           >
-            {isAdminMode && (
+            {canEdit && (
               <div className="absolute top-2 right-2 z-10 bg-black/80 text-white px-2 py-1 rounded text-xs font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
                 Init Slot
               </div>
@@ -255,7 +256,7 @@ const FallbackClips = ({ videoLinks }: { videoLinks: VideoLink[] }) => {
                 {video.description}
               </p>
               <span className="mt-3 text-sm font-black uppercase tracking-widest text-dem">
-                {isAdminMode ? "Initialize Slot →" : "Watch on YouTube →"}
+                {canEdit ? "Initialize Slot →" : "Watch on YouTube →"}
               </span>
             </div>
           </a>

@@ -8,14 +8,16 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
 
   useEffect(() => {
-    console.log("%cROUTE TRANSITION", "color: #a78bfa; font-weight: bold;", "admin.check", {
-      status,
-      rolesLoaded,
-      hasSession: !!session,
-      isAdmin,
-      isEditor,
-      pathname: location.pathname,
-    });
+    if (import.meta.env.DEV) {
+      console.log("%cROUTE TRANSITION", "color: #a78bfa; font-weight: bold;", "admin.check", {
+        status,
+        rolesLoaded,
+        hasSession: !!session,
+        isAdmin,
+        isEditor,
+        pathname: location.pathname,
+      });
+    }
   }, [isAdmin, isEditor, location.pathname, rolesLoaded, session, status]);
 
   if (status === "initializing") {

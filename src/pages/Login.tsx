@@ -13,6 +13,9 @@ import { validateUsername } from "@/lib/username";
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const googleAuthEnabled = import.meta.env.VITE_AUTH_GOOGLE_ENABLED !== "false";
+  const projectRef =
+    import.meta.env.VITE_SUPABASE_URL?.split(".")[0]?.split("//")[1] || "unknown";
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
@@ -126,7 +129,7 @@ const Login = () => {
       return "Password must be at least 6 characters long.";
     }
     if (message.includes("unsupported provider")) {
-      return `This login method is currently disabled on project ${import.meta.env.VITE_SUPABASE_URL?.split('.')[0]?.split('//')[1] || 'unknown'}. Please enable it in the Supabase Dashboard.`;
+      return `Google sign-in is disabled on Supabase project ${projectRef}. Enable Google in Authentication -> Providers, or use email/password.`;
     }
     if (message.includes("service unavailable") || message.includes("fetch failed")) {
       return "Unable to connect to the server. Please check your internet connection and try again.";
@@ -202,6 +205,15 @@ const Login = () => {
   };
 
   const handleGoogleLogin = async () => {
+    if (!googleAuthEnabled) {
+      toast({
+        title: "Google sign-in unavailable",
+        description: `This environment is configured with VITE_AUTH_GOOGLE_ENABLED=false for project ${projectRef}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
@@ -420,31 +432,35 @@ const Login = () => {
             </Button>
           </form>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-white/10" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-[#0A0A0A] px-2 text-white/40 font-medium">Or continue with</span>
-            </div>
-          </div>
+          {googleAuthEnabled && (
+            <>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-white/10" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-[#0A0A0A] px-2 text-white/40 font-medium">Or continue with</span>
+                </div>
+              </div>
 
-          <Button
-            variant="outline"
-            type="button"
-            onClick={handleGoogleLogin}
-            className="w-full border-white/10 bg-white/5 hover:bg-white/10 text-white h-11 font-medium transition-all"
-            disabled={loading}
-          >
-            {loading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <>
-                <Chrome className="mr-2 h-4 w-4" />
-                Google
-              </>
-            )}
-          </Button>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={handleGoogleLogin}
+                className="w-full border-white/10 bg-white/5 hover:bg-white/10 text-white h-11 font-medium transition-all"
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Chrome className="mr-2 h-4 w-4" />
+                    Google
+                  </>
+                )}
+              </Button>
+            </>
+          )}
         </CardContent>
         <CardFooter className="flex justify-center border-t border-white/10 pt-6">
           <button

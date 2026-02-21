@@ -33,6 +33,7 @@ Your local environment must match the remote project configuration.
 ```bash
 VITE_SUPABASE_URL="https://cjodbnsjggslngnzwxsv.supabase.co"
 VITE_SUPABASE_PUBLISHABLE_KEY="<your-anon-key>"
+VITE_AUTH_GOOGLE_ENABLED="true"
 SUPABASE_SERVICE_ROLE_KEY="<your-service-role-key>" # Required for admin scripts/tests
 ```
 
@@ -73,6 +74,7 @@ We use a strict `appReady` state to prevent race conditions.
 
 ## 5. Troubleshooting
 - **"Unsupported provider"**: Check Supabase Dashboard -> Providers.
+  - If you intentionally don't use Google OAuth in an environment, set `VITE_AUTH_GOOGLE_ENABLED=false` so the Google button is hidden.
 - **"Auth session missing"**: Check `VITE_SUPABASE_URL` matches the project you are logging into.
 - **Infinite Loading**: Check `appReady` state in `DebugAuth` component.
 - **400/404 Errors**: Likely Schema Drift. Run `supabase db push`.

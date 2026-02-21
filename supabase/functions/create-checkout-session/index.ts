@@ -172,9 +172,50 @@ serve(async (req: Request) => {
         color?: string;
       }
 
+      // Extract IDs to fetch trusted prices
+      // Handle both numeric and string IDs (some might be "booking-uuid")
+      const productIds = (items as MerchItem[])
+        .filter(i => typeof i.id === 'string' && !i.id.startsWith('booking-'))
+        .map(i => i.id);
+
+      // Fetch products from DB to get trusted prices
+      let dbProducts: any[] = [];
+      if (productIds.length > 0) {
+        const { data, error } = await supabaseClient
+          .from('products')
+          .select('id, price, title, status')
+          .in('id', productIds)
+          .eq('status', 'active');
+        
+        if (error) {
+          console.error("Error fetching products for price verification:", error);
+          throw new Error("Failed to verify product prices");
+        }
+        dbProducts = data || [];
+      }
+
       const normalizedItems = (items as MerchItem[]).map((item) => {
-        const unitPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price || 0));
-        const unitAmount = Math.round(unitPrice * 100);
+        let unitAmount = 0;
+        let itemName = item.name;
+
+        // If it's a booking, we trust the client for now (legacy) or should we verify booking price?
+        // Ideally we verify booking price too, but let's stick to products table for now.
+        // The booking logic is complex and might be handled separately.
+        // For now, if it's NOT a booking, we enforce DB price.
+        if (typeof item.id === 'string' && item.id.startsWith('booking-')) {
+           unitAmount = Math.round((typeof item.price === 'number' ? item.price : parseFloat(String(item.price || 0))) * 100);
+        } else {
+           // Find the product in DB results
+           const dbProduct = dbProducts.find(p => String(p.id) === String(item.id));
+           if (!dbProduct) {
+             console.error(`Product not found or inactive: ${item.id}`);
+             throw new Error(`Product ${item.name} is not available`);
+           }
+           // Trust the DB price (it's in cents)
+           unitAmount = dbProduct.price;
+           itemName = dbProduct.title; // Use official title
+        }
+
         const quantity = item.quantity || 1;
 
         // Ensure images is only populated with valid absolute URLs
@@ -184,7 +225,7 @@ serve(async (req: Request) => {
         }
 
         return {
-          item,
+          item: { ...item, name: itemName }, // Use trusted name
           unitAmount,
           quantity,
           images,
@@ -237,6 +278,7 @@ serve(async (req: Request) => {
         color: item.color || null,
         quantity,
         price_cents: unitAmount,
+        product_id: (typeof item.id === 'string' && !item.id.startsWith('booking-')) ? item.id : null,
       }));
 
       const { error: orderItemsError } = await supabaseClient.from('merch_order_items').insert(orderItemsPayload);

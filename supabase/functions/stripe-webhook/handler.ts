@@ -311,6 +311,45 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
         if (merchOrderError) {
           console.error("❌ Error updating merch order status:", merchOrderError);
           processingError = merchOrderError;
+        } else if (paymentStatus === "paid") {
+          // Grant entitlements for products in this order
+          try {
+            const { data: orderItems, error: itemsError } = await supabase
+              .from("merch_order_items")
+              .select("product_id, products(entitlement_key)")
+              .eq("order_id", merchOrderId)
+              .not("product_id", "is", null);
+
+            if (itemsError) {
+              console.error("❌ Error fetching order items for entitlements:", itemsError);
+            } else if (orderItems && orderItems.length > 0) {
+              const entitlementsToGrant = orderItems
+                .filter((item: any) => item.products?.entitlement_key)
+                .map((item: any) => ({
+                  user_id: userId,
+                  product_id: item.product_id,
+                  entitlement_key: item.products.entitlement_key,
+                  source_type: "purchase",
+                  source_id: merchOrderId,
+                  granted_at: new Date().toISOString(),
+                  is_active: true
+                }));
+
+              if (entitlementsToGrant.length > 0) {
+                const { error: grantError } = await supabase
+                  .from("user_entitlements")
+                  .upsert(entitlementsToGrant, { onConflict: "user_id,entitlement_key,is_active" }); // Adjust constraint if needed
+
+                if (grantError) {
+                  console.error("❌ Error granting user entitlements:", grantError);
+                } else {
+                  console.log(`✅ Granted ${entitlementsToGrant.length} entitlements for order ${merchOrderId}`);
+                }
+              }
+            }
+          } catch (entError) {
+            console.error("❌ Unexpected error granting entitlements:", entError);
+          }
         }
       }
 

@@ -163,9 +163,12 @@ export const BottomNav = () => {
                   <span className="text-sm font-bold uppercase tracking-wider font-display">Menu</span>
                 </button>
               </SheetTrigger>
-              <SheetContent side="left" aria-describedby={undefined} className="w-[300px] !bg-black border-r border-white/10 p-6 overflow-y-auto">
+              <SheetContent side="left" aria-describedby="mobile-menu-description" className="w-[300px] !bg-black border-r border-white/10 p-6 overflow-y-auto">
                 <SheetHeader className="mb-8">
                   <SheetTitle className="text-left">Menu</SheetTitle>
+                  <p id="mobile-menu-description" className="sr-only">
+                    Main navigation, categories, and account actions.
+                  </p>
                 </SheetHeader>
                 <div className="mt-6 space-y-6 pb-20">
                   <div>
@@ -318,7 +321,7 @@ export const BottomNav = () => {
                   </div>
 
                   {/* Debug Info in Menu */}
-                  {user && (
+                  {import.meta.env.DEV && hasAdminAccess && user && (
                     <div className="mt-8 p-4 bg-white/5 rounded-lg border border-white/10">
                       <p className="text-[10px] text-white/40 uppercase mb-2">Auth Status</p>
                       <div className="space-y-1">

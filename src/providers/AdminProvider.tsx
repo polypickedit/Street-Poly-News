@@ -93,6 +93,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     completeWalkthroughMutation.mutate();
   };
 
+  // Safety: never keep admin mode active after access is lost.
+  useEffect(() => {
+    if (hasAdminAccess) return;
+    setIsAdminMode(false);
+    setIsWalkthroughActive(false);
+    setWalkthroughStep(-1);
+    setActiveAdmins([]);
+  }, [hasAdminAccess]);
+
   // Keyboard shortcut: Ctrl + Alt + A
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

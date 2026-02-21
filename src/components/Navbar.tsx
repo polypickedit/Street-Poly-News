@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ShoppingBag, Search, Zap, Loader2, ChevronDown } from "lucide-react";
+import { Menu, X, ShoppingBag, Search, Zap, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "../hooks/useAuth";
@@ -13,6 +13,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import logo from "/logo.svg";
 import mobileSeal from "../assets/mobile-seal.png";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,11 +38,12 @@ export function Navbar() {
   const [showSearch, setShowSearch] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [mobileLogoErrored, setMobileLogoErrored] = useState(false);
-  const { session, isAdmin, isEditor, loading: authLoading } = useAuth();
+  const { session, isAdmin, isEditor } = useAuth();
   const hasAdminAccess = isAdmin || isEditor;
   const isAuthenticated = !!session;
   const { data: categories } = useCategories();
   const isVisible = useHeaderVisible();
+  const isMobile = useIsMobile();
   const location = useLocation();
   const { totalItems, setIsOpen: setCartOpen } = useCart();
   const { entitlements } = useEntitlements();
@@ -57,7 +59,7 @@ export function Navbar() {
     }
   };
 
-  const { activeAccount, isLoading: isLoadingAccount } = useAccount();
+  const { activeAccount } = useAccount();
 
   useEffect(() => {
     const topOverlayOpen = isOpen || showSearch || isUserMenuOpen;
@@ -66,20 +68,19 @@ export function Navbar() {
     );
   }, [isOpen, showSearch, isUserMenuOpen]);
 
-  useEffect(() => {
-    console.log('Navbar Debug:', {
-      hasSession: !!session,
-      userId: session?.user?.id,
-      authLoading,
-      isAdmin,
-      activeAccount,
-      isLoadingAccount
-    });
-  }, [session, authLoading, isAdmin, activeAccount, isLoadingAccount]);
-
-
-
-  const currentNavLinks = isAuthenticated ? [] : [];
+  const stripCategories = (categories && categories.length > 0
+    ? categories.map((category) => ({
+        label: category.slug === "exclusive" ? "Exclusives" : category.name,
+        path: `/?category=${category.slug}`,
+      }))
+    : [
+        { label: "Politics", path: "/?category=politics" },
+        { label: "Entertainment", path: "/?category=entertainment" },
+        { label: "Business", path: "/?category=business" },
+        { label: "Exclusives", path: "/?category=exclusive" },
+        { label: "Fashion", path: "/?category=fashion" },
+        { label: "Health", path: "/?category=health" },
+      ]).slice(0, 8);
 
   // Force header visible when menu is open
   const headerVisible = isOpen || isVisible;
@@ -257,7 +258,7 @@ export function Navbar() {
                     )}
 
                     {/* Search Toggle (Desktop only shows if search hidden, Mobile always shows) */}
-                    {(!showSearch || window.innerWidth < 1024) && (
+                    {(!showSearch || isMobile) && (
                       <button
                         type="button"
                         onClick={() => setShowSearch(!showSearch)}
@@ -320,42 +321,15 @@ export function Navbar() {
                   >
                     All
                   </Link>
-                  <Link
-                    to="/?category=politics"
-                    className="font-display text-lg uppercase tracking-[0.2em] text-white/70 hover:text-rep transition-colors whitespace-nowrap"
-                  >
-                    Politics
-                  </Link>
-                  <Link
-                    to="/?category=entertainment"
-                    className="font-display text-lg uppercase tracking-[0.2em] text-white/70 hover:text-rep transition-colors whitespace-nowrap"
-                  >
-                    Entertainment
-                  </Link>
-                  <Link
-                    to="/?category=business"
-                    className="font-display text-lg uppercase tracking-[0.2em] text-white/70 hover:text-rep transition-colors whitespace-nowrap"
-                  >
-                    Business
-                  </Link>
-                  <Link
-                    to="/?category=exclusive"
-                    className="font-display text-lg uppercase tracking-[0.2em] text-white/70 hover:text-rep transition-colors whitespace-nowrap"
-                  >
-                    Exclusives
-                  </Link>
-                  <Link
-                    to="/?category=fashion"
-                    className="font-display text-lg uppercase tracking-[0.2em] text-white/70 hover:text-rep transition-colors whitespace-nowrap"
-                  >
-                    Fashion
-                  </Link>
-                  <Link
-                    to="/?category=health"
-                    className="font-display text-lg uppercase tracking-[0.2em] text-white/70 hover:text-rep transition-colors whitespace-nowrap"
-                  >
-                    Health
-                  </Link>
+                  {stripCategories.map((category) => (
+                    <Link
+                      key={category.path}
+                      to={category.path}
+                      className="font-display text-lg uppercase tracking-[0.2em] text-white/70 hover:text-rep transition-colors whitespace-nowrap"
+                    >
+                      {category.label}
+                    </Link>
+                  ))}
                 </div>
               </div>
 
