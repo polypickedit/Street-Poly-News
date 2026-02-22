@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -133,7 +133,10 @@ export function MediaLibraryDialog({ onSelect, trigger, accept = "image/*,video/
       </DialogTrigger>
       <DialogContent className="max-w-4xl h-[80vh] flex flex-col bg-background/95 backdrop-blur-xl border-border">
         <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle className="text-xl font-display uppercase tracking-widest">Media Library</DialogTitle>
+          <div>
+            <DialogTitle className="text-xl font-display uppercase tracking-widest">Media Library</DialogTitle>
+            <DialogDescription>Upload, select, copy, and manage media files for placements.</DialogDescription>
+          </div>
           <Button variant="ghost" size="icon" onClick={fetchFiles} disabled={loading}>
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </Button>

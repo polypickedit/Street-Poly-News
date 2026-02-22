@@ -32,9 +32,7 @@ const enforceCanonicalOrigin = (): boolean => {
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-if (enforceCanonicalOrigin()) {
-  // Halt startup; browser is navigating to the canonical origin.
-} else if (!SUPABASE_URL || !SUPABASE_KEY) {
+if (!SUPABASE_URL || !SUPABASE_KEY) {
   // Render Fatal Error Screen directly, bypassing App initialization
   console.error('CRITICAL: Missing Supabase environment variables');
   
@@ -56,6 +54,8 @@ if (enforceCanonicalOrigin()) {
     `;
     console.error('Failed to load FatalError component:', err);
   });
+} else if (enforceCanonicalOrigin()) {
+  // Halt startup; browser is navigating to the canonical origin.
 } else {
   // Only import App if environment is valid
   // This prevents the Supabase client from initializing and throwing

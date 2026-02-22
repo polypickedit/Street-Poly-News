@@ -12,6 +12,7 @@ import { AdEditDialog } from "@/components/admin/AdEditDialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Promo } from "@/types/promo";
+import { ContentPlacement } from "@/types/cms";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "http://localhost:54321";
 
@@ -105,15 +106,18 @@ export const PromoSidebar = ({ position }: PromoSidebarProps) => {
 
       if (currentId) {
         // Update existing placement
-        const { error } = await supabase
+        const { data: updatedPlacement, error } = await supabase
           .from("content_placements")
           .update({ metadata })
-          .eq("id", currentId);
+          .eq("id", currentId)
+          .select("*")
+          .single();
           
         if (error) throw error;
+        queryClient.setQueryData(["slot-content", slotKey], updatedPlacement as ContentPlacement);
       } else {
         // Create new placement
-        const { error } = await supabase
+        const { data: insertedPlacement, error } = await supabase
           .from("content_placements")
           .insert({
             slot_key: slotKey,
@@ -122,15 +126,28 @@ export const PromoSidebar = ({ position }: PromoSidebarProps) => {
             active: true,
             priority: 100, // High priority to override others
             device_scope: "all",
-          });
+          })
+          .select("*")
+          .single();
           
         if (error) throw error;
+        queryClient.setQueryData(["slot-content", slotKey], insertedPlacement as ContentPlacement);
       }
 
       toast.success("Ad updated successfully");
       queryClient.invalidateQueries({ queryKey: ["slot-content", slotKey] });
+      queryClient.invalidateQueries({ queryKey: ["slot-contents", slotKey] });
     } catch (error) {
       console.error("Error updating ad:", error);
+      const err = error as { code?: string; message?: string };
+      if (err.code === "42804" && err.message?.includes("target_id")) {
+        toast.error("Ad update blocked: database migration needed for content placement audit logging.");
+        return;
+      }
+      if (err.code === "23514" && err.message?.includes("admin_actions_target_type_check")) {
+        toast.error("Ad update blocked: placement audit trigger is using an invalid target_type.");
+        return;
+      }
       toast.error("Failed to update ad");
     }
   };

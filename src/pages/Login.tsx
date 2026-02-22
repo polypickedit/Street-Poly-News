@@ -40,6 +40,8 @@ const Login = () => {
   const projectRef =
     import.meta.env.VITE_SUPABASE_URL?.split(".")[0]?.split("//")[1] || "unknown";
   const [loading, setLoading] = useState(false);
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -62,10 +64,7 @@ const Login = () => {
   const redirectTo = normalizeRedirectPath(requestedRedirect);
   const emailConfirmationRedirectUrl = `${window.location.origin}${redirectTo}`;
   const loginRedirectUrl = `${window.location.origin}/login?redirectTo=${encodeURIComponent(redirectTo)}`;
-  const resetPasswordRedirectUrl = `${window.location.origin}/login?${new URLSearchParams({
-    redirectTo,
-    type: "recovery",
-  }).toString()}`;
+  const resetPasswordRedirectUrl = `${window.location.origin}/login?redirectTo=${encodeURIComponent(redirectTo)}&type=recovery`;
 
   useEffect(() => {
     if (authStatus === "authenticated" && session) {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,6 +51,9 @@ export function AdEditDialog({ trigger, initialData, onSave }: AdEditDialogProps
       <DialogContent className="sm:max-w-[425px] bg-background/95 backdrop-blur-xl border-border">
         <DialogHeader>
           <DialogTitle className="text-xl font-display uppercase tracking-widest">Edit Ad Slot</DialogTitle>
+          <DialogDescription>
+            Update ad creative, destination link, and optional copy.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="grid gap-6 py-4">
