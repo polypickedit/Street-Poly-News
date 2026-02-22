@@ -323,12 +323,18 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
             if (itemsError) {
               console.error("❌ Error fetching order items for entitlements:", itemsError);
             } else if (orderItems && orderItems.length > 0) {
-              const entitlementsToGrant = orderItems
-                .filter((item: any) => item.products?.entitlement_key)
-                .map((item: any) => ({
+              interface OrderItemWithProduct {
+                product_id: string;
+                products: {
+                  entitlement_key: string;
+                } | null;
+              }
+              const entitlementsToGrant = (orderItems as unknown as OrderItemWithProduct[])
+                .filter((item) => item.products?.entitlement_key)
+                .map((item) => ({
                   user_id: userId,
                   product_id: item.product_id,
-                  entitlement_key: item.products.entitlement_key,
+                  entitlement_key: item.products!.entitlement_key,
                   source_type: "purchase",
                   source_id: merchOrderId,
                   granted_at: new Date().toISOString(),

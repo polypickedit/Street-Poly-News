@@ -179,7 +179,14 @@ serve(async (req: Request) => {
         .map(i => i.id);
 
       // Fetch products from DB to get trusted prices
-      let dbProducts: any[] = [];
+      interface DbProduct {
+        id: string | number;
+        price: number;
+        title: string;
+        status: string;
+      }
+
+      let dbProducts: DbProduct[] = [];
       if (productIds.length > 0) {
         const { data, error } = await supabaseClient
           .from('products')
