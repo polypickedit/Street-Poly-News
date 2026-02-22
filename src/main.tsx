@@ -3,11 +3,38 @@ import { injectSpeedInsights } from '@vercel/speed-insights';
 import { RootErrorBoundary } from '@/components/RootErrorBoundary';
 import './index.css';
 
+const CANONICAL_HOST = import.meta.env.VITE_CANONICAL_HOST?.trim().toLowerCase() ?? '';
+const CANONICAL_PROTOCOL = import.meta.env.VITE_CANONICAL_PROTOCOL?.trim().toLowerCase() ?? 'https';
+
+const isLocalHost = (host: string) => host === 'localhost' || host === '127.0.0.1' || host === '::1';
+
+const enforceCanonicalOrigin = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  if (!CANONICAL_HOST) return false;
+
+  const currentHost = window.location.hostname.toLowerCase();
+  if (isLocalHost(currentHost)) return false;
+
+  const targetProtocol = CANONICAL_PROTOCOL === 'http' ? 'http:' : 'https:';
+  const protocolMismatch = window.location.protocol !== targetProtocol;
+  const hostMismatch = currentHost !== CANONICAL_HOST;
+
+  if (!protocolMismatch && !hostMismatch) {
+    return false;
+  }
+
+  const redirectUrl = `${targetProtocol}//${CANONICAL_HOST}${window.location.pathname}${window.location.search}${window.location.hash}`;
+  window.location.replace(redirectUrl);
+  return true;
+};
+
 // Environment Guard
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_KEY) {
+if (enforceCanonicalOrigin()) {
+  // Halt startup; browser is navigating to the canonical origin.
+} else if (!SUPABASE_URL || !SUPABASE_KEY) {
   // Render Fatal Error Screen directly, bypassing App initialization
   console.error('CRITICAL: Missing Supabase environment variables');
   
@@ -39,7 +66,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
     
     if (import.meta.env.PROD && typeof window !== 'undefined') {
       const host = window.location.hostname;
-      const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '::1';
+      const isLocal = isLocalHost(host);
       if (!isLocal) {
         try {
           injectSpeedInsights();

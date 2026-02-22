@@ -52,6 +52,7 @@ const Login = () => {
   }>({ status: "idle", message: null });
   const { session, status: authStatus } = useAuth();
   const [searchParams] = useSearchParams();
+  const showDebug = searchParams.get("debug") === "true";
   const location = useLocation();
   
   // Default to home screen per user request, unless specific redirect requested
@@ -59,7 +60,12 @@ const Login = () => {
   const fromStatePath = (location.state as { from?: { pathname: string } })?.from?.pathname;
   const requestedRedirect = searchParams.get("redirectTo") || fromStatePath;
   const redirectTo = normalizeRedirectPath(requestedRedirect);
+  const emailConfirmationRedirectUrl = `${window.location.origin}${redirectTo}`;
   const loginRedirectUrl = `${window.location.origin}/login?redirectTo=${encodeURIComponent(redirectTo)}`;
+  const resetPasswordRedirectUrl = `${window.location.origin}/login?${new URLSearchParams({
+    redirectTo,
+    type: "recovery",
+  }).toString()}`;
 
   useEffect(() => {
     if (authStatus === "authenticated" && session) {
@@ -193,7 +199,7 @@ const Login = () => {
               display_name: displayName.trim() || null,
               full_name: displayName.trim() || null,
             },
-            emailRedirectTo: loginRedirectUrl,
+            emailRedirectTo: emailConfirmationRedirectUrl,
           },
         });
         
@@ -273,7 +279,7 @@ const Login = () => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${loginRedirectUrl}&type=recovery`,
+        redirectTo: resetPasswordRedirectUrl,
       });
       if (error) throw error;
       toast({
@@ -330,6 +336,17 @@ const Login = () => {
         </CardHeader>
         
         <CardContent className="space-y-6">
+          {showDebug && (
+            <div className="p-3 mb-4 rounded bg-black/40 border border-yellow-500/30 text-[10px] font-mono text-yellow-500/80 overflow-hidden">
+              <div className="grid grid-cols-[80px_1fr] gap-1">
+                <span className="opacity-50">Origin:</span> <span className="truncate">{window.location.origin}</span>
+                <span className="opacity-50">Redirect:</span> <span className="truncate">{redirectTo}</span>
+                <span className="opacity-50">Status:</span> <span>{authStatus}</span>
+                <span className="opacity-50">Session:</span> <span>{session ? "✅" : "❌"}</span>
+                <span className="opacity-50">Storage:</span> <span>{Object.keys(localStorage).some(k => k.startsWith('sb-')) ? "✅" : "❌"}</span>
+              </div>
+            </div>
+          )}
           <form onSubmit={handleAuth} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-white/60 text-xs font-semibold uppercase tracking-wider">Email Address</Label>

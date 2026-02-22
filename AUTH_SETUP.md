@@ -26,6 +26,7 @@ Ensure your Supabase project is configured correctly in the dashboard:
 Go to Authentication -> URL Configuration:
 
 - [ ] **Site URL**: Set to your production URL (e.g., `https://street-politics-feed.vercel.app` or your custom domain)
+- [ ] **Canonical Domain**: Pick one production hostname (`www` or non-`www`) and keep it consistent across DNS, app hosting redirects, and Supabase URL config.
 - [ ] **Redirect URLs**: Add all valid redirect URLs. This is CRITICAL for production auth to work:
   - `http://localhost:8080` (Local Dev)
   - `http://localhost:8080/admin`
@@ -33,6 +34,8 @@ Go to Authentication -> URL Configuration:
   - `https://cjodbnsjggslngnzwxsv.supabase.co`
   - `https://street-politics-feed.vercel.app` (Production Root)
   - `https://street-politics-feed.vercel.app/**` (Wildcard for production subpaths)
+
+If the frontend enforces a canonical host via `VITE_CANONICAL_HOST`, this value should match the same hostname used in Site URL/Redirect URLs.
 
 ## 2. Environment Variables (.env.local)
 
@@ -42,6 +45,8 @@ Your local environment must match the remote project configuration.
 VITE_SUPABASE_URL="https://cjodbnsjggslngnzwxsv.supabase.co"
 VITE_SUPABASE_PUBLISHABLE_KEY="<your-anon-key>"
 VITE_AUTH_GOOGLE_ENABLED="true"
+VITE_CANONICAL_HOST="streetpolynews.com"
+VITE_CANONICAL_PROTOCOL="https"
 SUPABASE_SERVICE_ROLE_KEY="<your-service-role-key>" # Required for admin scripts/tests
 ```
 

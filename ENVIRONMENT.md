@@ -11,6 +11,8 @@ The browser bundle reads `import.meta.env.VITE_*` variables directly, so the req
 | `VITE_SUPABASE_URL` | Supabase project | Public URL (e.g., `https://xxx.supabase.co`). |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase project | The anon/public key. |
 | `VITE_AUTH_GOOGLE_ENABLED` | App auth toggle | Set to `"true"`/`"false"` to show or hide Google OAuth in the login UI. |
+| `VITE_CANONICAL_HOST` | App origin guard | Optional. When set in production, app bootstrap redirects all non-localhost traffic to this hostname before auth initialization (example: `streetpolynews.com`). |
+| `VITE_CANONICAL_PROTOCOL` | App origin guard | Optional. Defaults to `https`; set to `http` only for special non-TLS environments. |
 | `VITE_SUPABASE_PROJECT_ID` | Supabase project | Used only for tooling (e.g., Lovable). |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe dashboard | Public publishable key for redirecting to checkout. |
 | `REACT_APP_*` (legacy) | Supabase project | Included in `.env`/`.env.local` for compatibility with tooling that expects `REACT_APP_` prefixes, but the app itself relies on the `VITE_` values above. |
@@ -21,6 +23,8 @@ Create a local `.env.local` (or `.env.development.local`) file that mirrors `.en
 VITE_SUPABASE_URL="https://your-project.supabase.co"
 VITE_SUPABASE_PUBLISHABLE_KEY="sb_publishable_xxx"
 VITE_AUTH_GOOGLE_ENABLED="true"
+VITE_CANONICAL_HOST="streetpolynews.com"
+VITE_CANONICAL_PROTOCOL="https"
 VITE_SUPABASE_PROJECT_ID="your-project-id"
 VITE_STRIPE_PUBLISHABLE_KEY="pk_test_xxx"
 # Optional compatibility entries

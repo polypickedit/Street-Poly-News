@@ -59,6 +59,9 @@ The application requires the following environment variables in `.env.local`:
 | --- | --- |
 | `VITE_SUPABASE_URL` | Your Supabase project URL |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Your Supabase anonymous key |
+| `VITE_AUTH_GOOGLE_ENABLED` | Toggle Google OAuth button (`"true"` or `"false"`) |
+| `VITE_CANONICAL_HOST` | Canonical production hostname to enforce (`www` or non-`www`) |
+| `VITE_CANONICAL_PROTOCOL` | Canonical protocol (`https` recommended, default) |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | (Optional) Stripe publishable key for payments |
 
 If these are missing, the application will display a "Fatal Configuration Error" screen on startup.
