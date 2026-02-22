@@ -51,7 +51,7 @@ export const useSlotAccess = (slotSlug: string) => {
           .select('*')
           .eq('slug', slotSlug)
           .abortSignal(signal)
-          .single()
+          .maybeSingle()
         ) as Slot | null;
 
         if (!slot) {

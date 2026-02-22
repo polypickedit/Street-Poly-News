@@ -82,9 +82,9 @@ const Index = () => {
           <h1 className="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-[0.1em] md:tracking-[0.3em] uppercase leading-[1.1] md:leading-none flex flex-col sm:block">
             <span className="inline-block">
               <span className="text-dem">Street</span>
-              <span className="text-rep">Poly</span>
+              <span className="text-dem">Poly</span>
             </span>
-            <span className="text-dem sm:ml-2 font-black">News</span>
+            <span className="text-rep sm:ml-2 font-black">News</span>
           </h1>
           <p className="mt-6 text-muted-foreground text-sm md:text-lg max-w-2xl mx-auto font-body leading-relaxed px-2">
             Unfiltered stories from the heart of the movement. <br className="hidden md:block" /> Real voices, real impact, real news.
@@ -105,9 +105,9 @@ const Index = () => {
         <section className="mb-6 md:mb-10 px-4">
           <div className="flex items-center justify-between gap-4 mb-3">
             <div>
-              <p className="text-xs uppercase tracking-widest text-dem/60 font-body font-black">
-                STREETPOLY NEWS
-              </p>
+              <p className="text-xs uppercase tracking-widest text-white/60 font-body font-black">
+              STREETPOLY NEWS
+            </p>
               <h2 className="font-display text-2xl md:text-3xl text-dem font-black uppercase">
                 Latest Clips
               </h2>

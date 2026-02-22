@@ -12,7 +12,7 @@ interface SlotProps {
   /** Optional wrapper class for the slot */
   className?: string;
   /** Function to render the resolved content */
-  children: (content: { type: ContentType; id: string | null; metadata: PlacementMetadata } | null) => ReactNode;
+  children: (content: { type: ContentType; id: string | null; placementId: string; metadata: PlacementMetadata } | null) => ReactNode;
 }
 
 /**
@@ -65,6 +65,7 @@ export function Slot({
       {children({
         type: placement.content_type as ContentType,
         id: placement.content_id,
+        placementId: placement.id,
         metadata: placement.metadata,
       })}
     </div>

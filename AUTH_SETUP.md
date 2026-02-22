@@ -19,19 +19,20 @@ Ensure your Supabase project is configured correctly in the dashboard:
 - [ ] **Enable Google Provider**: Go to Authentication -> Providers -> Google
 - [ ] **Client ID**: Add your Google Client ID
 - [ ] **Client Secret**: Add your Google Client Secret
-- [ ] **Callback URL**: Add `https://<project-ref>.supabase.co/auth/v1/callback` to your Google Cloud Console "Authorized redirect URIs".
+- [ ] **Callback URL**: Add `https://cjodbnsjggslngnzwxsv.supabase.co/auth/v1/callback` to your Google Cloud Console "Authorized redirect URIs".
 
 ### URL Configuration
 
 Go to Authentication -> URL Configuration:
 
-- [ ] **Site URL**: Set to your production URL (e.g., `https://streetpolitics.com`)
-- [ ] **Redirect URLs**: Add all valid redirect URLs:
+- [ ] **Site URL**: Set to your production URL (e.g., `https://street-politics-feed.vercel.app` or your custom domain)
+- [ ] **Redirect URLs**: Add all valid redirect URLs. This is CRITICAL for production auth to work:
   - `http://localhost:8080` (Local Dev)
   - `http://localhost:8080/admin`
   - `http://localhost:8080/auth/callback`
-  - `https://<project-ref>.supabase.co`
-  - Production URLs
+  - `https://cjodbnsjggslngnzwxsv.supabase.co`
+  - `https://street-politics-feed.vercel.app` (Production Root)
+  - `https://street-politics-feed.vercel.app/**` (Wildcard for production subpaths)
 
 ## 2. Environment Variables (.env.local)
 
@@ -94,17 +95,8 @@ We use a strict `appReady` state to prevent race conditions.
 - **"Auth session missing"**: Check `VITE_SUPABASE_URL` matches the project you are logging into.
 - **Infinite Loading**: Check `appReady` state in `DebugAuth` component.
 - **400/404 Errors**: Likely Schema Drift. Run `supabase db push`.
+- **Login Redirects Failing**: Ensure your Production URL is in the "Redirect URLs" list in Supabase Dashboard.
 
 ## 6. Role Management
 
 Roles are managed via `user_roles` table and `get_user_roles` RPC.
-
-- **Admin**: Full access.
-- **Editor**: Content management.
-- **Viewer**: Standard user.
-
-To assign a role (Admin only):
-
-```sql
-insert into public.user_roles (user_id, role) values ('<user-uuid>', 'admin');
-```

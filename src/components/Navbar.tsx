@@ -21,16 +21,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { MediaLibraryDialog } from "@/components/admin/MediaLibraryDialog";
 import { useEntitlements } from "../hooks/useEntitlements";
 
 const navLinks = [
   { name: "Home", path: "/" },
-  { name: "Videos", path: "/#videos" },
-  { name: "Gallery", path: "/gallery" },
-  { name: "Merch", path: "/merch" },
-  { name: "Booking", path: "/booking" },
-  { name: "About", path: "/about" },
-  { name: "Contact", path: "/contact" },
+  // { name: "Videos", path: "/#videos" },
+  // { name: "Gallery", path: "/gallery" },
+  // { name: "Merch", path: "/merch" },
+  // { name: "Booking", path: "/booking" },
+  // { name: "About", path: "/about" },
+  // { name: "Contact", path: "/contact" },
 ];
 
 export function Navbar() {
@@ -121,7 +122,7 @@ export function Navbar() {
                         className="hidden md:block w-full h-full object-contain"
                       />
                     </div>
-                    <span className="font-display text-2xl md:text-5xl tracking-widest text-dem leading-none">
+                    <span className="font-display text-2xl md:text-5xl tracking-widest text-white leading-none">
                       STREETPOLY <span className="text-rep ml-1">NEWS</span>
                     </span>
                   </Link>
@@ -132,6 +133,7 @@ export function Navbar() {
                     {/* Admin Link (Desktop Only) */}
                     {hasAdminAccess && (
                       <div className="flex items-center gap-2">
+                        <MediaLibraryDialog />
                         <button
                           type="button"
                           onClick={toggleAdminMode}

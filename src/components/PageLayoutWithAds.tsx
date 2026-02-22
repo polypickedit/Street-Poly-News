@@ -5,7 +5,6 @@ import { StockTicker } from "@/components/StockTicker";
 import { PromoSidebar, MobileSquarePromo, MobileSkyscraperPromo } from "@/components/PromoSidebar";
 import { PromoBanner } from "@/components/PromoBanner";
 import { BottomNav } from "@/components/BottomNav";
-import { useHeaderVisible } from "@/hooks/useHeaderVisible";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface PageLayoutWithAdsProps {
@@ -21,13 +20,13 @@ export const PageLayoutWithAds = ({
   headerContent,
   mainClassName = "max-w-4xl",
 }: PageLayoutWithAdsProps) => {
-  const isVisible = useHeaderVisible();
   const isMobile = useIsMobile();
 
   const getPaddingTop = () => {
+    // Keep a stable header offset so ad columns don't reflow while scrolling.
     // Mobile: 40 (banner) + 96 (nav top) + 40 (nav bot) = 176px
     // Desktop: 40 (banner) + 128 (nav top) + 50 (nav bot) = 218px
-    return isVisible ? (isMobile ? "pt-[176px]" : "pt-[218px]") : "pt-10";
+    return isMobile ? "pt-[176px]" : "pt-[218px]";
   };
 
   return (
@@ -38,7 +37,7 @@ export const PageLayoutWithAds = ({
       {headerContent}
 
       <div
-        className={`grid grid-cols-1 lg:grid-cols-[260px_minmax(0,56rem)_260px] justify-center gap-4 lg:gap-8 px-4 sm:px-6 md:px-8 transition-[padding] duration-300 ease-in-out ${getPaddingTop()}`}
+        className={`grid grid-cols-1 lg:grid-cols-[260px_minmax(0,56rem)_260px] justify-center gap-4 lg:gap-8 px-4 sm:px-6 md:px-8 ${getPaddingTop()}`}
       >
         <div className="hidden lg:block">
           <PromoSidebar position="left" />

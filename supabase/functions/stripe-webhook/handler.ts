@@ -373,6 +373,11 @@ export async function processStripeWebhookEvent(event: StripeEventLike, supabase
         console.error("Failed to log entitlement_granted event:", logError);
       }
 
+      // CRITICAL: If processing failed, throw error to trigger Stripe retry
+      if (processingError) {
+        throw new Error(`Processing failed with error: ${JSON.stringify(processingError)}`);
+      }
+
     } catch (globalError) {
       console.error("❌ Global error in webhook processing:", globalError);
       // Log Global Error (Ledger)
