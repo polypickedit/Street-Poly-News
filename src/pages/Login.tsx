@@ -10,6 +10,29 @@ import { Loader2, Chrome, ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { validateUsername } from "@/lib/username";
 
+const DEFAULT_REDIRECT_PATH = "/";
+
+const normalizeRedirectPath = (value: string | null | undefined): string => {
+  if (!value) return DEFAULT_REDIRECT_PATH;
+
+  // Allow only same-origin paths to avoid open redirects and callback mismatch.
+  if (value.startsWith("/")) {
+    return value;
+  }
+
+  try {
+    const parsed = new URL(value, window.location.origin);
+    if (parsed.origin === window.location.origin) {
+      const path = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+      return path.startsWith("/") ? path : DEFAULT_REDIRECT_PATH;
+    }
+  } catch {
+    return DEFAULT_REDIRECT_PATH;
+  }
+
+  return DEFAULT_REDIRECT_PATH;
+};
+
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -33,8 +56,10 @@ const Login = () => {
   
   // Default to home screen per user request, unless specific redirect requested
   // Prioritize query param (explicit redirect), then history state (protected route redirect), then home
-  const fromState = (location.state as { from?: { pathname: string } })?.from?.pathname;
-  const redirectTo = searchParams.get("redirectTo") || fromState || "/";
+  const fromStatePath = (location.state as { from?: { pathname: string } })?.from?.pathname;
+  const requestedRedirect = searchParams.get("redirectTo") || fromStatePath;
+  const redirectTo = normalizeRedirectPath(requestedRedirect);
+  const loginRedirectUrl = `${window.location.origin}/login?redirectTo=${encodeURIComponent(redirectTo)}`;
 
   useEffect(() => {
     if (authStatus === "authenticated" && session) {
@@ -168,7 +193,7 @@ const Login = () => {
               display_name: displayName.trim() || null,
               full_name: displayName.trim() || null,
             },
-            emailRedirectTo: `${window.location.origin}${redirectTo}`,
+            emailRedirectTo: loginRedirectUrl,
           },
         });
         
@@ -219,7 +244,7 @@ const Login = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: loginRedirectUrl,
         },
       });
       if (error) throw error;
@@ -248,7 +273,7 @@ const Login = () => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/login?type=recovery`,
+        redirectTo: `${loginRedirectUrl}&type=recovery`,
       });
       if (error) throw error;
       toast({
