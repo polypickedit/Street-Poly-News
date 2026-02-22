@@ -453,22 +453,14 @@ export const BookingForm = ({ type, onSuccess, slots, outlets }: BookingFormProp
         </div>
 
           {canUseCapability && (
-            <div className="pt-5 border-t border-dem/10 flex gap-3">
-              <Button
-                type="button"
-                variant={paymentMethod === 'stripe' ? 'default' : 'outline'}
-                className={`flex-1 h-10 text-xs font-bold uppercase tracking-wider transition-all ${paymentMethod === 'stripe' ? 'bg-dem shadow-lg shadow-dem/20' : ''}`}
-                onClick={() => setPaymentMethod('stripe')}
-              >
-                Pay with Card
-              </Button>
+            <div className="pt-5 border-t border-dem/10">
               <Button
                 type="button"
                 variant={paymentMethod === 'capability' ? 'default' : 'outline'}
-                className={`flex-1 h-10 text-xs font-bold uppercase tracking-wider transition-all ${paymentMethod === 'capability' ? 'bg-dem shadow-lg shadow-dem/20' : ''}`}
-                onClick={() => setPaymentMethod('capability')}
+                className={`w-full h-10 text-xs font-bold uppercase tracking-wider transition-all ${paymentMethod === 'capability' ? 'bg-dem shadow-lg shadow-dem/20' : 'hover:bg-dem/10'}`}
+                onClick={() => setPaymentMethod(prev => prev === 'capability' ? 'stripe' : 'capability')}
               >
-                Use Capability
+                {paymentMethod === 'capability' ? 'Using Capability (Free)' : 'Use Editor Capability'}
               </Button>
             </div>
           )}

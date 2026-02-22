@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Upload, Copy, Trash2, Image as ImageIcon, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface FileObject {
   name: string;
@@ -20,9 +21,10 @@ interface FileObject {
 interface MediaLibraryDialogProps {
   onSelect?: (url: string) => void;
   trigger?: React.ReactNode;
+  accept?: string;
 }
 
-export function MediaLibraryDialog({ onSelect, trigger }: MediaLibraryDialogProps) {
+export function MediaLibraryDialog({ onSelect, trigger, accept = "image/*,video/*" }: MediaLibraryDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [files, setFiles] = useState<FileObject[]>([]);
   const [loading, setLoading] = useState(false);
@@ -39,7 +41,11 @@ export function MediaLibraryDialog({ onSelect, trigger }: MediaLibraryDialogProp
 
       if (error) {
         console.error("Error fetching files:", error);
-        toast.error("Failed to load media library");
+        if ((error as { code?: string; message?: string })?.code === '404' || error.message?.includes('Bucket not found')) {
+          toast.error("Media bucket not configured");
+        } else {
+          toast.error("Failed to load media library");
+        }
       } else {
         setFiles(data || []);
       }
@@ -142,7 +148,7 @@ export function MediaLibraryDialog({ onSelect, trigger }: MediaLibraryDialogProp
               className="hidden"
               onChange={handleUpload}
               disabled={uploading}
-              accept="image/*,video/*"
+              accept={accept}
             />
             <label htmlFor="media-upload" className="cursor-pointer flex flex-col items-center gap-2">
               {uploading ? (
@@ -165,51 +171,80 @@ export function MediaLibraryDialog({ onSelect, trigger }: MediaLibraryDialogProp
                 const isImage = mimetype?.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file.name);
 
                 return (
-                  <div key={file.id} className="group relative aspect-square bg-muted rounded-lg overflow-hidden border border-border hover:border-dem transition-colors">
-                    {isImage ? (
-                      <img src={publicUrl} alt={file.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-muted">
-                        <span className="text-xs text-muted-foreground break-all p-2">{file.name}</span>
-                      </div>
-                    )}
-                    
-                    {/* Overlay Actions */}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
-                      {onSelect && (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="w-24 rounded-full bg-dem text-white hover:bg-dem/90 font-bold uppercase tracking-widest text-[10px]"
-                          onClick={() => handleSelect(publicUrl)}
+                  <div key={file.id} className="group relative flex flex-col bg-muted rounded-lg overflow-hidden border border-border hover:border-dem transition-colors">
+                    <div className="relative aspect-square w-full overflow-hidden">
+                      {isImage ? (
+                        <img 
+                          src={publicUrl} 
+                          alt={file.name} 
+                          className={`w-full h-full object-cover transition-transform group-hover:scale-105 ${onSelect ? 'cursor-pointer' : ''}`}
+                          onClick={() => onSelect && handleSelect(publicUrl)}
+                        />
+                      ) : (
+                        <div 
+                          className={`w-full h-full flex items-center justify-center bg-muted ${onSelect ? 'cursor-pointer' : ''}`}
+                          onClick={() => onSelect && handleSelect(publicUrl)}
                         >
-                          Select
-                        </Button>
+                          <span className="text-xs text-muted-foreground break-all p-2">{file.name}</span>
+                        </div>
                       )}
-                      <div className="flex items-center justify-center gap-2">
-                        <Button
-                          size="icon"
-                          variant="secondary"
-                          className="h-8 w-8 rounded-full"
-                          onClick={() => copyUrl(file.name)}
-                          title="Copy URL"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="destructive"
-                          className="h-8 w-8 rounded-full"
-                          onClick={() => handleDelete(file.name)}
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                      
+                      {/* Overlay Actions */}
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 pointer-events-none">
+                        <div className="flex items-center justify-center gap-2 pointer-events-auto">
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            className="h-8 w-8 rounded-full shadow-lg"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyUrl(file.name);
+                            }}
+                            title="Copy URL"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="destructive"
+                            className="h-8 w-8 rounded-full shadow-lg"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(file.name);
+                            }}
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        {onSelect && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="w-24 rounded-full bg-dem text-white hover:bg-dem/90 font-bold uppercase tracking-widest text-[10px] shadow-lg pointer-events-auto mt-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelect(publicUrl);
+                            }}
+                          >
+                            Select
+                          </Button>
+                        )}
                       </div>
                     </div>
                     
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-1 truncate">
-                      <p className="text-[10px] text-white truncate px-1">{file.name}</p>
+                    <div className="p-2 bg-card border-t border-border flex items-center justify-between gap-2">
+                      <p className="text-[10px] text-muted-foreground truncate flex-1" title={file.name}>{file.name}</p>
+                      {onSelect && (
+                        <Button 
+                          size="sm" 
+                          variant="secondary" 
+                          className="h-6 text-[10px] px-2 bg-dem/10 text-dem hover:bg-dem/20 border border-dem/20 font-bold uppercase tracking-wider"
+                          onClick={() => handleSelect(publicUrl)}
+                        >
+                          Use
+                        </Button>
+                      )}
                     </div>
                   </div>
                 );

@@ -8,7 +8,7 @@ import stripClubSlotsAd from "@/assets/Strip_Club_Slots_ad-removebg-preview.png"
 import streetPolyMerchAd from "@/assets/StreetPolyMerch_Ad.jpeg";
 import { Slot } from "./Slot";
 import { useAuth } from "@/hooks/useAuth";
-import { MediaLibraryDialog } from "@/components/admin/MediaLibraryDialog";
+import { AdEditDialog } from "@/components/admin/AdEditDialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Promo } from "@/types/promo";
@@ -93,14 +93,14 @@ export const PromoSidebar = ({ position }: PromoSidebarProps) => {
   const skyPromoFallback = mockPromos.skyscraper[position === "left" ? 0 : 1];
   const sqPromoFallback = mockPromos.square[position === "left" ? 0 : 2];
 
-  const handleUpdate = async (slotKey: string, url: string, currentId?: string | null) => {
+  const handleUpdate = async (slotKey: string, data: { imageUrl: string; link: string; title: string; subtitle: string }, currentId?: string | null) => {
     try {
       // Create metadata for the ad
       const metadata = {
-        imageUrl: url,
-        title: "Custom Ad",
-        description: "Uploaded via admin interface",
-        targetUrl: "#", // Default to hash, can be edited later if we add fields
+        imageUrl: data.imageUrl,
+        title: data.title,
+        description: data.subtitle,
+        targetUrl: data.link,
       };
 
       if (currentId) {
@@ -148,9 +148,9 @@ export const PromoSidebar = ({ position }: PromoSidebarProps) => {
              <SkyscraperRenderer promo={skyPromoFallback} />
              {isAdmin && (
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                  <MediaLibraryDialog 
-                    trigger={<Button size="icon" variant="secondary" className="h-8 w-8 shadow-md"><Edit className="w-4 h-4" /></Button>}
-                    onSelect={(url) => handleUpdate(`sidebar.${position}.sky`, url)}
+                  <AdEditDialog 
+                    initialData={skyPromoFallback}
+                    onSave={(data) => handleUpdate(`sidebar.${position}.sky`, data)}
                   />
                 </div>
               )}
@@ -175,9 +175,9 @@ export const PromoSidebar = ({ position }: PromoSidebarProps) => {
               <SkyscraperRenderer promo={promo} />
               {isAdmin && (
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                  <MediaLibraryDialog 
-                    trigger={<Button size="icon" variant="secondary" className="h-8 w-8 shadow-md"><Edit className="w-4 h-4" /></Button>}
-                    onSelect={(url) => handleUpdate(`sidebar.${position}.sky`, url, content?.placementId)}
+                  <AdEditDialog 
+                    initialData={promo}
+                    onSave={(data) => handleUpdate(`sidebar.${position}.sky`, data, content?.placementId)}
                   />
                 </div>
               )}
@@ -195,9 +195,9 @@ export const PromoSidebar = ({ position }: PromoSidebarProps) => {
             <SquareRenderer promo={sqPromoFallback} />
             {isAdmin && (
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                  <MediaLibraryDialog 
-                    trigger={<Button size="icon" variant="secondary" className="h-8 w-8 shadow-md"><Edit className="w-4 h-4" /></Button>}
-                    onSelect={(url) => handleUpdate(`sidebar.${position}.sq`, url)}
+                  <AdEditDialog 
+                    initialData={sqPromoFallback}
+                    onSave={(data) => handleUpdate(`sidebar.${position}.sq`, data)}
                   />
                 </div>
               )}
@@ -214,16 +214,17 @@ export const PromoSidebar = ({ position }: PromoSidebarProps) => {
             link: content.metadata.targetUrl as string || "#",
             image: content.metadata.imageUrl as string,
             scaleClass: "scale-100",
+            objectPosition: "center",
           } : sqPromoFallback;
 
           return (
-             <div className="relative group w-full">
+            <div className="relative group w-full">
               <SquareRenderer promo={promo} />
               {isAdmin && (
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                  <MediaLibraryDialog 
-                    trigger={<Button size="icon" variant="secondary" className="h-8 w-8 shadow-md"><Edit className="w-4 h-4" /></Button>}
-                    onSelect={(url) => handleUpdate(`sidebar.${position}.sq`, url, content?.placementId)}
+                  <AdEditDialog 
+                    initialData={promo}
+                    onSave={(data) => handleUpdate(`sidebar.${position}.sq`, data, content?.placementId)}
                   />
                 </div>
               )}

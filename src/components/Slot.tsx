@@ -27,7 +27,7 @@ export function Slot({
   className,
   children,
 }: SlotProps) {
-  const { data: placement, isLoading } = useSlotContent(slotKey);
+  const { data: placement, isLoading } = useSlotContent(slotKey, accepts);
 
   // While loading, we should probably show the fallback or a skeletal state
   // For now, mirroring the "site survival" rule, we return the fallback.
@@ -36,19 +36,6 @@ export function Slot({
       <div 
         data-slot={slotKey} 
         data-accepts={accepts.join(",")} 
-        className={className}
-      >
-        {fallback}
-      </div>
-    );
-  }
-
-  // Ensure the placement content type is allowed for this slot
-  if (!accepts.includes(placement.content_type as ContentType)) {
-    console.warn(`Slot ${slotKey} received unsupported content type: ${placement.content_type}`);
-    return (
-      <div 
-        data-slot={slotKey} 
         className={className}
       >
         {fallback}

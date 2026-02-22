@@ -3,12 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { ContentPlacement } from "@/types/cms";
 import { safeQuery } from "@/lib/supabase-debug";
 import { useAuth } from "@/hooks/useAuth";
+import { ContentType } from "@/types/cms";
 
 /**
  * Fetches the active placement for a given slot key.
  * Resolves by priority, device scope, and time window.
  */
-export function useSlotContent(slotKey: string) {
+export function useSlotContent(slotKey: string, accepts?: ContentType[]) {
   const { appReady } = useAuth();
   return useQuery({
     queryKey: ["slot-content", slotKey],
@@ -35,7 +36,15 @@ export function useSlotContent(slotKey: string) {
         (isMobile ? p.device_scope === 'mobile' : p.device_scope === 'desktop')
       );
 
-      return filtered[0] || null;
+      if (!accepts || accepts.length === 0) {
+        return filtered[0] || null;
+      }
+
+      const acceptedPlacement = filtered.find((p) =>
+        accepts.includes(p.content_type as ContentType)
+      );
+
+      return acceptedPlacement || null;
     },
     enabled: appReady && !!slotKey,
     staleTime: 1000 * 30, // Shorter stale time for temporal changes

@@ -4,7 +4,8 @@ ON storage.objects FOR INSERT
 TO authenticated
 WITH CHECK (
     bucket_id = 'media' AND
-    (storage.foldername(name))[1] = 'uploads'
+    (storage.foldername(name))[1] = 'uploads' AND
+    public.is_admin_or_editor()
 );
 
 -- Allow authenticated users to update their own media in 'uploads' folder
@@ -14,12 +15,14 @@ TO authenticated
 USING (
     bucket_id = 'media' AND
     (storage.foldername(name))[1] = 'uploads' AND
-    auth.uid() = owner
+    auth.uid() = owner AND
+    public.is_admin_or_editor()
 )
 WITH CHECK (
     bucket_id = 'media' AND
     (storage.foldername(name))[1] = 'uploads' AND
-    auth.uid() = owner
+    auth.uid() = owner AND
+    public.is_admin_or_editor()
 );
 
 -- Allow authenticated users to delete their own media in 'uploads' folder
@@ -29,5 +32,6 @@ TO authenticated
 USING (
     bucket_id = 'media' AND
     (storage.foldername(name))[1] = 'uploads' AND
-    auth.uid() = owner
+    auth.uid() = owner AND
+    public.is_admin_or_editor()
 );
