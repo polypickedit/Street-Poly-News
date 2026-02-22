@@ -239,20 +239,6 @@ export const BottomNav = () => {
                         <span className="text-lg font-medium">Home</span>
                       </Link>
                       <Link
-                        to="/#videos"
-                        onClick={() => setMenuOpen(false)}
-                        className="flex items-center p-3 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-colors"
-                      >
-                        <span className="text-lg font-medium">Videos</span>
-                      </Link>
-                      <Link
-                        to="/gallery"
-                        onClick={() => setMenuOpen(false)}
-                        className="flex items-center p-3 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-colors"
-                      >
-                        <span className="text-lg font-medium">Gallery</span>
-                      </Link>
-                      <Link
                         to="/merch"
                         onClick={() => setMenuOpen(false)}
                         className="flex items-center p-3 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-colors"
