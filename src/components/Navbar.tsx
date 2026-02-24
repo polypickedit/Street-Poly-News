@@ -8,7 +8,6 @@ import { useAccount } from "../hooks/useAccount";
 import { SearchBar } from "./SearchBar";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHeaderVisible } from "../hooks/useHeaderVisible";
-import { useCategories } from "../hooks/useCategories";
 import { useAdmin } from "@/hooks/useAdmin";
 import logo from "/logo.svg";
 import mobileSeal from "../assets/mobile-seal.png";
@@ -42,7 +41,6 @@ export function Navbar() {
   const { session, isAdmin, isEditor } = useAuth();
   const hasAdminAccess = isAdmin || isEditor;
   const isAuthenticated = !!session;
-  const { data: categories } = useCategories();
   const isVisible = useHeaderVisible();
   const isMobile = useIsMobile();
   const location = useLocation();
@@ -68,20 +66,6 @@ export function Navbar() {
       new CustomEvent("streetpoly:top-overlay", { detail: { open: topOverlayOpen } })
     );
   }, [isOpen, showSearch, isUserMenuOpen]);
-
-  const stripCategories = (categories && categories.length > 0
-    ? categories.map((category) => ({
-        label: category.slug === "exclusive" ? "Exclusives" : category.name,
-        path: `/?category=${category.slug}`,
-      }))
-    : [
-        { label: "Politics", path: "/?category=politics" },
-        { label: "Entertainment", path: "/?category=entertainment" },
-        { label: "Business", path: "/?category=business" },
-        { label: "Exclusives", path: "/?category=exclusive" },
-        { label: "Fashion", path: "/?category=fashion" },
-        { label: "Health", path: "/?category=health" },
-      ]).slice(0, 8);
 
   // Force header visible when menu is open
   const headerVisible = isOpen || isVisible;
@@ -323,15 +307,6 @@ export function Navbar() {
                   >
                     All
                   </Link>
-                  {stripCategories.map((category) => (
-                    <Link
-                      key={category.path}
-                      to={category.path}
-                      className="font-display text-lg uppercase tracking-[0.2em] text-white/70 hover:text-rep transition-colors whitespace-nowrap"
-                    >
-                      {category.label}
-                    </Link>
-                  ))}
                 </div>
               </div>
 

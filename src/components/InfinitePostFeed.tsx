@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { usePosts } from "@/hooks/usePosts";
 import { PostCard } from "./PostCard";
-import { Loader2, Sparkles } from "lucide-react";
+import { ExternalLink, Loader2, Sparkles } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
 interface InfinitePostFeedProps {
@@ -57,6 +57,8 @@ export function InfinitePostFeed({ category: propCategory, variant = "list" }: I
   const posts = Array.from(new Map(allPosts.map(post => [post.id, post])).values());
 
   if (posts.length === 0 && !isLoading && !isFetchingNextPage) {
+    const isAllFeed = !currentCategory;
+
     return (
       <div className="flex flex-col items-center justify-center py-32 text-center animate-in fade-in zoom-in duration-700">
         <div className="w-20 h-20 rounded-full bg-muted/30 flex items-center justify-center mb-6">
@@ -68,6 +70,17 @@ export function InfinitePostFeed({ category: propCategory, variant = "list" }: I
         <p className="text-muted-foreground text-sm font-body max-w-xs mx-auto">
           We're currently curating the best street politics content for this category. Check back shortly!
         </p>
+        {isAllFeed && (
+          <a
+            href="https://www.youtube.com/@STREETPOLY"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-flex items-center gap-2 rounded-md border border-dem/30 bg-dem/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-dem transition-colors hover:bg-dem/20"
+          >
+            Watch @streetpoly
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        )}
         <div className="mt-8 h-px w-24 bg-gradient-to-r from-transparent via-border to-transparent" />
       </div>
     );

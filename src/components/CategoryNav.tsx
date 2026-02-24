@@ -1,18 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { useCategories } from "@/hooks/useCategories";
 import { useHeaderVisible } from "@/hooks/useHeaderVisible";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
 
 export function CategoryNav() {
-  const { data: categories, isLoading } = useCategories();
   const isVisible = useHeaderVisible();
   const isMobile = useIsMobile();
   const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const currentCategory = searchParams.get("category");
-
-  if (isLoading || !categories?.length) return null;
 
   return (
     <motion.div
@@ -34,83 +28,6 @@ export function CategoryNav() {
             }`}
           >
             All
-          </Link>
-          {categories.map((category) => (
-            <Link
-              key={category.id}
-              to={`/?category=${category.slug}`}
-              className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
-                currentCategory === category.slug
-                  ? "bg-dem text-white shadow-sm"
-                  : "text-white/40 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              {category.name}
-            </Link>
-          ))}
-          {(!categories || categories.length === 0) && (
-            <>
-              <Link
-                to="/?category=politics"
-                className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
-                  currentCategory === "politics"
-                    ? "bg-dem text-white shadow-sm"
-                    : "text-white/40 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                Politics
-              </Link>
-              <Link
-                to="/?category=entertainment"
-                className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
-                  currentCategory === "entertainment"
-                    ? "bg-dem text-white shadow-sm"
-                    : "text-white/40 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                Entertainment
-              </Link>
-              <Link
-                to="/?category=business"
-                className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
-                  currentCategory === "business"
-                    ? "bg-dem text-white shadow-sm"
-                    : "text-white/40 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                Business
-              </Link>
-              <Link
-                to="/?category=exclusive"
-                className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
-                  currentCategory === "exclusive"
-                    ? "bg-dem text-white shadow-sm"
-                    : "text-white/40 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                Exclusives
-              </Link>
-            </>
-          )}
-          <Link
-            to="/?category=health"
-            className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
-              currentCategory === "health"
-                ? "bg-dem text-white shadow-sm"
-                : "text-white/40 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            Health
-          </Link>
-          <Link
-            to="/?category=fashion"
-            className={`px-4 py-2 font-body text-sm uppercase tracking-wider whitespace-nowrap transition-colors rounded ${
-              currentCategory === "fashion"
-                ? "bg-dem text-white shadow-sm"
-                : "text-white/40 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            Fashion
           </Link>
           <Link
             to="/merch"

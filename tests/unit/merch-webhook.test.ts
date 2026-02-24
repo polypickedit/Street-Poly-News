@@ -75,7 +75,10 @@ describe("Merch Webhook Handler", () => {
     });
 
     // Run Handler
-    await processStripeWebhookEvent(merchEvent, mockSupabase as any);
+    await processStripeWebhookEvent(
+      merchEvent,
+      mockSupabase as unknown as Parameters<typeof processStripeWebhookEvent>[1]
+    );
 
     // Verify
     // 1. Check merch_orders update

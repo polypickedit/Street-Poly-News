@@ -21,51 +21,51 @@ const Index = () => {
   const videoLinks = [
     {
       id: "3PXQSs-FsK4",
-      title: "Tampa meets Memphis in ATL BMY Treydawg & Foreign Freckles",
+      title: "Alabama rapper SlummKidd Tooly - Activate",
       description:
-        "Coalition DJs’ New Music Mondays captures independent energy from BMY Treydawg and Foreign Freckles.",
-      url: "https://www.youtube.com/shorts/3PXQSs-FsK4",
+        "From the Street Politician channel videos list.",
+      url: "https://www.youtube.com/@STREETPOLY/search?query=Alabama%20rapper%20SlummKidd%20Tooly%20-%20Activate",
       thumbnail: "https://i.ytimg.com/vi/3PXQSs-FsK4/hqdefault.jpg",
     },
     {
-      id: "Uxnw9TANizo",
-      title: "@superspodeeotm Opens Up: The Dark Truth About Designer Drugs",
+      id: "8L44W6wAELs",
+      title: "Tampa rapper Tae Bae did 7 years in prison with labels tryna sign him. Wale , Chris Brown , Rhianna",
       description:
-        "Spodee breaks down addiction, sobriety, and why raw storytelling matters in the streets.",
-      url: "https://www.youtube.com/watch?v=Uxnw9TANizo",
+        "From the Street Politician channel videos list.",
+      url: "https://www.youtube.com/watch?v=8L44W6wAELs",
+      thumbnail: "https://i.ytimg.com/vi/8L44W6wAELs/hqdefault.jpg",
+    },
+    {
+      id: "P931DkZ1BG4",
+      title: "Fredo Bang Def Jam deal/ Roddy Rich song",
+      description:
+        "From the Street Politician channel videos list.",
+      url: "https://www.youtube.com/watch?v=P931DkZ1BG4",
+      thumbnail: "https://i.ytimg.com/vi/P931DkZ1BG4/hqdefault.jpg",
+    },
+    {
+      id: "Uxnw9TANizo",
+      title: "Fredo Bang speaks on Bandman Kevo’s tattoo of Kevin Samuels",
+      description:
+        "From the Street Politician channel videos list.",
+      url: "https://www.youtube.com/@STREETPOLY/search?query=Fredo%20Bang%20speaks%20on%20Bandman%20Kevo%E2%80%99s%20tattoo%20of%20Kevin%20Samuels",
       thumbnail: "https://i.ytimg.com/vi/Uxnw9TANizo/hqdefault.jpg",
     },
     {
       id: "uU9fFp5KxWw",
-      title: "The Reality of Street Politics: Exclusive Interview",
+      title: "Louisiana rapper FREDO BANG talks new cereal and big concert with Mulatto",
       description:
-        "Deep dive into the intersection of community leadership and street influence.",
-      url: "https://www.youtube.com/watch?v=uU9fFp5KxWw",
+        "From the Street Politician channel videos list.",
+      url: "https://www.youtube.com/@STREETPOLY/search?query=Louisiana%20rapper%20FREDO%20BANG%20talks%20new%20cereal%20and%20big%20concert%20with%20Mulatto",
       thumbnail: "https://i.ytimg.com/vi/uU9fFp5KxWw/hqdefault.jpg",
     },
     {
-      id: "V8_Xh4Y4N0c",
-      title: "Independent Artists Taking Over the Game",
+      id: "GHXQVsVtFWo",
+      title: "How Jack Harlow got his Papa John’s pizza deal?",
       description:
-        "How the new wave of independent talent is reshaping the music industry landscape.",
-      url: "https://www.youtube.com/watch?v=V8_Xh4Y4N0c",
-      thumbnail: "https://i.ytimg.com/vi/V8_Xh4Y4N0c/hqdefault.jpg",
-    },
-    {
-      id: "mYm4h_qf0Uo",
-      title: "Community Impact: Real Stories from the Movement",
-      description:
-        "Highlighting the voices that matter and the change being driven from the heart of the city.",
-      url: "https://www.youtube.com/watch?v=mYm4h_qf0Uo",
-      thumbnail: "https://i.ytimg.com/vi/mYm4h_qf0Uo/hqdefault.jpg",
-    },
-    {
-      id: "zN5-N0o-Gq4",
-      title: "The Future of Street Media and News",
-      description:
-        "Exploring the evolution of grassroots journalism and its role in modern society.",
-      url: "https://www.youtube.com/watch?v=zN5-N0o-Gq4",
-      thumbnail: "https://i.ytimg.com/vi/zN5-N0o-Gq4/hqdefault.jpg",
+        "From the Street Politician channel videos list.",
+      url: "https://www.youtube.com/watch?v=GHXQVsVtFWo",
+      thumbnail: "https://i.ytimg.com/vi/GHXQVsVtFWo/hqdefault.jpg",
     },
   ];
 

@@ -36,13 +36,10 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   // Render Fatal Error Screen directly, bypassing App initialization
   console.error('CRITICAL: Missing Supabase environment variables');
   
-  // Dynamic import to avoid bundling dependencies if not needed, 
-  // but for simplicity we'll render a basic error if components fail to load
   import('./components/FatalError').then(({ FatalError }) => {
     const root = createRoot(document.getElementById('root')!);
     root.render(<FatalError />);
   }).catch((err) => {
-    // Fallback if even the error component fails
     document.body.innerHTML = `
       <div style="display: flex; height: 100vh; justify-content: center; align-items: center; background: #000; color: #fff; font-family: system-ui, sans-serif;">
         <div style="text-align: center; padding: 2rem;">
@@ -54,32 +51,34 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
     `;
     console.error('Failed to load FatalError component:', err);
   });
-} else if (enforceCanonicalOrigin()) {
-  // Halt startup; browser is navigating to the canonical origin.
 } else {
-  // Only import App if environment is valid
-  // This prevents the Supabase client from initializing and throwing
-  import('./App').then(({ default: App }) => {
-    if (import.meta.env.DEV) {
-      console.log('ENV: Configuration valid, starting app...');
-    }
-    
-    if (import.meta.env.PROD && typeof window !== 'undefined') {
-      const host = window.location.hostname;
-      const isLocal = isLocalHost(host);
-      if (!isLocal) {
-        try {
-          injectSpeedInsights();
-        } catch {
-          void 0;
+  // Canonical Redirect (Only if auth config is valid)
+  if (enforceCanonicalOrigin()) {
+    // Halt startup; browser is navigating to the canonical origin.
+  } else {
+    // Only import App if environment is valid
+    import('./App').then(({ default: App }) => {
+      if (import.meta.env.DEV) {
+        console.log('ENV: Configuration valid, starting app...');
+      }
+      
+      if (import.meta.env.PROD && typeof window !== 'undefined') {
+        const host = window.location.hostname;
+        const isLocal = isLocalHost(host);
+        if (!isLocal) {
+          try {
+            injectSpeedInsights();
+          } catch {
+            void 0;
+          }
         }
       }
-    }
 
-    createRoot(document.getElementById('root')!).render(
-      <RootErrorBoundary>
-        <App />
-      </RootErrorBoundary>
-    );
-  });
+      createRoot(document.getElementById('root')!).render(
+        <RootErrorBoundary>
+          <App />
+        </RootErrorBoundary>
+      );
+    });
+  }
 }
