@@ -5,6 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MediaLibraryDialog } from "./MediaLibraryDialog";
 import { Edit, Image as ImageIcon, Link as LinkIcon, Type } from "lucide-react";
+import newMusicMondaysSideBanner from "@/assets/New Music Monday Side banner ad.png";
+import { supabase } from "@/integrations/supabase/client";
+import stripClubSlotsAd from "@/assets/Strip_Club_Slots_ad-removebg-preview.png";
+import streetPolyMerchAd from "@/assets/StreetPolyMerch_Ad.jpeg";
+import donTripAd from "@/assets/Don Trip ad.jpeg";
 import { Promo } from "@/types/promo";
 
 interface AdEditDialogProps {
@@ -13,12 +18,42 @@ interface AdEditDialogProps {
   onSave: (data: { imageUrl: string; link: string; title: string; subtitle: string }) => void;
 }
 
+interface UploadedFile {
+  name: string;
+  id: string;
+  metadata: Record<string, unknown>;
+}
+
 export function AdEditDialog({ trigger, initialData, onSave }: AdEditDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState(initialData?.image || "");
   const [link, setLink] = useState(initialData?.link || "");
   const [title, setTitle] = useState(initialData?.title || "");
   const [subtitle, setSubtitle] = useState(initialData?.subtitle || "");
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [loadingUploads, setLoadingUploads] = useState(false);
+  const availableAds = [
+    {
+      id: "new-music-monday",
+      label: "New Music Mondays",
+      imageUrl: newMusicMondaysSideBanner,
+    },
+    {
+      id: "strip-club-slots",
+      label: "Strip Club Slots",
+      imageUrl: stripClubSlotsAd,
+    },
+    {
+      id: "streetpoly-merch",
+      label: "StreetPoly Merch",
+      imageUrl: streetPolyMerchAd,
+    },
+    {
+      id: "don-trip",
+      label: "Don Trip",
+      imageUrl: donTripAd,
+    },
+  ];
 
   useEffect(() => {
     if (!isOpen) return;
@@ -28,6 +63,29 @@ export function AdEditDialog({ trigger, initialData, onSave }: AdEditDialogProps
     setTitle(initialData?.title || "");
     setSubtitle(initialData?.subtitle || "");
   }, [isOpen, initialData?.image, initialData?.link, initialData?.title, initialData?.subtitle]);
+
+  const fetchUploaded = async () => {
+    setLoadingUploads(true);
+    try {
+      const { data, error } = await supabase.storage.from("media").list("uploads", {
+        limit: 60,
+        offset: 0,
+        sortBy: { column: "created_at", order: "desc" },
+      });
+      if (error) {
+        console.error("Failed to fetch uploaded files:", error);
+        return;
+      }
+      setUploadedFiles((data || []) as UploadedFile[]);
+    } finally {
+      setLoadingUploads(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    fetchUploaded();
+  }, [isOpen]);
 
   const handleSave = () => {
     onSave({
@@ -86,6 +144,59 @@ export function AdEditDialog({ trigger, initialData, onSave }: AdEditDialogProps
                   />
                 </div>
               )}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Available Ads</Label>
+            <div className="grid grid-cols-2 gap-3">
+              {availableAds.map((ad) => (
+                <button
+                  key={ad.id}
+                  type="button"
+                  onClick={() => setImageUrl(ad.imageUrl)}
+                  className="group rounded-lg border border-border bg-muted/40 overflow-hidden text-left"
+                >
+                  <div className="aspect-[16/9] bg-muted">
+                    <img src={ad.imageUrl} alt={ad.label} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
+                    {ad.label}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Uploaded Ads</Label>
+              <Button variant="ghost" size="sm" onClick={fetchUploaded} disabled={loadingUploads}>
+                {loadingUploads ? "Loading..." : "Refresh"}
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {uploadedFiles
+                .filter((file) => {
+                  const mimetype = (file.metadata as { mimetype?: string })?.mimetype;
+                  return mimetype?.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file.name);
+                })
+                .map((file) => {
+                  const publicUrl = supabase.storage.from("media").getPublicUrl(`uploads/${file.name}`).data.publicUrl;
+                  return (
+                    <button
+                      key={file.id}
+                      type="button"
+                      onClick={() => setImageUrl(publicUrl)}
+                      className="group rounded-lg border border-border bg-muted/40 overflow-hidden text-left"
+                    >
+                      <div className="aspect-[16/9] bg-muted">
+                        <img src={publicUrl} alt={file.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
+                        {file.name}
+                      </div>
+                    </button>
+                  );
+                })}
             </div>
           </div>
 

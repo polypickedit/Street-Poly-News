@@ -246,6 +246,11 @@ const FallbackClips = ({ videoLinks }: { videoLinks: VideoLink[] }) => {
                 src={video.thumbnail}
                 alt={video.title}
                 className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
+                onError={(event) => {
+                  const target = event.currentTarget;
+                  if (target.src.includes("/placeholder.svg")) return;
+                  target.src = "/placeholder.svg";
+                }}
               />
             </div>
             <div className="p-4 flex flex-col gap-2">
