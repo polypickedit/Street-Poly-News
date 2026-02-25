@@ -180,7 +180,11 @@ export function AdEditDialog({ trigger, initialData, onSave }: AdEditDialogProps
                   return mimetype?.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file.name);
                 })
                 .map((file) => {
-                  const publicUrl = supabase.storage.from("media").getPublicUrl(`uploads/${file.name}`).data.publicUrl;
+                  const publicUrl = supabase.storage.from("media").getPublicUrl(`uploads/${file.name}`).data?.publicUrl;
+                  if (!publicUrl) {
+                    console.error("Failed to get public URL for uploaded file:", file.name);
+                    return null;
+                  }
                   return (
                     <button
                       key={file.id}
