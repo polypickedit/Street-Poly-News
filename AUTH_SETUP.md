@@ -25,15 +25,14 @@ Ensure your Supabase project is configured correctly in the dashboard:
 
 Go to Authentication -> URL Configuration:
 
-- [ ] **Site URL**: Set to your production URL (e.g., `https://street-politics-feed.vercel.app` or your custom domain)
+- [ ] **Site URL**: Set to your production URL (e.g., `https://streetpolynews.com` or your custom domain)
 - [ ] **Canonical Domain**: Pick one production hostname (`www` or non-`www`) and keep it consistent across DNS, app hosting redirects, and Supabase URL config.
 - [ ] **Redirect URLs**: Add all valid redirect URLs. This is CRITICAL for production auth to work:
-  - `http://localhost:8080` (Local Dev)
-  - `http://localhost:8080/admin`
-  - `http://localhost:8080/auth/callback`
-  - `https://cjodbnsjggslngnzwxsv.supabase.co`
-  - `https://street-politics-feed.vercel.app` (Production Root)
-  - `https://street-politics-feed.vercel.app/**` (Wildcard for production subpaths)
+  - `http://localhost:5173` (Local Dev)
+  - `http://localhost:5173/login`
+  - `https://<your-project-id>.supabase.co`
+  - `https://streetpolynews.com` (Production Root)
+  - `https://streetpolynews.com/**` (Wildcard for production subpaths)
 
 If the frontend enforces a canonical host via `VITE_CANONICAL_HOST`, this value should match the same hostname used in Site URL/Redirect URLs.
 
@@ -42,12 +41,12 @@ If the frontend enforces a canonical host via `VITE_CANONICAL_HOST`, this value 
 Your local environment must match the remote project configuration.
 
 ```bash
-VITE_SUPABASE_URL="https://cjodbnsjggslngnzwxsv.supabase.co"
+VITE_SUPABASE_URL="https://<your-project-id>.supabase.co"
 VITE_SUPABASE_ANON_KEY="<your-anon-key>"
 VITE_AUTH_GOOGLE_ENABLED="true"
 VITE_CANONICAL_HOST="streetpolynews.com"
 VITE_CANONICAL_PROTOCOL="https"
-SUPABASE_SERVICE_ROLE_KEY="<your-service-role-key>" # Required for admin scripts/tests
+# SUPABASE_SERVICE_ROLE_KEY="<your-service-role-key>" # Required for admin scripts/tests
 ```
 
 **Important**:
@@ -68,7 +67,7 @@ To run migrations and sync schema:
 2. **Link Project**:
 
    ```bash
-   supabase link --project-ref cjodbnsjggslngnzwxsv
+   supabase link --project-ref <your-project-id>
    ```
 
    (You will need your Database Password. If lost, reset it in Supabase Dashboard -> Settings -> Database).

@@ -18,17 +18,6 @@ export type AuthStatusEvent =
   | 'roles.loaded'
   | 'roles.failed';
 
-const OAUTH_CALLBACK_PARAM_KEYS = ['code', 'access_token', 'refresh_token', 'type'];
-const OAUTH_MAX_ATTEMPTS = 30; // Increased from 15
-const OAUTH_TIMEOUT_MS = 30000; // Increased from 15s to 30s
-const SESSION_FETCH_TIMEOUT_MS = 10000; // Increased from 4s
-
-const isOAuthCallbackReturn = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  const params = new URLSearchParams(window.location.search);
-  return OAUTH_CALLBACK_PARAM_KEYS.some((key) => params.has(key));
-};
-
 const logTransition = (event: AuthStatusEvent, next: AuthState) => {
   if (import.meta.env.DEV) {
     console.log('%cAUTH TRANSITION', 'color: violet; font-weight: bold;', event, {
@@ -173,52 +162,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     try {
-      const oauthCallback = isOAuthCallbackReturn();
-      // Increase attempts and timeout for OAuth callbacks to allow Supabase to exchange code
-      const maxAttempts = oauthCallback ? OAUTH_MAX_ATTEMPTS : 1;
-      const timeoutMs = oauthCallback ? OAUTH_TIMEOUT_MS : SESSION_FETCH_TIMEOUT_MS;
+      const result = await fetchSession({ timeoutMs: 4000 });
 
-      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-        const result = await fetchSession({ timeoutMs });
-        if (!result.ok) {
-          if (oauthCallback && attempt < maxAttempts) {
-            // Exponential backoff for retries: 250, 500, 750...
-            const delay = Math.min(250 * attempt, 2000);
-            await new Promise((resolve) => setTimeout(resolve, delay));
-            continue;
-          }
+      if (!result.ok) {
+        const error = (result as { error: Error }).error;
+        transition('session.error', {
+          status: 'unauthenticated',
+          session: null,
+          user: null,
+          rolesLoaded: false,
+          isAdmin: false,
+          isEditor: false,
+          error: error.message,
+          traceId: result.traceId,
+        });
+        return;
+      }
 
-          const error = (result as { error: Error }).error;
-          transition('session.error', {
-            status: 'unauthenticated',
-            session: null,
-            user: null,
-            rolesLoaded: false,
-            isAdmin: false,
-            isEditor: false,
-            error: error.message,
-            traceId: result.traceId,
-          });
-          return;
-        }
-
-        const session = result.response.data.session;
-        if (session?.user) {
-          hydrateForSession(session, result.traceId);
-          return;
-        }
-
-        if (oauthCallback && attempt < maxAttempts) {
-          // Session is null but we are in OAuth callback flow. 
-          // Supabase might still be exchanging code. Wait and retry.
-          const delay = Math.min(250 * attempt, 2000);
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          continue;
-        }
-
+      const session = result.response.data.session;
+      if (!session?.user) {
         markUnauthenticated(result.traceId, 'session.unauthenticated');
         return;
       }
+
+      hydrateForSession(session, result.traceId);
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       transition('session.error', {

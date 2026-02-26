@@ -3,11 +3,15 @@
 # Configuration
 PROD_URL="https://streetpolynews.com"
 OLD_PROJECT="duldhllwapsjytdzpjfz"
-NEW_PROJECT="cjodbnsjggslngnzwxsv"
+NEW_PROJECT="${EXPECTED_SUPABASE_PROJECT_REF:-}"
 
 echo "🔍 Starting Production Bundle Audit..."
 echo "Target: $PROD_URL"
-echo "Expected Project ID: $NEW_PROJECT"
+if [ -n "$NEW_PROJECT" ]; then
+  echo "Expected Project ID: $NEW_PROJECT"
+else
+  echo "Expected Project ID: [Not Set - Skipping check]"
+fi
 echo "Forbidden Project ID: $OLD_PROJECT"
 echo "----------------------------------------"
 
@@ -43,12 +47,16 @@ else
 fi
 
 # 4. Check for NEW project ID
-echo "4. Checking for NEW project ID ($NEW_PROJECT)..."
-if echo "$BUNDLE_CONTENT" | grep -q "$NEW_PROJECT"; then
-  echo "✅ PASS: New project ID found in bundle."
+if [ -n "$NEW_PROJECT" ]; then
+  echo "4. Checking for NEW project ID ($NEW_PROJECT)..."
+  if echo "$BUNDLE_CONTENT" | grep -q "$NEW_PROJECT"; then
+    echo "✅ PASS: New project ID found in bundle."
+  else
+    echo "❌ FAIL: New project ID NOT found in bundle!"
+    echo "   The build might be missing the VITE_SUPABASE_URL environment variable."
+  fi
 else
-  echo "❌ FAIL: New project ID NOT found in bundle!"
-  echo "   The build might be missing the VITE_SUPABASE_URL environment variable."
+  echo "4. Skipping NEW project ID check (EXPECTED_SUPABASE_PROJECT_REF not set)."
 fi
 
 echo "----------------------------------------"

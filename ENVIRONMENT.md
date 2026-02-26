@@ -8,7 +8,7 @@ The browser bundle reads `import.meta.env.VITE_*` variables directly, so the req
 
 | Env | Source | Notes |
 | --- | --- | --- |
-| `VITE_SUPABASE_URL` | Supabase project | Public URL (e.g., `https://xxx.supabase.co`). |
+| `VITE_SUPABASE_URL` | Supabase project | Public URL (e.g., `https://<your-project-id>.supabase.co`). |
 | `VITE_SUPABASE_ANON_KEY` | Supabase project | The anon/public key (canonical key var used by app runtime). |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase project | Legacy alias for compatibility; keep equal to `VITE_SUPABASE_ANON_KEY` if present. |
 | `VITE_AUTH_GOOGLE_ENABLED` | App auth toggle | Set to `"true"`/`"false"` to show or hide Google OAuth in the login UI. |

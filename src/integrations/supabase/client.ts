@@ -30,6 +30,34 @@ try {
   throw err;
 }
 
+// Clean up any legacy Supabase local storage keys that don't match the current project
+if (typeof window !== "undefined" && SUPABASE_URL) {
+  try {
+    const currentRef = SUPABASE_URL.split(".")[0]?.split("//")[1];
+    if (currentRef) {
+      // Clear verifiers that might be causing 401s
+      // The pattern is usually sb-<project-ref>-auth-token-code-verifier
+      Object.keys(window.localStorage).forEach((key) => {
+        // If it's a supabase key (starts with sb-) but NOT for this project
+        if (key.startsWith("sb-") && !key.includes(currentRef)) {
+          console.warn(`[Supabase] Clearing legacy storage key: ${key}`);
+          window.localStorage.removeItem(key);
+        }
+        // Also proactively clear any "verifier" keys if we are stuck in a 401 loop
+        // This is a safety measure for the migration
+        if (key.includes("code-verifier")) {
+             // We verify if it belongs to current project, if not, nuke it
+             if (!key.includes(currentRef)) {
+                window.localStorage.removeItem(key);
+             }
+        }
+      });
+    }
+  } catch (e) {
+    console.error("Error clearing legacy Supabase keys:", e);
+  }
+}
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 

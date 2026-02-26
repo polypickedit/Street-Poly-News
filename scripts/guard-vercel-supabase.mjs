@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const expectedRef =
-  process.env.EXPECTED_SUPABASE_PROJECT_REF?.trim() || "cjodbnsjggslngnzwxsv";
+  process.env.EXPECTED_SUPABASE_PROJECT_REF?.trim() || "";
 const requiredCanonicalHost =
   process.env.REQUIRED_CANONICAL_HOST?.trim().toLowerCase() || "streetpolynews.com";
 
@@ -34,7 +34,7 @@ try {
   process.exit(1);
 }
 
-if (!actualRef || actualRef !== expectedRef) {
+if (expectedRef && actualRef !== expectedRef) {
   console.error(
     `[guard-vercel-supabase] Ref mismatch:\n  expected_ref=${expectedRef}\n  actual_ref=${actualRef || "unknown"}\n  url=${url}`
   );

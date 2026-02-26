@@ -1,8 +1,8 @@
 project_id = "cjodbnsjggslngnzwxsv"
 
 [auth]
-site_url = "http://localhost:8080"
-additional_redirect_urls = ["http://localhost:8080/admin", "http://127.0.0.1:8080/admin", "http://localhost:8080", "http://127.0.0.1:8080"]
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://localhost:5173/login", "http://127.0.0.1:5173/login", "https://streetpolynews.com", "https://streetpolynews.com/login"]
 jwt_expiry = 3600
 enable_signup = true
 
@@ -12,8 +12,8 @@ enable_signup = true
 
 [auth.external.google]
 enabled = true
-client_id = "1088732041164-jvcked4k9mo34sutecvmf33vu7v2ogq5.apps.googleusercontent.com"
-secret = "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"
+client_id = "env(GOOGLE_CLIENT_ID)"
+secret = "env(GOOGLE_CLIENT_SECRET)"
 # The redirect URI should be: http://127.0.0.1:54321/auth/v1/callback
 
 [analytics]

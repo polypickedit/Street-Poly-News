@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,32 +14,25 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  
+  // Secure redirect validation
+  // We strictly enforce that redirects must be to the root "/" or a relative path
+  // to prevent open redirect vulnerabilities and directory traversal.
+  const rawRedirect = searchParams.get("redirectTo");
+  let isValidRedirect = false;
 
-  // Normalize redirect path to prevent open redirects
-  const redirectPath = useMemo(() => {
-    const rawRedirect = searchParams.get("redirectTo");
-    if (!rawRedirect) return "/";
-    
-    // If it's a full URL, only allow if it matches our origin
-    if (rawRedirect.startsWith("http")) {
-      try {
-        const url = new URL(rawRedirect);
-        if (url.origin === window.location.origin) {
-          return url.pathname + url.search + url.hash;
-        }
-      } catch {
-        return "/";
-      }
-      return "/";
+  if (rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")) {
+    // Decode URI component to check for encoded traversal attacks like %2e%2e
+    try {
+      const decoded = decodeURIComponent(rawRedirect);
+      isValidRedirect = !decoded.includes("..") && !decoded.includes("\\");
+    } catch {
+      // If decoding fails, the path is malformed and unsafe
+      isValidRedirect = false;
     }
-    
-    // If it's a relative path, ensure it starts with / and doesn't use // (protocol relative)
-    if (rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")) {
-      return rawRedirect;
-    }
-    
-    return "/";
-  }, [searchParams]);
+  }
+
+  const redirectPath = isValidRedirect && rawRedirect ? rawRedirect : "/";
 
   const googleAuthEnabled = import.meta.env.VITE_AUTH_GOOGLE_ENABLED !== "false";
   const projectRef =
@@ -57,21 +50,27 @@ const Login = () => {
   }>({ status: "idle", message: null });
   const { session, status: authStatus } = useAuth();
   const showDebug = searchParams.get("debug") === "true";
-  const isAuthCallbackFlow =
-    searchParams.has("code") ||
-    searchParams.has("access_token") ||
-    searchParams.has("refresh_token") ||
-    searchParams.has("type");
   const emailConfirmationRedirectUrl = `${window.location.origin}${redirectPath}`;
-  const loginRedirectUrl = `${window.location.origin}/login?redirectTo=${encodeURIComponent(redirectPath)}`;
   const resetPasswordRedirectUrl = `${window.location.origin}/login?redirectTo=${encodeURIComponent(redirectPath)}&type=recovery`;
 
   useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled && data.session) {
+        navigate("/", { replace: true });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
+
+  useEffect(() => {
     if (authStatus === "authenticated" && session) {
-      console.log("Login: Session ready, redirecting to", redirectPath);
-      navigate(redirectPath, { replace: true });
+      console.log("Login: Session ready, redirecting to /");
+      navigate("/", { replace: true });
     }
-  }, [authStatus, session, navigate, redirectPath]);
+  }, [authStatus, session, navigate]);
 
   useEffect(() => {
     if (!isSignUp) {
@@ -249,7 +248,7 @@ const Login = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: loginRedirectUrl,
+          redirectTo: `${window.location.origin}/login`,
         },
       });
       if (error) throw error;
@@ -314,23 +313,6 @@ const Login = () => {
     );
   }
 
-  if (isAuthCallbackFlow && authStatus !== "authenticated") {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-black gap-4">
-        <Loader2 className="h-8 w-8 animate-spin text-dem" />
-        <div className="text-center">
-          <p className="text-white/40 animate-pulse text-sm">Completing sign-in...</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 text-xs text-dem hover:text-dem/80 underline transition-colors"
-          >
-            Taking too long? Refresh
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-black p-4 relative overflow-hidden">
       {/* Background Decorative Elements */}
@@ -356,7 +338,7 @@ const Login = () => {
             <div className="p-3 mb-4 rounded bg-black/40 border border-yellow-500/30 text-[10px] font-mono text-yellow-500/80 overflow-hidden">
               <div className="grid grid-cols-[80px_1fr] gap-1">
                 <span className="opacity-50">Origin:</span> <span className="truncate">{window.location.origin}</span>
-                <span className="opacity-50">Redirect:</span> <span className="truncate">{POST_AUTH_REDIRECT_PATH}</span>
+                <span className="opacity-50">Redirect:</span> <span className="truncate">{redirectPath}</span>
                 <span className="opacity-50">Status:</span> <span>{authStatus}</span>
                 <span className="opacity-50">Session:</span> <span>{session ? "✅" : "❌"}</span>
                 <span className="opacity-50">Storage:</span> <span>{Object.keys(localStorage).some(k => k.startsWith('sb-')) ? "✅" : "❌"}</span>

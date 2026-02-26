@@ -4,12 +4,12 @@
 
 
 - [ ] **CRITICAL: Align deployed Supabase project with local/project-of-record**
-  - Finding: live bundle at `streetpolynews.com` is currently compiled with `https://duldhllwapsjytdzpjfz.supabase.co`.
-  - Expected: production should use same project as local `.env.local` (`https://cjodbnsjggslngnzwxsv.supabase.co`).
+  - Finding: live bundle at `streetpolynews.com` is currently compiled with old project ID.
+  - Expected: production should use same project as local `.env.local`.
   - Risk: users may be authenticating against a different auth user base than intended.
 - [ ] Update Vercel Production env vars and redeploy:
-  - `VITE_SUPABASE_URL=https://cjodbnsjggslngnzwxsv.supabase.co`
-  - `VITE_SUPABASE_ANON_KEY=<anon key for cjodbnsjggslngnzwxsv>`
+  - `VITE_SUPABASE_URL=https://<your-project-id>.supabase.co`
+  - `VITE_SUPABASE_ANON_KEY=<your-anon-key>`
   - Confirm canonical settings still correct:
     - `VITE_CANONICAL_HOST=streetpolynews.com`
     - `VITE_CANONICAL_PROTOCOL=https`
