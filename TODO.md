@@ -1,5 +1,7 @@
+# Project TODOs
 
 ## Production Auth Hotfix (2026-02-26)
+
 
 - [ ] **CRITICAL: Align deployed Supabase project with local/project-of-record**
   - Finding: live bundle at `streetpolynews.com` is currently compiled with `https://duldhllwapsjytdzpjfz.supabase.co`.
@@ -28,6 +30,7 @@
   - `tests/helpers/run-seed.ts` and `tests/helpers/seed.ts`: ESM import extension fixes (`.ts`).
 
 ## PayPal Stabilizer (Temporary)
+
 - [x] Create placement_orders table
 - [x] Implement Intake Modal (Booking & Merch)
 - [x] Redirect to PayPal hosted checkout
@@ -47,6 +50,7 @@
 - [ ] Confirm all tables in migration exist (`profiles`, `accounts`, `submissions`, `payments`, `artists`, `merch_orders`, `listening_sessions`).
 - [ ] Confirm RLS is enabled on each table.
 - [ ] List existing policies per table using:
+
   ```sql
   SELECT schemaname, tablename, policyname 
   FROM pg_policies 
