@@ -19,9 +19,9 @@ export type AuthStatusEvent =
   | 'roles.failed';
 
 const OAUTH_CALLBACK_PARAM_KEYS = ['code', 'access_token', 'refresh_token', 'type'];
-const OAUTH_MAX_ATTEMPTS = 15;
-const OAUTH_TIMEOUT_MS = 15000;
-const SESSION_FETCH_TIMEOUT_MS = 4000;
+const OAUTH_MAX_ATTEMPTS = 30; // Increased from 15
+const OAUTH_TIMEOUT_MS = 30000; // Increased from 15s to 30s
+const SESSION_FETCH_TIMEOUT_MS = 10000; // Increased from 4s
 
 const isOAuthCallbackReturn = (): boolean => {
   if (typeof window === 'undefined') return false;
