@@ -7,7 +7,7 @@
   - Risk: users may be authenticating against a different auth user base than intended.
 - [ ] Update Vercel Production env vars and redeploy:
   - `VITE_SUPABASE_URL=https://cjodbnsjggslngnzwxsv.supabase.co`
-  - `VITE_SUPABASE_PUBLISHABLE_KEY=<anon key for cjodbnsjggslngnzwxsv>`
+  - `VITE_SUPABASE_ANON_KEY=<anon key for cjodbnsjggslngnzwxsv>`
   - Confirm canonical settings still correct:
     - `VITE_CANONICAL_HOST=streetpolynews.com`
     - `VITE_CANONICAL_PROTOCOL=https`

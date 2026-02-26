@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import donTripAd from "@/assets/Don Trip ad.jpeg";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "http://localhost:54321";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 interface Promo {
   title: string;
@@ -67,7 +67,7 @@ export const PromoBanner = ({ className = "", showLabel = true, type = "donTrip"
   });
 
   const getTrackedUrl = () => {
-    if (affiliateLink?.id) {
+    if (affiliateLink?.id && SUPABASE_URL) {
       return `${SUPABASE_URL}/functions/v1/track-click?id=${affiliateLink.id}`;
     }
     return currentPromo.link || "#";

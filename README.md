@@ -58,7 +58,8 @@ The application requires the following environment variables in `.env.local`:
 | Variable | Description |
 | --- | --- |
 | `VITE_SUPABASE_URL` | Your Supabase project URL |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Your Supabase anonymous key |
+| `VITE_SUPABASE_ANON_KEY` | Your Supabase anonymous key |
+| `EXPECTED_SUPABASE_PROJECT_REF` | Canonical drift guard ref (defaults to `cjodbnsjggslngnzwxsv`) |
 | `VITE_AUTH_GOOGLE_ENABLED` | Toggle Google OAuth button (`"true"` or `"false"`) |
 | `VITE_CANONICAL_HOST` | Canonical production hostname to enforce (`www` or non-`www`) |
 | `VITE_CANONICAL_PROTOCOL` | Canonical protocol (`https` recommended, default) |

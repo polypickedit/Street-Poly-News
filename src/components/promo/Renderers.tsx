@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Promo } from "@/types/promo";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "http://localhost:54321";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 export const SkyscraperRenderer = ({ promo }: { promo: Promo }) => {
   const { data: affiliateLink } = useQuery({
@@ -34,7 +34,7 @@ export const SkyscraperRenderer = ({ promo }: { promo: Promo }) => {
 
   const getTrackedUrl = () => {
     const linkData = affiliateLink;
-    if (linkData?.id) {
+    if (linkData?.id && SUPABASE_URL) {
       return `${SUPABASE_URL}/functions/v1/track-click?id=${linkData.id}`;
     }
     return promo.link;

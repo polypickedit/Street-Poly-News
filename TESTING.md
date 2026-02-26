@@ -16,7 +16,7 @@ We follow the golden rule: **"Webhook = truth, DB = memory, UI = reflection."** 
    export SUPABASE_ANON_KEY=...
    export SUPABASE_SERVICE_ROLE_KEY=...
    export VITE_SUPABASE_URL=$SUPABASE_URL
-   export VITE_SUPABASE_PUBLISHABLE_KEY=...
+   export VITE_SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
    ```
 2. (Optional) Run `supabase functions serve` if you need to exercise Edge Functions locally. The tests do not hit Stripe directly, but the CLI still requires valid `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` when functions are invoked outside the mock path.
 3. Seed the system objects once with:
@@ -47,7 +47,7 @@ We follow the golden rule: **"Webhook = truth, DB = memory, UI = reflection."** 
 | Variable | Purpose |
 | --- | --- |
 | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Point Vitest and Playwright at your local Supabase stack. |
-| `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` | Required by the Vite frontend; reuse the same values. |
+| `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Required by the Vite frontend; reuse the same values. |
 | `TEST_SUPABASE_EMAIL`, `TEST_SUPABASE_PASSWORD` | Optional overrides for the seeded credentials (otherwise use `test-framework-user@streetpoly.local` / `Test1234!`). |
 | `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` | Required only if you exercise Edge Functions that talk to Stripe. For CI we rely on stubbed events so they can stay empty. |
 

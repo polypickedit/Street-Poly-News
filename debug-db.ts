@@ -1,8 +1,14 @@
-
 import { createClient } from '@supabase/supabase-js';
+import * as dotenv from 'dotenv';
 
-const supabaseUrl = "http://127.0.0.1:54321";
-const supabaseKey = "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH";
+dotenv.config({ path: '.env.local' });
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in .env.local');
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 

@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { Promo } from "@/types/promo";
 import { ContentPlacement } from "@/types/cms";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "http://localhost:54321";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 const mockPromos: { skyscraper: Promo[]; square: Promo[]; banner: Promo[] } = {
   skyscraper: [
@@ -281,7 +281,7 @@ const SkyscraperRenderer = ({ promo }: { promo: Promo }) => {
 
   const getTrackedUrl = () => {
     const linkData = affiliateLink;
-    if (linkData?.id) {
+    if (linkData?.id && SUPABASE_URL) {
       return `${SUPABASE_URL}/functions/v1/track-click?id=${linkData.id}`;
     }
     return promo.link;

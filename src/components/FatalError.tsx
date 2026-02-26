@@ -31,7 +31,7 @@ export function FatalError() {
               </div>
               <div className="h-px bg-zinc-800" />
               <div className="flex items-center justify-between text-sm">
-                <span className="text-zinc-400">VITE_SUPABASE_PUBLISHABLE_KEY</span>
+                <span className="text-zinc-400">VITE_SUPABASE_ANON_KEY</span>
                 <span className="font-mono text-red-400">Missing</span>
               </div>
             </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,28 +10,7 @@ import { Loader2, Chrome, ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { validateUsername } from "@/lib/username";
 
-const DEFAULT_REDIRECT_PATH = "/";
-
-const normalizeRedirectPath = (value: string | null | undefined): string => {
-  if (!value) return DEFAULT_REDIRECT_PATH;
-
-  // Allow only same-origin paths to avoid open redirects and callback mismatch.
-  if (value.startsWith("/")) {
-    return value;
-  }
-
-  try {
-    const parsed = new URL(value, window.location.origin);
-    if (parsed.origin === window.location.origin) {
-      const path = `${parsed.pathname}${parsed.search}${parsed.hash}`;
-      return path.startsWith("/") ? path : DEFAULT_REDIRECT_PATH;
-    }
-  } catch {
-    return DEFAULT_REDIRECT_PATH;
-  }
-
-  return DEFAULT_REDIRECT_PATH;
-};
+const POST_AUTH_REDIRECT_PATH = "/";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -40,8 +19,6 @@ const Login = () => {
   const projectRef =
     import.meta.env.VITE_SUPABASE_URL?.split(".")[0]?.split("//")[1] || "unknown";
   const [loading, setLoading] = useState(false);
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,23 +32,21 @@ const Login = () => {
   const { session, status: authStatus } = useAuth();
   const [searchParams] = useSearchParams();
   const showDebug = searchParams.get("debug") === "true";
-  const location = useLocation();
-  
-  // Default to home screen per user request, unless specific redirect requested
-  // Prioritize query param (explicit redirect), then history state (protected route redirect), then home
-  const fromStatePath = (location.state as { from?: { pathname: string } })?.from?.pathname;
-  const requestedRedirect = searchParams.get("redirectTo") || fromStatePath;
-  const redirectTo = normalizeRedirectPath(requestedRedirect);
-  const emailConfirmationRedirectUrl = `${window.location.origin}${redirectTo}`;
-  const loginRedirectUrl = `${window.location.origin}/login?redirectTo=${encodeURIComponent(redirectTo)}`;
-  const resetPasswordRedirectUrl = `${window.location.origin}/login?redirectTo=${encodeURIComponent(redirectTo)}&type=recovery`;
+  const isAuthCallbackFlow =
+    searchParams.has("code") ||
+    searchParams.has("access_token") ||
+    searchParams.has("refresh_token") ||
+    searchParams.has("type");
+  const emailConfirmationRedirectUrl = `${window.location.origin}${POST_AUTH_REDIRECT_PATH}`;
+  const loginRedirectUrl = `${window.location.origin}/login?redirectTo=${encodeURIComponent(POST_AUTH_REDIRECT_PATH)}`;
+  const resetPasswordRedirectUrl = `${window.location.origin}/login?redirectTo=${encodeURIComponent(POST_AUTH_REDIRECT_PATH)}&type=recovery`;
 
   useEffect(() => {
     if (authStatus === "authenticated" && session) {
-      console.log("Login: Session ready, redirecting to", redirectTo);
-      navigate(redirectTo, { replace: true });
+      console.log("Login: Session ready, redirecting to", POST_AUTH_REDIRECT_PATH);
+      navigate(POST_AUTH_REDIRECT_PATH, { replace: true });
     }
-  }, [authStatus, session, navigate, redirectTo]);
+  }, [authStatus, session, navigate]);
 
   useEffect(() => {
     if (!isSignUp) {
@@ -314,6 +289,23 @@ const Login = () => {
     );
   }
 
+  if (isAuthCallbackFlow && authStatus !== "authenticated") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-dem" />
+        <div className="text-center">
+          <p className="text-white/40 animate-pulse text-sm">Completing sign-in...</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 text-xs text-dem hover:text-dem/80 underline transition-colors"
+          >
+            Taking too long? Refresh
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-black p-4 relative overflow-hidden">
       {/* Background Decorative Elements */}
@@ -339,7 +331,7 @@ const Login = () => {
             <div className="p-3 mb-4 rounded bg-black/40 border border-yellow-500/30 text-[10px] font-mono text-yellow-500/80 overflow-hidden">
               <div className="grid grid-cols-[80px_1fr] gap-1">
                 <span className="opacity-50">Origin:</span> <span className="truncate">{window.location.origin}</span>
-                <span className="opacity-50">Redirect:</span> <span className="truncate">{redirectTo}</span>
+                <span className="opacity-50">Redirect:</span> <span className="truncate">{POST_AUTH_REDIRECT_PATH}</span>
                 <span className="opacity-50">Status:</span> <span>{authStatus}</span>
                 <span className="opacity-50">Session:</span> <span>{session ? "✅" : "❌"}</span>
                 <span className="opacity-50">Storage:</span> <span>{Object.keys(localStorage).some(k => k.startsWith('sb-')) ? "✅" : "❌"}</span>

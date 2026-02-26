@@ -19,6 +19,9 @@ export type AuthStatusEvent =
   | 'roles.failed';
 
 const OAUTH_CALLBACK_PARAM_KEYS = ['code', 'access_token', 'refresh_token', 'type'];
+const OAUTH_MAX_ATTEMPTS = 15;
+const OAUTH_TIMEOUT_MS = 15000;
+const SESSION_FETCH_TIMEOUT_MS = 4000;
 
 const isOAuthCallbackReturn = (): boolean => {
   if (typeof window === 'undefined') return false;
@@ -172,8 +175,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const oauthCallback = isOAuthCallbackReturn();
       // Increase attempts and timeout for OAuth callbacks to allow Supabase to exchange code
-      const maxAttempts = oauthCallback ? 15 : 1;
-      const timeoutMs = oauthCallback ? 15000 : 4000;
+      const maxAttempts = oauthCallback ? OAUTH_MAX_ATTEMPTS : 1;
+      const timeoutMs = oauthCallback ? OAUTH_TIMEOUT_MS : SESSION_FETCH_TIMEOUT_MS;
 
       for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
         const result = await fetchSession({ timeoutMs });

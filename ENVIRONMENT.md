@@ -9,7 +9,8 @@ The browser bundle reads `import.meta.env.VITE_*` variables directly, so the req
 | Env | Source | Notes |
 | --- | --- | --- |
 | `VITE_SUPABASE_URL` | Supabase project | Public URL (e.g., `https://xxx.supabase.co`). |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase project | The anon/public key. |
+| `VITE_SUPABASE_ANON_KEY` | Supabase project | The anon/public key (canonical key var used by app runtime). |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase project | Legacy alias for compatibility; keep equal to `VITE_SUPABASE_ANON_KEY` if present. |
 | `VITE_AUTH_GOOGLE_ENABLED` | App auth toggle | Set to `"true"`/`"false"` to show or hide Google OAuth in the login UI. |
 | `VITE_CANONICAL_HOST` | App origin guard | Optional. When set in production, app bootstrap redirects all non-localhost traffic to this hostname before auth initialization (example: `streetpolynews.com`). |
 | `VITE_CANONICAL_PROTOCOL` | App origin guard | Optional. Defaults to `https`; set to `http` only for special non-TLS environments. |
@@ -22,11 +23,13 @@ Create a local `.env.local` (or `.env.development.local`) file that mirrors `.en
 
 ```
 VITE_SUPABASE_URL="https://your-project.supabase.co"
+VITE_SUPABASE_ANON_KEY="sb_publishable_xxx"
 VITE_SUPABASE_PUBLISHABLE_KEY="sb_publishable_xxx"
 VITE_AUTH_GOOGLE_ENABLED="true"
 VITE_CANONICAL_HOST="streetpolynews.com"
 VITE_CANONICAL_PROTOCOL="https"
 VITE_SUPABASE_PROJECT_ID="your-project-id"
+EXPECTED_SUPABASE_PROJECT_REF="cjodbnsjggslngnzwxsv"
 VITE_STRIPE_PUBLISHABLE_KEY="pk_test_xxx"
 # Optional compatibility entries
 REACT_APP_SUPABASE_URL="https://..."
@@ -37,6 +40,8 @@ Production builds run `scripts/guard-vercel-supabase.mjs` before `vite build`. O
 - `VITE_SUPABASE_URL` does not match the expected project ref.
 - `VITE_CANONICAL_HOST` does not match `streetpolynews.com` (or `REQUIRED_CANONICAL_HOST` if overridden).
 - `VITE_CANONICAL_PROTOCOL` is not `https`.
+
+You can also run `npm run validate:supabase-env` locally/CI to fail fast on Supabase ref drift.
 
 Vite/hot-reload picks up `.env.local` automatically. You can keep secrets per-environment by creating `.env.production.local`, `.env.staging.local`, etc.
 

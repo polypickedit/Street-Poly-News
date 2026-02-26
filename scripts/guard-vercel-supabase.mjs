@@ -1,12 +1,8 @@
 #!/usr/bin/env node
 
-const EXPECTED_PROJECT_REF = process.env.EXPECTED_SUPABASE_PROJECT_REF;
-
-if (!EXPECTED_PROJECT_REF) {
-  console.error("❌ Error: EXPECTED_SUPABASE_PROJECT_REF environment variable is not set.");
-  process.exit(1);
-}
-const REQUIRED_CANONICAL_HOST =
+const expectedRef =
+  process.env.EXPECTED_SUPABASE_PROJECT_REF?.trim() || "cjodbnsjggslngnzwxsv";
+const requiredCanonicalHost =
   process.env.REQUIRED_CANONICAL_HOST?.trim().toLowerCase() || "streetpolynews.com";
 
 const isVercel = process.env.VERCEL === "1";
@@ -26,26 +22,21 @@ if (vercelEnv !== "production") {
 
 const url = process.env.VITE_SUPABASE_URL?.trim();
 if (!url) {
-  console.error(
-    "[guard-vercel-supabase] Missing VITE_SUPABASE_URL in production build environment."
-  );
+  console.error("[guard-vercel-supabase] Missing VITE_SUPABASE_URL in production build environment.");
   process.exit(1);
 }
 
-let hostname = "";
+let actualRef = "";
 try {
-  hostname = new URL(url).hostname.toLowerCase();
+  actualRef = new URL(url).hostname.toLowerCase().split(".")[0] ?? "";
 } catch {
-  console.error(
-    `[guard-vercel-supabase] Invalid VITE_SUPABASE_URL format: "${url}". Expected full URL.`
-  );
+  console.error(`[guard-vercel-supabase] Invalid VITE_SUPABASE_URL: "${url}".`);
   process.exit(1);
 }
 
-const projectRef = hostname.split(".")[0];
-if (projectRef !== EXPECTED_PROJECT_REF) {
+if (!actualRef || actualRef !== expectedRef) {
   console.error(
-    `[guard-vercel-supabase] Ref mismatch: expected "${EXPECTED_PROJECT_REF}" but got "${projectRef}" from VITE_SUPABASE_URL=${url}`
+    `[guard-vercel-supabase] Ref mismatch:\n  expected_ref=${expectedRef}\n  actual_ref=${actualRef || "unknown"}\n  url=${url}`
   );
   process.exit(1);
 }
@@ -56,9 +47,9 @@ if (!canonicalHost) {
   process.exit(1);
 }
 
-if (canonicalHost !== REQUIRED_CANONICAL_HOST) {
+if (canonicalHost !== requiredCanonicalHost) {
   console.error(
-    `[guard-vercel-supabase] Canonical host mismatch: expected "${REQUIRED_CANONICAL_HOST}" but got "${canonicalHost}".`
+    `[guard-vercel-supabase] Canonical host mismatch: expected "${requiredCanonicalHost}" but got "${canonicalHost}".`
   );
   process.exit(1);
 }
@@ -72,5 +63,5 @@ if (canonicalProtocol !== "https") {
 }
 
 console.log(
-  `[guard-vercel-supabase] OK: production build locked to ${EXPECTED_PROJECT_REF} with canonical host ${canonicalHost}.`
+  `[guard-vercel-supabase] OK:\n  expected_ref=${expectedRef}\n  actual_ref=${actualRef}\n  canonical_host=${canonicalHost}\n  url=${url}`
 );

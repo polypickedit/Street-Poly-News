@@ -1,10 +1,11 @@
+import { CANONICAL_SUPABASE_PROJECT_REF } from "@/lib/supabase-env";
+
 /**
  * Utility to clean up stale Supabase auth tokens from localStorage.
  * This prevents ghost sessions from previous projects/environments from persisting.
  */
 export function cleanupStaleAuthTokens() {
-  const EXPECTED_PROJECT_REF = "cjodbnsjggslngnzwxsv";
-  const EXPECTED_KEY_PREFIX = `sb-${EXPECTED_PROJECT_REF}-auth-token`;
+  const EXPECTED_KEY_PREFIX = `sb-${CANONICAL_SUPABASE_PROJECT_REF}-auth-token`;
 
   if (typeof window === "undefined") return;
 

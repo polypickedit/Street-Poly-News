@@ -43,7 +43,7 @@ Your local environment must match the remote project configuration.
 
 ```bash
 VITE_SUPABASE_URL="https://cjodbnsjggslngnzwxsv.supabase.co"
-VITE_SUPABASE_PUBLISHABLE_KEY="<your-anon-key>"
+VITE_SUPABASE_ANON_KEY="<your-anon-key>"
 VITE_AUTH_GOOGLE_ENABLED="true"
 VITE_CANONICAL_HOST="streetpolynews.com"
 VITE_CANONICAL_PROTOCOL="https"

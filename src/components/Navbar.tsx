@@ -38,9 +38,9 @@ export function Navbar() {
   const [showSearch, setShowSearch] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [mobileLogoErrored, setMobileLogoErrored] = useState(false);
-  const { session, isAdmin, isEditor } = useAuth();
+  const { session, isAdmin, isEditor, authReady, status } = useAuth();
   const hasAdminAccess = isAdmin || isEditor;
-  const isAuthenticated = !!session;
+  const isAuthenticated = status === "authenticated" && !!session;
   const isVisible = useHeaderVisible();
   const isMobile = useIsMobile();
   const location = useLocation();
@@ -234,7 +234,7 @@ export function Navbar() {
 
 
                     {/* Sign In Button (Unauthenticated) */}
-                    {!isAuthenticated && (
+                    {authReady && !isAuthenticated && (
                       <Link
                         to="/login?redirectTo=/"
                         className="text-xs font-bold uppercase tracking-widest text-white hover:text-rep transition-colors px-2"
