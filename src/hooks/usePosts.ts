@@ -2,6 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { safeQuery } from "@/lib/supabase-debug";
 import { useAuth } from "@/hooks/useAuth";
+import { getYouTubeId } from "@/lib/utils";
 
 const POSTS_PER_PAGE = 9;
 
@@ -17,6 +18,59 @@ export interface Post {
   is_featured: boolean | null;
   is_breaking: boolean | null;
   view_count: number | null;
+}
+
+type YouTubeMetadata = {
+  videoId: string;
+  description: string;
+  thumbnail: string | null;
+  viewCount: number | null;
+};
+
+type YouTubeFeedResponse = {
+  byId?: Record<string, YouTubeMetadata>;
+};
+
+async function hydratePostsWithYouTubeMetadata(posts: Post[]): Promise<Post[]> {
+  if (!posts.length) return posts;
+
+  const videoIds = Array.from(
+    new Set(
+      posts
+        .map((post) => getYouTubeId(post.youtube_id))
+        .filter((id): id is string => !!id)
+    )
+  );
+
+  if (!videoIds.length) return posts;
+
+  const { data, error } = await supabase.functions.invoke("youtube-feed", {
+    body: { videoIds },
+  });
+
+  if (error) {
+    if (import.meta.env.DEV) {
+      console.warn("youtube-feed invoke failed, continuing with DB values", error);
+    }
+    return posts;
+  }
+
+  const byId = ((data as YouTubeFeedResponse | null)?.byId ?? {}) as Record<string, YouTubeMetadata>;
+
+  return posts.map((post) => {
+    const videoId = getYouTubeId(post.youtube_id);
+    if (!videoId) return post;
+
+    const metadata = byId[videoId];
+    if (!metadata) return post;
+
+    return {
+      ...post,
+      subtitle: post.subtitle || metadata.description || null,
+      thumbnail_url: post.thumbnail_url || metadata.thumbnail,
+      view_count: post.view_count ?? metadata.viewCount ?? null,
+    };
+  });
 }
 
 async function fetchPosts({ 
@@ -57,10 +111,11 @@ async function fetchPosts({
   ) as Post[] | null;
   
   const data = posts || [];
+  const hydrated = await hydratePostsWithYouTubeMetadata(data);
   
   return {
-    posts: data,
-    nextPage: data.length === POSTS_PER_PAGE ? pageParam + 1 : undefined,
+    posts: hydrated,
+    nextPage: hydrated.length === POSTS_PER_PAGE ? pageParam + 1 : undefined,
   };
 }
 

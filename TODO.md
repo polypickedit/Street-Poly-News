@@ -41,3 +41,45 @@
 - [ ] **Admin Visibility Test**: Log in as admin, verify visibility of all records in `submissions` or `accounts`.
 - [ ] **User Restriction Test**: Log in as standard user, verify only own records are visible.
 - [ ] **Admin Removal Test**: Remove `admin` role/user from `admin_users` and confirm immediate lockout from admin views.
+
+## YouTube Feed Sovereignty – Phase 1/2
+
+### Phase 1 (Completed in code)
+
+- [x] Create Supabase Edge Function `youtube-feed` for normalized YouTube responses.
+  - File: `supabase/functions/youtube-feed/index.ts`
+  - Supports `videoIds` lookup mode using `videos?part=snippet,statistics`.
+  - Supports channel pipeline mode using:
+    1. `channels?part=contentDetails` -> uploads playlist
+    2. `playlistItems?part=snippet,contentDetails`
+- [x] Clamp long descriptions server-side (160 chars) to protect infinite-scroll layout stability.
+- [x] Wire frontend feed hydration to consume backend metadata only (no direct YouTube fetches in React).
+  - File: `src/hooks/usePosts.ts`
+  - Hydrates missing `subtitle`, `thumbnail_url`, and `view_count`.
+- [x] Keep current feed architecture stable (existing `posts` query + metadata hydration fallback).
+
+### Phase 2 (Team Execution Queue)
+
+- [ ] Add Supabase Edge secret:
+  - `YOUTUBE_API_KEY` for function `youtube-feed`.
+- [ ] Deploy function:
+  - `supabase functions deploy youtube-feed`
+- [ ] Add/confirm feed-source config (channel IDs for StreetPoly sources) in env or DB.
+- [ ] Build cache table `youtube_feed_cache` and indexes.
+  - Required columns: `channel_id`, `video_id`, `title`, `description`, `thumbnail`, `published_at`, `fetched_at`.
+- [ ] Add refresh function to fetch channel uploads and upsert cache rows.
+- [ ] Schedule cron refresh every 30-60 minutes.
+- [ ] Add cache-first read path so frontend hits StreetPoly API only, never YouTube directly.
+- [ ] Add failure safeguards:
+  - Keep last known cache on API failure/quota exhaustion.
+  - Emit structured logs for quota/call errors.
+- [ ] Add acceptance checks:
+  - Cards always show `title`, `thumbnail`, and `publishedAt`.
+  - Descriptions are clamped in UI and/or API.
+  - Infinite scroll remains stable under long text payloads.
+
+### Ownership Split Suggestion
+
+- [ ] Backend owner: cache table + cron refresh + API hardening.
+- [ ] Frontend owner: card mapping verification + UI clamp + scroll regression checks.
+- [ ] Ops owner: secrets + deploy + quota monitoring.

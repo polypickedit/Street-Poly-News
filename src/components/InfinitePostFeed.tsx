@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { usePosts } from "@/hooks/usePosts";
 import { PostCard } from "./PostCard";
 import { ExternalLink, Loader2, Sparkles } from "lucide-react";
+import { MobileSkyscraperPromo } from "@/components/PromoSidebar";
 import { useLocation } from "react-router-dom";
 
 interface InfinitePostFeedProps {
@@ -129,6 +130,9 @@ export function InfinitePostFeed({ category: propCategory, variant = "list" }: I
             <div className="h-px w-12 bg-border" />
           </div>
         )}
+      </div>
+      <div className="px-4 lg:hidden">
+        <MobileSkyscraperPromo index={0} />
       </div>
     </div>
   );

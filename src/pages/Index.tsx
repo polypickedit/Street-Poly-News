@@ -9,6 +9,8 @@ import { Link } from "react-router-dom";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipsGrid } from "@/components/ClipsGrid";
+import { MobileSquarePromo } from "@/components/PromoSidebar";
+import { MobileSkyscraperPromo } from "@/components/PromoSidebar";
 import { useSlotContents } from "@/hooks/usePlacements";
 import { useAdmin } from "@/hooks/useAdmin";
 import { VideoSlotEditor } from "@/components/admin/VideoSlotEditor";
@@ -79,16 +81,21 @@ const Index = () => {
             <span className="text-rep mx-2">Politics</span>
             <span className="text-dem">Feed</span>
           </p>
-          <h1 className="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-[0.1em] md:tracking-[0.3em] uppercase leading-[1.1] md:leading-none flex flex-col sm:block">
-            <span className="inline-block">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold tracking-[0.05em] md:tracking-[0.12em] uppercase leading-[1.05] md:leading-none flex flex-col items-center text-center max-w-full">
+            <span className="inline-flex flex-nowrap items-center justify-center gap-x-2">
               <span className="text-dem">Street</span>
               <span className="text-dem">Poly</span>
             </span>
-            <span className="text-rep sm:ml-2 font-black">News</span>
+            <span className="text-rep font-black">News</span>
           </h1>
           <p className="mt-6 text-muted-foreground text-sm md:text-lg max-w-2xl mx-auto font-body leading-relaxed px-2">
             Unfiltered stories from the heart of the movement. <br className="hidden md:block" /> Real voices, real impact, real news.
           </p>
+          <div className="mt-8 w-full flex justify-center lg:hidden">
+            <div className="w-full max-w-sm">
+              <MobileSquarePromo />
+            </div>
+          </div>
         </div>
 
         {/* Divider */}
@@ -100,6 +107,9 @@ const Index = () => {
 
         {/* Featured Section */}
         <FeaturedSection />
+        <div className="px-4 lg:hidden">
+          <MobileSkyscraperPromo index={0} />
+        </div>
 
         {/* Video Links */}
         <section className="mb-6 md:mb-10 px-4">
@@ -133,6 +143,9 @@ const Index = () => {
             />
           </div>
         </section>
+        <div className="px-4 lg:hidden">
+          <MobileSkyscraperPromo index={1} />
+        </div>
 
         {/* Posts Feed */}
         <section id="videos" className="pb-8 md:pb-12 px-4">

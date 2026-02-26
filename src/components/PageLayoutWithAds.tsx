@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { Navbar } from "@/components/Navbar";
 import { BreakingNewsBanner } from "@/components/BreakingNewsBanner";
 import { StockTicker } from "@/components/StockTicker";
-import { PromoSidebar, MobileSquarePromo, MobileSkyscraperPromo } from "@/components/PromoSidebar";
+import { PromoSidebar } from "@/components/PromoSidebar";
 import { PromoBanner } from "@/components/PromoBanner";
 import { BottomNav } from "@/components/BottomNav";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -51,8 +51,6 @@ export const PageLayoutWithAds = ({
                 <PromoBanner />
               </div>
             )}
-            
-            {showAds && <MobileSquarePromo />}
             
             <div className="w-full">
               {children}

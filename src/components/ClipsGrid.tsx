@@ -90,7 +90,13 @@ export function ClipsGrid({ slotKey, fallback }: ClipsGridProps) {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-        {clipPosts.map((post) => (
+        {clipPosts.map((post) => {
+          const videoId = getYouTubeId(post.youtube_id);
+          const thumbnailSrc =
+            post.thumbnail_url ||
+            (videoId && videoId.length === 11 ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&auto=format&fit=crop&q=60");
+
+          return (
           <a
             key={post.id}
             href={`https://www.youtube.com/watch?v=${post.youtube_id}`}
@@ -111,9 +117,14 @@ export function ClipsGrid({ slotKey, fallback }: ClipsGridProps) {
             )}
             <div className="overflow-hidden rounded-t-2xl bg-black/20 aspect-video">
               <img
-                src={post.thumbnail_url || `https://i.ytimg.com/vi/${getYouTubeId(post.youtube_id)}/hqdefault.jpg`}
+                src={thumbnailSrc}
                 alt={post.title}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                onError={(event) => {
+                  const target = event.currentTarget;
+                  if (target.src.includes("images.unsplash.com")) return;
+                  target.src = "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&auto=format&fit=crop&q=60";
+                }}
               />
             </div>
             <div className="p-4 flex flex-col gap-2">
@@ -128,7 +139,8 @@ export function ClipsGrid({ slotKey, fallback }: ClipsGridProps) {
               </span>
             </div>
           </a>
-        ))}
+        );
+        })}
       </div>
 
       <VideoSlotEditor
