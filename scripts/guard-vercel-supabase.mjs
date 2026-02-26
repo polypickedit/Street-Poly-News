@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 
-const EXPECTED_PROJECT_REF =
-  process.env.EXPECTED_SUPABASE_PROJECT_REF?.trim() || "cjodbnsjggslngnzwxsv";
+const EXPECTED_PROJECT_REF = process.env.EXPECTED_SUPABASE_PROJECT_REF;
+
+if (!EXPECTED_PROJECT_REF) {
+  console.error("❌ Error: EXPECTED_SUPABASE_PROJECT_REF environment variable is not set.");
+  process.exit(1);
+}
 const REQUIRED_CANONICAL_HOST =
   process.env.REQUIRED_CANONICAL_HOST?.trim().toLowerCase() || "streetpolynews.com";
 
