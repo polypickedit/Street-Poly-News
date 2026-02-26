@@ -1,6 +1,12 @@
 import { createRoot } from 'react-dom/client';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 import { RootErrorBoundary } from '@/components/RootErrorBoundary';
+import {
+  SUPABASE_ANON_KEY,
+  SUPABASE_URL,
+  assertCanonicalSupabaseProject,
+} from '@/lib/supabase-env';
+import { cleanupStaleAuthTokens } from '@/utils/auth-cleanup';
 import './index.css';
 
 const CANONICAL_HOST = import.meta.env.VITE_CANONICAL_HOST?.trim().toLowerCase() ?? '';
@@ -29,10 +35,7 @@ const enforceCanonicalOrigin = (): boolean => {
 };
 
 // Environment Guard
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-if (!SUPABASE_URL || !SUPABASE_KEY) {
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   // Render Fatal Error Screen directly, bypassing App initialization
   console.error('CRITICAL: Missing Supabase environment variables');
   
@@ -44,7 +47,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
       <div style="display: flex; height: 100vh; justify-content: center; align-items: center; background: #000; color: #fff; font-family: system-ui, sans-serif;">
         <div style="text-align: center; padding: 2rem;">
           <h1 style="color: #ef4444; margin-bottom: 1rem;">Fatal Configuration Error</h1>
-          <p>Missing VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY.</p>
+          <p>Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY.</p>
           <p style="opacity: 0.7; margin-top: 0.5rem;">Check console for details.</p>
         </div>
       </div>
@@ -52,6 +55,9 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
     console.error('Failed to load FatalError component:', err);
   });
 } else {
+  assertCanonicalSupabaseProject(SUPABASE_URL, "main-bootstrap");
+  cleanupStaleAuthTokens();
+
   // Canonical Redirect (Only if auth config is valid)
   if (enforceCanonicalOrigin()) {
     // Halt startup; browser is navigating to the canonical origin.
