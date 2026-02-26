@@ -47,6 +47,7 @@ import CompleteProfile from "./pages/CompleteProfile";
 import ProfileSettings from "./pages/ProfileSettings";
 import { ArtistProfileGate } from "@/components/ArtistProfileGate";
 import { AppDiagnosticsProbe } from "@/components/AppDiagnosticsProbe";
+import Diagnostics from "./pages/Diagnostics";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -228,6 +229,7 @@ const AnimatedRoutes = () => {
         <Route path="/categories" element={<Categories />} />
         <Route path="/category/:slug" element={<Category />} />
         <Route path="/person/:slug" element={<Person />} />
+        <Route path="/diagnostics-probe" element={<Diagnostics />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>

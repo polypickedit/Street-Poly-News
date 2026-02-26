@@ -1,4 +1,4 @@
-import { serviceRoleClient } from "./supabase";
+import { serviceRoleClient } from "./supabase.ts";
 
 const NORMAL_EMAIL = "test-framework-user@streetpoly.local";
 const ADMIN_EMAIL = "test-framework-admin@streetpoly.local";

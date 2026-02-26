@@ -9,6 +9,7 @@ import { Loader2, Video, Type, Settings, ExternalLink } from "lucide-react";
 import { getYouTubeId } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VideoSlotEditorProps {
   open: boolean;
@@ -61,19 +62,32 @@ export function VideoSlotEditor({
   const handleFetchMetadata = async () => {
     if (!url) return;
     const videoId = getYouTubeId(url);
-    if (!videoId) return;
+    if (!videoId) {
+      toast.error("Enter a valid YouTube URL first");
+      return;
+    }
 
     setFetching(true);
     try {
-      const response = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
-      const data = await response.json();
-      if (data.title) setTitle(data.title);
-      // Update thumbnail again just in case
-      const thumb = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-      setThumbnail(thumb);
+      const { data, error } = await supabase.functions.invoke("youtube-feed-refresh", {
+        body: { videoIds: [videoId] },
+      });
+
+      if (error) throw error;
+
+      const item = (data as { byId?: Record<string, { title?: string; description?: string; thumbnail?: string | null }> } | null)?.byId?.[videoId];
+      if (!item) {
+        toast.error("No metadata returned for this video");
+        return;
+      }
+
+      if (item.title) setTitle(item.title);
+      if (item.description) setDescription(item.description);
+      setThumbnail(item.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`);
+      toast.success("Metadata refreshed and cached");
     } catch (error) {
       console.error("Failed to fetch metadata:", error);
-      toast.error("Could not fetch video details");
+      toast.error("Could not sync metadata from YouTube");
     } finally {
       setFetching(false);
     }
@@ -140,15 +154,17 @@ export function VideoSlotEditor({
                                 <Button 
                                     type="button"
                                     variant="outline"
-                                    size="icon"
+                                    size="sm"
                                     onClick={handleFetchMetadata}
                                     disabled={fetching || !url}
-                                    title="Auto-fill details"
+                                    title="Sync metadata from YouTube API"
+                                    className="whitespace-nowrap"
                                 >
-                                    {fetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                                    {fetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ExternalLink className="mr-2 h-4 w-4" />}
+                                    Sync YouTube
                                 </Button>
                             </div>
-                            <p className="text-[11px] text-muted-foreground">Paste a YouTube link. The preview updates automatically.</p>
+                            <p className="text-[11px] text-muted-foreground">Paste a YouTube link, then use Sync to manually pull title, description, and thumbnail from YouTube API.</p>
                         </div>
                     </div>
                 </section>

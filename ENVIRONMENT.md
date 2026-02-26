@@ -16,6 +16,7 @@ The browser bundle reads `import.meta.env.VITE_*` variables directly, so the req
 | `VITE_SUPABASE_PROJECT_ID` | Supabase project | Used only for tooling (e.g., Lovable). |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe dashboard | Public publishable key for redirecting to checkout. |
 | `REACT_APP_*` (legacy) | Supabase project | Included in `.env`/`.env.local` for compatibility with tooling that expects `REACT_APP_` prefixes, but the app itself relies on the `VITE_` values above. |
+| `EXPECTED_SUPABASE_PROJECT_REF` | Build guard | Optional override for production build guard (defaults to `cjodbnsjggslngnzwxsv`). |
 
 Create a local `.env.local` (or `.env.development.local`) file that mirrors `.env.example` and never check it in. Example:
 
@@ -31,6 +32,11 @@ VITE_STRIPE_PUBLISHABLE_KEY="pk_test_xxx"
 REACT_APP_SUPABASE_URL="https://..."
 REACT_APP_SUPABASE_PUBLISHABLE_DEFAULT_KEY="sb_publishable_xxx"
 ```
+
+Production builds run `scripts/guard-vercel-supabase.mjs` before `vite build`. On Vercel production deployments, it fails the build if:
+- `VITE_SUPABASE_URL` does not match the expected project ref.
+- `VITE_CANONICAL_HOST` does not match `streetpolynews.com` (or `REQUIRED_CANONICAL_HOST` if overridden).
+- `VITE_CANONICAL_PROTOCOL` is not `https`.
 
 Vite/hot-reload picks up `.env.local` automatically. You can keep secrets per-environment by creating `.env.production.local`, `.env.staging.local`, etc.
 

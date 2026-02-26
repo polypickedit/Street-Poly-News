@@ -1,4 +1,4 @@
-import { seedTestFixture } from "./seed";
+import { seedTestFixture } from "./seed.ts";
 
 seedTestFixture()
   .then((fixture) => {

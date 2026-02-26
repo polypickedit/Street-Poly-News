@@ -27,9 +27,12 @@ export default defineConfig({
     port: 4173,
     reuseExistingServer: !process.env.CI,
     env: {
-      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL,
-      VITE_SUPABASE_PUBLISHABLE_KEY: process.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL,
+      VITE_SUPABASE_PUBLISHABLE_KEY:
+        process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY,
+      SUPABASE_URL: process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL,
+      SUPABASE_ANON_KEY:
+        process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY,
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
       TEST_SUPABASE_EMAIL: process.env.TEST_SUPABASE_EMAIL,
       TEST_SUPABASE_PASSWORD: process.env.TEST_SUPABASE_PASSWORD,
