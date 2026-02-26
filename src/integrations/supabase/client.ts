@@ -26,11 +26,8 @@ try {
   assertCanonicalSupabaseProject(SUPABASE_URL, "supabase-client");
 } catch (err) {
   console.error("Supabase Project Validation Failed:", err);
-  // In DEV, we throw to alert the developer immediately.
-  // In PROD, we might choose to log and degrade, but for now we fail safe to prevent data drift.
-  if (import.meta.env.DEV || import.meta.env.PROD) {
-    throw err;
-  }
+  // Always throw critical configuration errors to prevent data drift
+  throw err;
 }
 
 // Import the supabase client like this:
