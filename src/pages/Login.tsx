@@ -10,11 +10,37 @@ import { Loader2, Chrome, ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { validateUsername } from "@/lib/username";
 
-const POST_AUTH_REDIRECT_PATH = "/";
-
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+
+  // Normalize redirect path to prevent open redirects
+  const redirectPath = useMemo(() => {
+    const rawRedirect = searchParams.get("redirectTo");
+    if (!rawRedirect) return "/";
+    
+    // If it's a full URL, only allow if it matches our origin
+    if (rawRedirect.startsWith("http")) {
+      try {
+        const url = new URL(rawRedirect);
+        if (url.origin === window.location.origin) {
+          return url.pathname + url.search + url.hash;
+        }
+      } catch {
+        return "/";
+      }
+      return "/";
+    }
+    
+    // If it's a relative path, ensure it starts with / and doesn't use // (protocol relative)
+    if (rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")) {
+      return rawRedirect;
+    }
+    
+    return "/";
+  }, [searchParams]);
+
   const googleAuthEnabled = import.meta.env.VITE_AUTH_GOOGLE_ENABLED !== "false";
   const projectRef =
     import.meta.env.VITE_SUPABASE_URL?.split(".")[0]?.split("//")[1] || "unknown";
@@ -30,23 +56,22 @@ const Login = () => {
     message: string | null;
   }>({ status: "idle", message: null });
   const { session, status: authStatus } = useAuth();
-  const [searchParams] = useSearchParams();
   const showDebug = searchParams.get("debug") === "true";
   const isAuthCallbackFlow =
     searchParams.has("code") ||
     searchParams.has("access_token") ||
     searchParams.has("refresh_token") ||
     searchParams.has("type");
-  const emailConfirmationRedirectUrl = `${window.location.origin}${POST_AUTH_REDIRECT_PATH}`;
-  const loginRedirectUrl = `${window.location.origin}/login?redirectTo=${encodeURIComponent(POST_AUTH_REDIRECT_PATH)}`;
-  const resetPasswordRedirectUrl = `${window.location.origin}/login?redirectTo=${encodeURIComponent(POST_AUTH_REDIRECT_PATH)}&type=recovery`;
+  const emailConfirmationRedirectUrl = `${window.location.origin}${redirectPath}`;
+  const loginRedirectUrl = `${window.location.origin}/login?redirectTo=${encodeURIComponent(redirectPath)}`;
+  const resetPasswordRedirectUrl = `${window.location.origin}/login?redirectTo=${encodeURIComponent(redirectPath)}&type=recovery`;
 
   useEffect(() => {
     if (authStatus === "authenticated" && session) {
-      console.log("Login: Session ready, redirecting to", POST_AUTH_REDIRECT_PATH);
-      navigate(POST_AUTH_REDIRECT_PATH, { replace: true });
+      console.log("Login: Session ready, redirecting to", redirectPath);
+      navigate(redirectPath, { replace: true });
     }
-  }, [authStatus, session, navigate]);
+  }, [authStatus, session, navigate, redirectPath]);
 
   useEffect(() => {
     if (!isSignUp) {

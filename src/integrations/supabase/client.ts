@@ -22,7 +22,16 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error("Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY.");
 }
 
-assertCanonicalSupabaseProject(SUPABASE_URL, "supabase-client");
+try {
+  assertCanonicalSupabaseProject(SUPABASE_URL, "supabase-client");
+} catch (err) {
+  console.error("Supabase Project Validation Failed:", err);
+  // In DEV, we throw to alert the developer immediately.
+  // In PROD, we might choose to log and degrade, but for now we fail safe to prevent data drift.
+  if (import.meta.env.DEV || import.meta.env.PROD) {
+    throw err;
+  }
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
