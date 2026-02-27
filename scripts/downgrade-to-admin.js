@@ -21,6 +21,12 @@ const TARGET_EMAIL = process.argv[2];
 
 if (!TARGET_EMAIL) {
   console.error('Usage: node scripts/downgrade-to-admin.js <email>');
+  console.error('Example: node scripts/downgrade-to-admin.js user@example.com');
+  process.exit(1);
+}
+
+if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(TARGET_EMAIL)) {
+  console.error('Error: Invalid email format provided.');
   process.exit(1);
 }
 
