@@ -9,6 +9,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      EXPECTED_SUPABASE_PROJECT_REF: cjodbnsjggslngnzwxsv
+      VITE_SUPABASE_URL: https://cjodbnsjggslngnzwxsv.supabase.co
+      VITE_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+      VITE_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-anon-key
+      VITE_STRIPE_PUBLISHABLE_KEY: pk_test_ci_placeholder
+      VITE_CANONICAL_HOST: streetpolynews.com
+      VITE_CANONICAL_PROTOCOL: https
+      STRIPE_WEBHOOK_URL: https://cjodbnsjggslngnzwxsv.functions.supabase.co/stripe-webhook
+      FORCE_PRODUCTION_GUARD: "1"
 
     steps:
     - uses: actions/checkout@v4
@@ -35,6 +45,9 @@ jobs:
 
     - name: Typecheck
       run: npm run typecheck
+
+    - name: Release invariants
+      run: npm run validate:release
 
     - name: Unit tests
       run: npm run test:unit

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const isForcedProduction = process.env.FORCE_PRODUCTION_GUARD === "1";
 const expectedRef =
   process.env.EXPECTED_SUPABASE_PROJECT_REF?.trim() || "";
 const requiredCanonicalHost =
@@ -8,12 +9,12 @@ const requiredCanonicalHost =
 const isVercel = process.env.VERCEL === "1";
 const vercelEnv = process.env.VERCEL_ENV;
 
-if (!isVercel) {
+if (!isForcedProduction && !isVercel) {
   console.log("[guard-vercel-supabase] Non-Vercel build detected. Skipping guard.");
   process.exit(0);
 }
 
-if (vercelEnv !== "production") {
+if (!isForcedProduction && vercelEnv !== "production") {
   console.log(
     `[guard-vercel-supabase] VERCEL_ENV=${vercelEnv ?? "unknown"} (not production). Skipping strict production guard.`
   );
@@ -63,5 +64,5 @@ if (canonicalProtocol !== "https") {
 }
 
 console.log(
-  `[guard-vercel-supabase] OK:\n  expected_ref=${expectedRef}\n  actual_ref=${actualRef}\n  canonical_host=${canonicalHost}\n  url=${url}`
+  `[guard-vercel-supabase] OK:\n  forced=${isForcedProduction}\n  expected_ref=${expectedRef}\n  actual_ref=${actualRef}\n  canonical_host=${canonicalHost}\n  url=${url}`
 );

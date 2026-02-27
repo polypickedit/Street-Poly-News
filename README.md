@@ -77,8 +77,8 @@ Simply open [Lovable](https://lovable.dev/projects) and click on **Share -> Publ
 
 ## 📜 Documentation
 
-- [Production Checklist](TODO.md)
 - [Testing Guide](TESTING.md)
+- [Production Checklist](docs/supabase-production-checklist.md)
 - [Environment Setup](ENVIRONMENT.md)
 - [Authentication Setup](AUTH_SETUP.md)
 - [Supabase Backend Setup](SUPABASE-SETUP.md)

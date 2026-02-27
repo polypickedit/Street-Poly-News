@@ -29,9 +29,12 @@ export function assertCanonicalSupabaseProject(url: string, context: string): st
 
   // Soft warning in dev, error in prod if critical
   if (currentRef !== CANONICAL_SUPABASE_PROJECT_REF) {
-    console.warn(`[${context}] Supabase project ref mismatch: expected "${CANONICAL_SUPABASE_PROJECT_REF}", got "${currentRef}" from VITE_SUPABASE_URL="${url}".`);
+    const message = `[${context}] Supabase project ref mismatch: expected "${CANONICAL_SUPABASE_PROJECT_REF}", got "${currentRef}" from VITE_SUPABASE_URL="${url}".`;
+    if (import.meta.env.PROD) {
+      throw new Error(message);
+    }
+    console.warn(message);
   }
 
   return currentRef;
 }
-

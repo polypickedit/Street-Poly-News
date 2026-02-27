@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "validate:supabase-env": "node scripts/validate-supabase-env.mjs",
+    "validate:release": "node scripts/validate-release-invariants.mjs",
     "build": "node scripts/guard-vercel-supabase.mjs && vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
