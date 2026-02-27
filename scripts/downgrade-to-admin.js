@@ -16,7 +16,13 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const TARGET_EMAIL = 'editingpale@gmail.com';
+// Get email from command line arg, or default to specific user if needed (though explicit is better)
+const TARGET_EMAIL = process.argv[2];
+
+if (!TARGET_EMAIL) {
+  console.error('Usage: node scripts/downgrade-to-admin.js <email>');
+  process.exit(1);
+}
 
 async function main() {
   console.log(`Downgrading user from Owner to Admin: ${TARGET_EMAIL}...`);
@@ -62,8 +68,6 @@ async function main() {
 
   if (roleError || !roles) {
     console.error('Error finding admin role:', roleError);
-    // If roles table doesn't exist or is empty, we might need to rely on metadata or create it
-    // But based on migration logs, user_roles/roles structure exists.
     process.exit(1);
   }
 
